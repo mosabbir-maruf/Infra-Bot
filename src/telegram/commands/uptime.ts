@@ -1,5 +1,6 @@
 import { TelegramContext } from '../../types';
 import { CommandHandler } from './CommandHandler';
+import { MessageRenderer } from '../MessageRenderer';
 
 export class UptimeHandler implements CommandHandler {
   public readonly name = 'uptime';
@@ -11,17 +12,20 @@ export class UptimeHandler implements CommandHandler {
     } | null;
 
     if (!kv) {
-      await ctx.reply('⚠️ <b>Error:</b> MONITORING_KV binding is not configured.', 'HTML');
+      await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML');
       return;
     }
 
     const aliases = ctx.serverRegistry.getAliases();
-    let report = '⏱️ <b>VPS System Uptime Telemetry</b>\n\n';
+    let report = '';
 
     for (const alias of aliases) {
       const data = await kv.get(`metrics:${alias.toLowerCase()}`);
       if (!data) {
-        report += `• <b>${alias}</b>: <i>No telemetry recorded</i>\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Status': 'No telemetry data',
+        });
+        report += '\n';
         continue;
       }
 
@@ -44,12 +48,19 @@ export class UptimeHandler implements CommandHandler {
 
         const lastSeen = new Date(metrics.timestamp * 1000);
         const ageMinutes = Math.floor((Date.now() - lastSeen.getTime()) / (1000 * 60));
-        const statusStr = ageMinutes > 15 ? `🔴 (Stale: ${ageMinutes}m)` : '🟢 (Active)';
+        const status = ageMinutes > 15 ? `Stale (${ageMinutes}m)` : 'Active';
 
-        report += `• <b>${alias}</b>: <code>${uptimeStr}</code> | Uptime Status: ${statusStr}
-  Avg CPU Load: <code>${metrics.cpu}%</code>\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Uptime': uptimeStr,
+          'Status': status,
+          'CPU Load': `${metrics.cpu}%`,
+        });
+        report += '\n';
       } catch {
-        report += `• <b>${alias}</b>: <i>Corrupted data</i>\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Status': 'Corrupted telemetry data',
+        });
+        report += '\n';
       }
     }
 

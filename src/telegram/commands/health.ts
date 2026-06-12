@@ -1,5 +1,6 @@
 import { TelegramContext } from '../../types';
 import { CommandHandler } from './CommandHandler';
+import { MessageRenderer } from '../MessageRenderer';
 import { ProviderRegistry } from '../../providers/ProviderRegistry';
 
 export class HealthHandler implements CommandHandler {
@@ -11,17 +12,23 @@ export class HealthHandler implements CommandHandler {
     const activeProviders = registry.getActiveProviders().map((p) => p.name);
 
     const kv = (ctx.env as unknown as Record<string, unknown>).MONITORING_KV;
-    const kvStatus = kv ? 'Bound 🟢' : 'Missing ⚠️';
+    const kvStatus = kv ? 'Bound' : 'Not Bound';
 
-    const report = `⚙️ <b>Control Plane Health Summary</b>
-
-• <b>Status:</b> Active 🟢
-• <b>Node Env:</b> <code>${ctx.env.NODE_ENV}</code>
-• <b>Default AWS Region:</b> <code>${ctx.env.AWS_REGION}</code>
-• <b>Active Provider Bindings:</b> ${activeProviders.length > 0 ? activeProviders.join(', ') : 'None ⚠️'}
-• <b>Monitoring KV Status:</b> <code>${kvStatus}</code>
-• <b>Authorized Whitelist:</b> <code>${ctx.env.AUTHORIZED_USER_IDS.length} user(s)</code>
-• <b>Deployment Platform:</b> Cloudflare Workers (Edge Engine)`;
+    let report = MessageRenderer.header('Control Plane Health');
+    report += '\n';
+    report += MessageRenderer.line('Status', 'Active');
+    report += MessageRenderer.line('Environment', ctx.env.NODE_ENV);
+    report += MessageRenderer.line('Default Region', ctx.env.AWS_REGION);
+    report += MessageRenderer.line(
+      'Active Providers',
+      activeProviders.length > 0 ? activeProviders.join(', ') : 'None',
+    );
+    report += MessageRenderer.line('Monitoring KV', kvStatus);
+    report += MessageRenderer.line(
+      'Authorized Users',
+      `${ctx.env.AUTHORIZED_USER_IDS.length} user(s)`,
+    );
+    report += MessageRenderer.line('Platform', 'Cloudflare Workers');
 
     await ctx.reply(report, 'HTML');
   }

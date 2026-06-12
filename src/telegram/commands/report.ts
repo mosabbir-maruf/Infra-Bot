@@ -1,5 +1,6 @@
 import { TelegramContext } from '../../types';
 import { CommandHandler } from './CommandHandler';
+import { MessageRenderer } from '../MessageRenderer';
 
 export class ReportHandler implements CommandHandler {
   public readonly name = 'report';
@@ -11,23 +12,26 @@ export class ReportHandler implements CommandHandler {
     } | null;
 
     if (!kv) {
-      await ctx.reply('⚠️ <b>Error:</b> MONITORING_KV binding is not configured.', 'HTML');
+      await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML');
       return;
     }
 
     const aliases = ctx.serverRegistry.getAliases();
     if (aliases.length === 0) {
-      await ctx.reply('⚠️ <b>No servers are registered.</b>', 'HTML');
+      await ctx.reply(MessageRenderer.noServers(), 'HTML');
       return;
     }
 
-    let report = '📊 <b>Infrastructure Metrics Dashboard</b>\n\n';
+    let report = '';
     let activeCount = 0;
 
     for (const alias of aliases) {
       const data = await kv.get(`metrics:${alias.toLowerCase()}`);
       if (!data) {
-        report += `⚪ <b>${alias}</b>: No telemetry data available.\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Status': 'No telemetry data',
+        });
+        report += '\n';
         continue;
       }
 
@@ -45,9 +49,9 @@ export class ReportHandler implements CommandHandler {
         const lastSeen = new Date(metrics.timestamp * 1000);
         const ageMinutes = (Date.now() - lastSeen.getTime()) / (1000 * 60);
 
-        let statusEmoji = '🟢';
+        let status = 'Active';
         if (ageMinutes > 15) {
-          statusEmoji = '🔴 (Stale)';
+          status = 'Stale';
         } else {
           activeCount++;
         }
@@ -64,17 +68,26 @@ export class ReportHandler implements CommandHandler {
         const dockerRun = metrics.docker?.running || 0;
         const dockerTot = metrics.docker?.total || 0;
 
-        report += `${statusEmoji} <b>${alias}</b>
-• <b>CPU:</b> <code>${metrics.cpu}%</code> | <b>Uptime:</b> <code>${uptimeStr}</code>
-• <b>RAM:</b> <code>${ramUsedGB} GB / ${ramTotalGB} GB</code>
-• <b>Disk:</b> <code>${diskUsedGB} GB / ${diskTotalGB} GB</code>
-• <b>Docker:</b> <code>${dockerRun}/${dockerTot} containers</code>\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Status': status,
+          'CPU': `${metrics.cpu}%`,
+          'Uptime': uptimeStr,
+          'RAM': `${ramUsedGB} GB / ${ramTotalGB} GB`,
+          'Disk': `${diskUsedGB} GB / ${diskTotalGB} GB`,
+          'Containers': `${dockerRun}/${dockerTot}`,
+        });
+        report += '\n';
       } catch {
-        report += `⚠️ <b>${alias}</b>: Corrupted telemetry data.\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Status': 'Corrupted telemetry data',
+        });
+        report += '\n';
       }
     }
 
-    report += `Summary: ${activeCount} / ${aliases.length} active nodes.`;
+    const summary = `${activeCount} / ${aliases.length} active nodes.`;
+    report += MessageRenderer.header('Summary');
+    report += `\n${summary}\n`;
 
     await ctx.reply(report, 'HTML');
   }

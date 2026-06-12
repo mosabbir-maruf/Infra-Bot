@@ -1,5 +1,6 @@
 import { TelegramContext } from '../../types';
 import { CommandHandler } from './CommandHandler';
+import { MessageRenderer } from '../MessageRenderer';
 
 export class BandwidthHandler implements CommandHandler {
   public readonly name = 'bandwidth';
@@ -11,22 +12,25 @@ export class BandwidthHandler implements CommandHandler {
     } | null;
 
     if (!kv) {
-      await ctx.reply('⚠️ <b>Error:</b> MONITORING_KV binding is not configured.', 'HTML');
+      await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML');
       return;
     }
 
     const aliases = ctx.serverRegistry.getAliases();
     if (aliases.length === 0) {
-      await ctx.reply('⚠️ <b>No servers are registered.</b>', 'HTML');
+      await ctx.reply(MessageRenderer.noServers(), 'HTML');
       return;
     }
 
-    let report = '📈 <b>Monthly Bandwidth Usage Report</b>\n\n';
+    let report = '';
 
     for (const alias of aliases) {
       const data = await kv.get(`metrics:${alias.toLowerCase()}`);
       if (!data) {
-        report += `• <b>${alias}</b>: <i>No telemetry recorded</i>\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Status': 'No telemetry data',
+        });
+        report += '\n';
         continue;
       }
 
@@ -38,23 +42,22 @@ export class BandwidthHandler implements CommandHandler {
         const rx = metrics.bandwidth?.rx || 0;
         const tx = metrics.bandwidth?.tx || 0;
         const totalB = rx + tx;
-        
+
         const rxGB = (rx / (1024 * 1024 * 1024)).toFixed(2);
         const txGB = (tx / (1024 * 1024 * 1024)).toFixed(2);
         const totalGB = (totalB / (1024 * 1024 * 1024)).toFixed(2);
 
-        // Render progress bar (reference limit: 100 GB)
-        const limitGB = 100;
-        const percent = Math.min(Math.floor((parseFloat(totalGB) / limitGB) * 10), 10);
-        let bar = '';
-        for (let i = 0; i < 10; i++) {
-          bar += i < percent ? '■' : '□';
-        }
-        const pctLabel = Math.min(Math.floor((parseFloat(totalGB) / limitGB) * 100), 100);
-
-        report += `• <b>${alias}</b>: <b>${totalGB} GB</b> (rx: <code>${rxGB} GB</code> | tx: <code>${txGB} GB</code>)\n  <code>${bar}</code> [${pctLabel}% of 100GB]\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Total': `${totalGB} GB`,
+          'RX': `${rxGB} GB`,
+          'TX': `${txGB} GB`,
+        });
+        report += '\n';
       } catch {
-        report += `• <b>${alias}</b>: <i>Corrupted data</i>\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Status': 'Corrupted telemetry data',
+        });
+        report += '\n';
       }
     }
 

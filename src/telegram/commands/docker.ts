@@ -1,5 +1,6 @@
 import { TelegramContext } from '../../types';
 import { CommandHandler } from './CommandHandler';
+import { MessageRenderer } from '../MessageRenderer';
 
 export class DockerHandler implements CommandHandler {
   public readonly name = 'docker';
@@ -11,17 +12,20 @@ export class DockerHandler implements CommandHandler {
     } | null;
 
     if (!kv) {
-      await ctx.reply('⚠️ <b>Error:</b> MONITORING_KV binding is not configured.', 'HTML');
+      await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML');
       return;
     }
 
     const aliases = ctx.serverRegistry.getAliases();
-    let report = '🐳 <b>Docker Containers Telemetry Status</b>\n\n';
+    let report = '';
 
     for (const alias of aliases) {
       const data = await kv.get(`metrics:${alias.toLowerCase()}`);
       if (!data) {
-        report += `🔹 <b>${alias}</b>: <i>No telemetry recorded</i>\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Status': 'No telemetry data',
+        });
+        report += '\n';
         continue;
       }
 
@@ -43,26 +47,31 @@ export class DockerHandler implements CommandHandler {
         const docker = metrics.docker;
 
         if (!docker) {
-          report += `🔹 <b>${alias}</b>: <i>Docker details unavailable</i>\n\n`;
+          report += MessageRenderer.serverMetrics(alias, {
+            'Status': 'Docker metrics unavailable',
+          });
+          report += '\n';
           continue;
         }
 
-        const unhealthyText = docker.unhealthy > 0 ? ` (⚠️ ${docker.unhealthy} unhealthy)` : '';
-        report += `🖥️ <b>${alias}</b> [${docker.running}/${docker.total} running]${unhealthyText}\n`;
+        const unhealthy = docker.unhealthy > 0 ? ` (${docker.unhealthy} unhealthy)` : '';
+        report += MessageRenderer.serverMetrics(alias, {
+          'Containers': `${docker.running}/${docker.total} running${unhealthy}`,
+        });
 
         const containers = docker.containers || [];
-        if (containers.length === 0) {
-          report += '  <i>No containers running.</i>\n\n';
-          continue;
+        if (containers.length > 0) {
+          for (const c of containers) {
+            report += MessageRenderer.line(`  ${c.name}`, c.status);
+          }
         }
 
-        for (const c of containers) {
-          const stateEmoji = c.state === 'running' ? '🟢' : '🔴';
-          report += `  ${stateEmoji} <code>${c.name}</code> - <i>${c.status}</i>\n`;
-        }
         report += '\n';
       } catch {
-        report += `🔹 <b>${alias}</b>: <i>Corrupted data</i>\n\n`;
+        report += MessageRenderer.serverMetrics(alias, {
+          'Status': 'Corrupted telemetry data',
+        });
+        report += '\n';
       }
     }
 

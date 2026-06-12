@@ -1,4 +1,5 @@
 import { Logger } from '../utils/Logger';
+import { escapeMarkdownV2 } from './Escaper';
 
 export class TelegramClient {
   private readonly baseUrl: string;
@@ -16,9 +17,10 @@ export class TelegramClient {
     parseMode?: 'MarkdownV2' | 'HTML' | 'Markdown',
   ): Promise<void> {
     const url = `${this.baseUrl}/sendMessage`;
+    const safeText = parseMode === 'MarkdownV2' ? escapeMarkdownV2(text) : text;
     const body = {
       chat_id: chatId,
-      text,
+      text: safeText,
       parse_mode: parseMode,
     };
 

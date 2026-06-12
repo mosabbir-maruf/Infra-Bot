@@ -3,11 +3,11 @@ import { Env } from '../config/Env';
 import { TelegramClient } from './TelegramClient';
 import { Logger } from '../utils/Logger';
 import { handleError } from '../utils/ErrorHandler';
+import { MessageRenderer } from './MessageRenderer';
 import { CommandHandler } from './commands/CommandHandler';
 import { ServerRegistry } from '../config/ServerRegistry';
 import { ProviderRegistry } from '../providers/ProviderRegistry';
 
-// Register Handlers
 import { StartHandler } from './commands/start';
 import { HelpHandler } from './commands/help';
 import { HealthHandler } from './commands/health';
@@ -43,9 +43,6 @@ export class CommandRouter {
     return Array.from(this.handlers.values());
   }
 
-  /**
-   * Routes a verified incoming Telegram message to the appropriate handler
-   */
   public async route(
     message: TelegramMessage,
     env: Env,
@@ -86,7 +83,7 @@ export class CommandRouter {
     const handler = this.handlers.get(command);
     if (!handler) {
       Logger.warn(`CommandRouter: Unknown command "/${command}" from user ID ${userId}`);
-      await reply(`⚠️ Unknown command: <b>/${command}</b>. Use /help to see valid commands.`, 'HTML');
+      await reply(MessageRenderer.unknownCommand(`/${command}`), 'HTML');
       return;
     }
 

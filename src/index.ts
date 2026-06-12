@@ -7,6 +7,7 @@ import { CloudflareKVRateLimiter } from './middleware/RateLimiter';
 import { TelegramClient } from './telegram/TelegramClient';
 import { TelegramUpdate } from './types';
 import { verifyHmacSignature } from './utils/Crypto';
+import { MessageRenderer } from './telegram/MessageRenderer';
 import { ServerRegistry } from './config/ServerRegistry';
 import { ProviderRegistry } from './providers/ProviderRegistry';
 import { faviconBase64, favicon32Base64, favicon16Base64 } from './assets/favicon';
@@ -203,7 +204,27 @@ app.get('/', (c) => {
       --mono:     'Geist Mono', 'JetBrains Mono', monospace;
     }
 
+    .light {
+      --bg:       #f7f5f1;
+      --surface:  #eeebe6;
+      --border:   #d4d0c8;
+      --border2:  #bfbab0;
+      --fg:       #1c1a16;
+      --fg2:      #5c5850;
+      --fg3:      #9a958c;
+      --amber:    #a06c0c;
+      --amber-d:  rgba(160,108,12,0.1);
+      --amber-b:  rgba(160,108,12,0.18);
+      --green:    #1f7a44;
+      --green-d:  rgba(31,122,68,0.1);
+      --aws-c:    #a06c0c;
+      --do-c:     #1d4ed8;
+      --red:      #b91c1c;
+      --red-d:    rgba(185,28,28,0.08);
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { transition: background .2s ease, background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, fill .2s ease, stroke .2s ease; }
     html { color-scheme: dark; }
 
     body {
@@ -756,6 +777,11 @@ app.get('/', (c) => {
       <span class="clock" id="clock">--:--:-- UTC</span>
       <a href="/health" class="nav-link" target="_blank" rel="noopener">health ↗</a>
       <a href="https://workers.cloudflare.com" target="_blank" rel="noopener" class="nav-link">cf workers ↗</a>
+      <a href="/docs" class="nav-link">docs</a>
+      <button id="theme-btn" class="nav-link" style="background:none;border:none;cursor:pointer;padding:0;display:inline-flex;align-items:center" aria-label="Toggle theme">
+        <svg class="theme-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="theme-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <a href="https://github.com/mosabbir-maruf/Infra-Bot" target="_blank" rel="noopener" class="nav-link" aria-label="GitHub repo"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a>
     </div>
   </div>
@@ -952,12 +978,561 @@ app.get('/', (c) => {
         }, 1600);
       });
     }
+
+    // Theme toggle
+    (function(){
+      const btn=document.getElementById('theme-btn');
+      if(!btn)return;
+      const key='infra-bot-theme';
+      const setTheme=(light)=>{
+        document.documentElement.classList.toggle('light',light);
+        const sun=btn.querySelector('.theme-sun');
+        const moon=btn.querySelector('.theme-moon');
+        if(sun)sun.style.display=light?'':'none';
+        if(moon)moon.style.display=light?'none':'';
+        try{localStorage.setItem(key,light?'light':'dark')}catch(e){}
+      };
+      try{
+        const saved=localStorage.getItem(key);
+        if(saved==='light')setTheme(true);
+      }catch(e){}
+      btn.addEventListener('click',()=>{
+        setTheme(!document.documentElement.classList.contains('light'));
+      });
+    })();
   </script>
 </body>
 </html>`;
 
   return c.html(htmlContent, 200);
 });
+// Documentation page
+app.get('/docs', (c) => {
+  const year = new Date().getFullYear();
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>infra-bot · docs</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c0b09; --surface: #131210; --sidebar: #0e0d0b;
+      --border: #252320; --border2: #302e2b;
+      --fg: #e8e4dc; --fg2: #7a7670; --fg3: #3d3b38;
+      --amber: #e8a020; --amber-d: rgba(232,160,32,0.08); --amber-b: rgba(232,160,32,0.18);
+      --green: #3dba6e; --mono: 'Geist Mono','JetBrains Mono',monospace;
+    }
+    .light {
+      --bg: #f7f5f1; --surface: #eeebe6; --sidebar: #f2efeb;
+      --border: #d4d0c8; --border2: #bfbab0;
+      --fg: #1c1a16; --fg2: #5c5850; --fg3: #9a958c;
+      --amber: #a06c0c; --amber-d: rgba(160,108,12,0.1); --amber-b: rgba(160,108,12,0.18);
+      --green: #1f7a44;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    *,*::before,*::after { transition:background .2s ease,background-color .2s ease,color .2s ease,border-color .2s ease,box-shadow .2s ease,fill .2s ease,stroke .2s ease; }
+    html { color-scheme:dark; scroll-behavior:smooth; }
+    body {
+      font-family:'Geist','Inter',system-ui,sans-serif;
+      background:var(--bg); color:var(--fg);
+      min-height:100vh; font-size:14px; line-height:1.7;
+      -webkit-font-smoothing:antialiased;
+    }
+    .topbar {
+      position:sticky; top:0; z-index:50;
+      background:var(--bg); border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 2rem; height:48px;
+    }
+    .wordmark { font-family:var(--mono); font-size:0.8rem; font-weight:500; color:var(--fg); display:flex; align-items:center; gap:0.5rem; }
+    .wordmark-sep { color:var(--fg3); font-weight:300; }
+    .wordmark-sub { color:var(--fg2); font-weight:400; }
+    .topbar-right { display:flex; align-items:center; gap:1.25rem; }
+    .nav-link { font-size:0.72rem; color:var(--fg2); text-decoration:none; transition:color .12s; display:inline-flex; align-items:center; gap:.25rem; }
+    .nav-link svg { display:block; }
+    .nav-link:hover { color:var(--fg); }
+
+    .doc-layout {
+      display:flex;
+      max-width:1660px;
+      margin:0 auto;
+      min-height:calc(100vh - 48px);
+    }
+    /* Left sidebar */
+    .doc-sidebar {
+      width:220px;
+      flex-shrink:0;
+      position:sticky;
+      top:48px;
+      height:calc(100vh - 48px);
+      overflow-y:auto;
+      padding:2rem 1rem 2rem 1.5rem;
+      border-right:1px solid var(--border);
+      background:var(--sidebar);
+    }
+    .doc-sidebar-label {
+      font-size:0.6rem;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      color:var(--fg3);
+      font-weight:500;
+      margin-bottom:0.75rem;
+    }
+    .doc-sidebar nav { display:flex; flex-direction:column; gap:0.15rem; }
+    .doc-sidebar a {
+      font-size:0.78rem;
+      color:var(--fg2);
+      text-decoration:none;
+      padding:0.25rem 0.5rem;
+      border-radius:3px;
+      transition:color .12s, background .12s;
+      font-family:var(--mono);
+    }
+    .doc-sidebar a:hover { color:var(--amber); background:var(--amber-d); }
+
+    /* Main content */
+    .doc-content {
+      flex:1;
+      min-width:0;
+      padding:2.5rem 2rem 6rem;
+      display:flex;
+      flex-direction:column;
+      gap:2.5rem;
+    }
+    .page-hdr { padding-bottom:1.25rem; border-bottom:1px solid var(--border); }
+    .page-title { font-size:1.5rem; font-weight:500; letter-spacing:-.03em; color:var(--fg); }
+    .page-title span { color:var(--amber); }
+    .page-sub { font-size:0.78rem; color:var(--fg2); margin-top:0.3rem; }
+
+    .section { display:flex; flex-direction:column; gap:1rem; scroll-margin-top:4rem; }
+    .section-label {
+      font-size:0.67rem; text-transform:uppercase; letter-spacing:0.1em;
+      color:var(--fg3); font-weight:500; display:flex; align-items:center; gap:0.75rem;
+    }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+    .section h2 { font-size:1.1rem; font-weight:500; color:var(--fg); margin-top:0.5rem; }
+    .section h3 { font-size:0.92rem; font-weight:500; color:var(--amber); margin-top:0.5rem; }
+    .section p,.section li { font-size:0.85rem; color:var(--fg2); line-height:1.7; }
+    .section ul,.section ol { padding-left:1.25rem; display:flex; flex-direction:column; gap:0.35rem; }
+    .section a { color:var(--amber); text-decoration:none; border-bottom:1px solid transparent; transition:border-color .12s; }
+    .section a:hover { border-bottom-color:var(--amber); }
+    .section strong { color:var(--fg); font-weight:500; }
+    .section code {
+      font-family:var(--mono); font-size:0.78rem;
+      background:var(--surface); padding:0.1rem 0.35rem; border-radius:3px;
+      border:1px solid var(--border); color:var(--amber);
+    }
+    .section pre {
+      background:var(--surface); border:1px solid var(--border); border-radius:6px;
+      padding:1rem 1.25rem; overflow-x:auto; -webkit-overflow-scrolling:touch;
+      font-family:var(--mono); font-size:0.78rem; line-height:1.6;
+    }
+    .section pre code { background:none; border:none; padding:0; color:var(--fg2); }
+
+    .tbl-wrap { border:1px solid var(--border); border-radius:6px; overflow:hidden; overflow-x:auto; }
+    .tbl-wrap table { width:100%; border-collapse:collapse; }
+    .tbl-wrap thead { background:var(--surface); border-bottom:1px solid var(--border); }
+    .tbl-wrap th {
+      font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em;
+      color:var(--fg3); font-weight:500; padding:0.55rem 1rem; text-align:left; white-space:nowrap;
+    }
+    .tbl-wrap th:first-child { padding-left:1.25rem; }
+    .tbl-wrap td { padding:0.55rem 1rem; font-size:0.82rem; color:var(--fg2); vertical-align:middle; }
+    .tbl-wrap td:first-child { padding-left:1.25rem; }
+    .tbl-wrap tr { border-bottom:1px solid var(--border); }
+    .tbl-wrap tr:last-child { border-bottom:none; }
+    .tbl-wrap td code { font-size:0.75rem; }
+    .tag { font-family:var(--mono); font-size:0.6rem; font-weight:500; padding:0.12rem 0.4rem; border-radius:3px; letter-spacing:0.04em; white-space:nowrap; }
+    .tag-req { background:rgba(224,82,82,0.1); color:#e05252; border:1px solid rgba(224,82,82,0.2); }
+    .tag-opt { background:rgba(61,186,110,0.1); color:var(--green); border:1px solid rgba(61,186,110,0.2); }
+    .tag-rec { background:var(--amber-d); color:var(--amber); border:1px solid var(--amber-b); }
+    .warning { background:rgba(224,82,82,0.06); border-left:3px solid #e05252; padding:0.75rem 1rem; border-radius:0 4px 4px 0; font-size:0.82rem; color:var(--fg2); }
+    .warning strong { color:#e05252; }
+
+    /* Right sidebar - On this page */
+    .doc-toc {
+      width:200px;
+      flex-shrink:0;
+      position:sticky;
+      top:48px;
+      height:calc(100vh - 48px);
+      overflow-y:auto;
+      padding:2rem 1.25rem 2rem 1rem;
+      border-left:1px solid var(--border);
+    }
+    .doc-toc-label {
+      font-size:0.6rem;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      color:var(--fg3);
+      font-weight:500;
+      margin-bottom:0.75rem;
+    }
+    .doc-toc nav { display:flex; flex-direction:column; gap:0.25rem; }
+    .doc-toc a {
+      font-size:0.72rem;
+      color:var(--fg3);
+      text-decoration:none;
+      padding:0.15rem 0;
+      transition:color .12s;
+    }
+    .doc-toc a:hover { color:var(--amber); }
+    .doc-toc a.active { color:var(--amber); font-weight:500; }
+
+    .foot { display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; padding-top:1.5rem; border-top:1px solid var(--border); }
+    .foot-copy { font-size:0.7rem; color:var(--fg2); font-family:var(--mono); }
+    .foot-copy a { text-decoration:none; color:inherit; }
+    ::-webkit-scrollbar { width:5px; height:5px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+    @media (max-width:1024px) {
+      .doc-toc { display:none; }
+    }
+    @media (max-width:768px) {
+      .doc-sidebar { display:none; }
+      .topbar { padding:0 1rem; }
+      .doc-content { padding:1.5rem 1rem 4rem; gap:2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="/" class="wordmark" style="text-decoration:none">
+      <span>infra-bot</span>
+      <span class="wordmark-sep">/</span>
+      <span class="wordmark-sub">docs</span>
+    </a>
+    <div class="topbar-right">
+      <a href="/" class="nav-link">dashboard</a>
+      <a href="/health" class="nav-link" target="_blank" rel="noopener">health ↗</a>
+      <a href="https://workers.cloudflare.com" target="_blank" rel="noopener" class="nav-link">cf workers ↗</a>
+      <button id="theme-btn" class="nav-link" style="background:none;border:none;cursor:pointer;padding:0;display:inline-flex;align-items:center" aria-label="Toggle theme">
+        <svg class="theme-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="theme-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/mosabbir-maruf/Infra-Bot" target="_blank" rel="noopener" class="nav-link" aria-label="GitHub repo"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a>
+    </div>
+  </div>
+
+  <div class="doc-layout">
+    <aside class="doc-sidebar">
+      <div class="doc-sidebar-label">Sections</div>
+      <nav>
+        <a href="#architecture">architecture</a>
+        <a href="#commands">commands</a>
+        <a href="#config">configuration</a>
+        <a href="#env">environment</a>
+        <a href="#providers">providers</a>
+        <a href="#security">security</a>
+        <a href="#webhook">webhook</a>
+        <a href="#rate-limit">rate limit</a>
+        <a href="#monitoring">monitoring</a>
+        <a href="#deployment">deployment</a>
+        <a href="#recovery">recovery</a>
+      </nav>
+    </aside>
+
+    <main class="doc-content">
+      <div class="page-hdr">
+        <div class="page-title">documentation</div>
+        <div class="page-sub">Infra-Bot Control Plane — setup, configuration &amp; reference</div>
+      </div>
+
+      <div class="section" id="architecture">
+        <div class="section-label">architecture</div>
+        <p>The Control Plane is a <strong>production-grade, vendor-independent edge service</strong> on Cloudflare Workers managing VPS infrastructure across <strong>AWS EC2</strong> and <strong>DigitalOcean</strong> via Telegram.</p>
+        <h3 id="arch-design">Key Design Decisions</h3>
+        <ul>
+          <li><strong>Edge serverless</strong> — No VMs to maintain. Immune to datacenter outages. Cost efficient with high free-tier.</li>
+          <li><strong>Complete decoupling</strong> — Queries VM state directly from provider APIs. Can boot/reboot even a fully powered-down VPS.</li>
+          <li><strong>Provider abstraction</strong> — Unified <code>CloudProvider</code> interface. Adding GCP/Azure/Hetzner requires only implementing the interface.</li>
+          <li><strong>Config-driven registry</strong> — Friendly aliases instead of raw instance IDs. Git-controlled, zero database overhead.</li>
+        </ul>
+      </div>
+
+      <div class="section" id="commands">
+        <div class="section-label">bot commands</div>
+        <p>Case-insensitive. Syntax: <code>/command &lt;alias&gt;</code>.</p>
+        <h2 id="cmds-info">Info &amp; Health</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Command</th><th>Description</th><th>Args</th></tr></thead>
+            <tbody>
+              <tr><td><code>/status</code></td><td>List all servers or query a specific alias</td><td><code>&lt;alias&gt;</code> <span class="tag tag-opt">opt</span></td></tr>
+              <tr><td><code>/health</code></td><td>Check control plane, providers, KV, authorized users</td><td>—</td></tr>
+              <tr><td><code>/help</code></td><td>Show available commands and usage</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h2 id="cmds-ops">Operations</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Command</th><th>Description</th><th>Args</th></tr></thead>
+            <tbody>
+              <tr><td><code>/start</code></td><td>Start a stopped instance</td><td><code>&lt;alias&gt;</code> <span class="tag tag-opt">opt</span></td></tr>
+              <tr><td><code>/stop</code></td><td>Power off (releases capacity — high risk)</td><td><code>&lt;alias&gt;</code> <span class="tag tag-req">req</span></td></tr>
+              <tr><td><code>/reboot</code></td><td>Reboot / power-cycle (preferred over stop)</td><td><code>&lt;alias&gt;</code> <span class="tag tag-req">req</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="warning"><strong>Warning:</strong> Stopping EC2 releases physical hardware. Restart may fail with <code>InsufficientInstanceCapacity</code>. Prefer <code>/reboot</code>.</div>
+        <h2 id="cmds-mon">Monitoring (KV-dependent)</h2>
+        <p>Reads telemetry from <code>MONITORING_KV</code> at <code>metrics:&lt;alias&gt;</code>. Requires agent on each server.</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>/report</code></td><td>Full metrics (CPU, RAM, Disk, Uptime, Docker)</td></tr>
+              <tr><td><code>/bandwidth</code></td><td>Monthly bandwidth (rx/tx, progress bar)</td></tr>
+              <tr><td><code>/docker</code></td><td>Container status (running/total/unhealthy)</td></tr>
+              <tr><td><code>/uptime</code></td><td>Uptime per VPS (&gt;15 min = stale)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section" id="config">
+        <div class="section-label">server configuration</div>
+        <p><code>SERVERS_CONFIG</code> is a flat JSON object keyed by alias.</p>
+        <h3 id="config-aws">AWS EC2</h3>
+        <pre><code>{
+  "ai-gateway-prod": {
+    "provider": "aws",
+    "region": "ap-south-1",
+    "instanceId": "i-0123456789abcdef0"
+  }
+}</code></pre>
+        <h3 id="config-do">DigitalOcean</h3>
+        <pre><code>{
+  "docs-server": {
+    "provider": "digitalocean",
+    "dropletId": "123456789"
+  }
+}</code></pre>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Field</th><th>Req</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>provider</code></td><td><span class="tag tag-req">req</span></td><td><code>aws</code>, <code>digitalocean</code>, <code>do</code></td></tr>
+              <tr><td><code>instanceId</code></td><td><span class="tag tag-req">req</span></td><td>AWS EC2 instance ID</td></tr>
+              <tr><td><code>region</code></td><td><span class="tag tag-opt">opt</span></td><td>Defaults to <code>AWS_REGION</code></td></tr>
+              <tr><td><code>dropletId</code></td><td><span class="tag tag-req">req</span></td><td>DO droplet ID (string/number)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section" id="env">
+        <div class="section-label">environment variables</div>
+        <p>Set as Cloudflare Secrets via dashboard or <code>npx wrangler secret put</code>.</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Variable</th><th>Req</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>TELEGRAM_BOT_TOKEN</code></td><td><span class="tag tag-req">req</span></td><td>From BotFather</td></tr>
+              <tr><td><code>AUTHORIZED_USER_IDS</code></td><td><span class="tag tag-req">req</span></td><td>Comma-separated Telegram user IDs</td></tr>
+              <tr><td><code>SERVERS_CONFIG</code></td><td><span class="tag tag-req">req</span></td><td>Server registry JSON</td></tr>
+              <tr><td><code>MONITORING_SECRET</code></td><td><span class="tag tag-req">req</span></td><td>HMAC-SHA256 secret for telemetry</td></tr>
+              <tr><td><code>AWS_ACCESS_KEY_ID</code></td><td><span class="tag tag-opt">opt</span></td><td>AWS IAM access key</td></tr>
+              <tr><td><code>AWS_SECRET_ACCESS_KEY</code></td><td><span class="tag tag-opt">opt</span></td><td>AWS IAM secret key</td></tr>
+              <tr><td><code>AWS_REGION</code></td><td><span class="tag tag-opt">opt</span></td><td>Default: <code>us-east-1</code></td></tr>
+              <tr><td><code>DIGITALOCEAN_TOKEN</code></td><td><span class="tag tag-opt">opt</span></td><td>DO personal access token</td></tr>
+              <tr><td><code>TELEGRAM_WEBHOOK_SECRET</code></td><td><span class="tag tag-rec">rec</span></td><td>Webhook header validation</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 id="env-kv">KV Bindings</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Binding</th><th>Req</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>MONITORING_KV</code></td><td><span class="tag tag-req">req</span></td><td>Telemetry storage &amp; alert dedup</td></tr>
+              <tr><td><code>RATE_LIMIT_KV</code></td><td><span class="tag tag-opt">opt</span></td><td>Distributed rate limiting</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section" id="providers">
+        <div class="section-label">providers</div>
+        <h3 id="providers-aws">AWS EC2</h3>
+        <p>Uses <code>@aws-sdk/client-ec2</code>. IAM least-privilege policy:</p>
+        <pre><code>{
+  "Effect": "Allow",
+  "Action": ["ec2:StartInstances","ec2:StopInstances","ec2:RebootInstances"],
+  "Resource": ["arn:aws:ec2:...:instance/i-*"]
+}</code></pre>
+        <p>Status: <code>pending</code>→starting, <code>running</code>→running, <code>stopping</code>→stopping, <code>stopped</code>→stopped, <code>shutting-down/terminated</code>→terminated.</p>
+
+        <h3 id="providers-do">DigitalOcean</h3>
+        <p>REST at <code>https://api.digitalocean.com/v2</code>, <code>Authorization: Bearer &lt;token&gt;</code>.</p>
+        <ol>
+          <li>API → Tokens/Keys → Generate New Token (Read &amp; Write)</li>
+          <li>Set as <code>DIGITALOCEAN_TOKEN</code> secret</li>
+        </ol>
+        <p>Actions: <code>power_on</code>, <code>power_off</code>, <code>power_cycle</code>. Status: <code>new</code>→starting, <code>active</code>→running, <code>off</code>→stopped.</p>
+      </div>
+
+      <div class="section" id="security">
+        <div class="section-label">authentication &amp; security</div>
+        <h3 id="sec-webhook">Webhook Source Validation</h3>
+        <p><code>TELEGRAM_WEBHOOK_SECRET</code> matched against <code>X-Telegram-Bot-Api-Secret-Token</code> header. Mismatch returns <code>403</code>.</p>
+        <h3 id="sec-whitelist">Whitelisted Access</h3>
+        <p>Only <code>AUTHORIZED_USER_IDS</code> can execute commands. Unauthorized messages are silently dropped (<code>200 OK</code>, no reply) to prevent reconnaissance.</p>
+        <h3 id="sec-hmac">HMAC-Signed Telemetry</h3>
+        <p><code>X-Signature</code> (HMAC-SHA256) + <code>X-Server-Alias</code> headers. Replay protection rejects payloads with clock drift &gt;300s.</p>
+      </div>
+
+      <div class="section" id="webhook">
+        <div class="section-label">webhook setup</div>
+        <pre><code>curl -F "url=https://&lt;worker&gt;.workers.dev/webhook" \\
+     -F "secret_token=&lt;TOKEN&gt;" \\
+     https://api.telegram.org/bot&lt;TOKEN&gt;/setWebhook</code></pre>
+        <p>Verify: <code>curl .../getWebhookInfo</code>. Clear pending: <code>curl .../deleteWebhook?drop_pending_updates=true</code>.</p>
+      </div>
+
+      <div class="section" id="rate-limit">
+        <div class="section-label">rate limiting</div>
+        <p><strong>10 commands / 60s</strong> per user. Uses <code>RATE_LIMIT_KV</code>; falls back to in-memory. Exceeded users receive a warning and are blocked for the window. Key: <code>rl:&lt;userId&gt;</code>, 60s TTL.</p>
+      </div>
+
+      <div class="section" id="monitoring">
+        <div class="section-label">monitoring &amp; telemetry</div>
+        <h3 id="mon-arch">Architecture</h3>
+        <p>Push-based. Every 5 minutes, <code>agent.sh</code> collects metrics and posts to <code>POST /monitoring/report</code> with HMAC signing. Stored in <code>MONITORING_KV</code> under <code>metrics:&lt;alias&gt;</code>.</p>
+
+        <h3 id="mon-agent">Agent Setup</h3>
+        <p>Copy <code>monitoring/agent.sh</code> → <code>/usr/local/bin/infra-agent.sh</code>, <code>chmod +x</code>. Create <code>/etc/infra-agent.conf</code>:</p>
+        <pre><code>SERVER_ALIAS="ai-gateway-prod"
+MONITORING_SECRET="your_hmac_secret"
+CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
+        <p>Cron (every 5 min): <code>*/5 * * * * . /etc/infra-agent.conf; export ...; /usr/local/bin/infra-agent.sh &gt;/dev/null 2&gt;&amp;1</code></p>
+        <p>Requires: <code>bash</code>, <code>curl</code>, <code>openssl</code>, <code>vnstat</code>, <code>docker</code> (optional).</p>
+
+        <h3 id="mon-alerts">Bandwidth Alerts</h3>
+        <p>Thresholds: <strong>50 GB</strong>, <strong>80 GB</strong>, <strong>95 GB</strong>. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
+
+        <h3 id="mon-cron">Cron Report</h3>
+        <p>Daily at <strong>08:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>
+
+        <h3 id="mon-recovery">Recovery</h3>
+        <p>Stale server? SSH in, check <code>grep CRON /var/log/syslog</code>, run agent manually. Clock drift? <code>sudo systemctl restart systemd-timesyncd</code>. Rotate secret: <code>openssl rand -hex 24</code>, <code>wr secret put</code>, update agent configs.</p>
+      </div>
+
+      <div class="section" id="deployment">
+        <div class="section-label">deployment</div>
+        <h3 id="deploy-dash">Cloudflare Dashboard</h3>
+        <ol>
+          <li>Fork repo, connect Workers &amp; Pages → Create → Connect to Git</li>
+          <li>Create KV namespace, bind as <code>MONITORING_KV</code></li>
+          <li>Set variables, encrypt sensitive ones, Save &amp; Deploy</li>
+        </ol>
+        <h3 id="deploy-cli">Wrangler CLI</h3>
+        <pre><code>npx wrangler login
+npx wrangler kv namespace create MONITORING_KV
+npx wrangler secret put TELEGRAM_BOT_TOKEN
+npx wrangler secret put AUTHORIZED_USER_IDS
+npx wrangler secret put MONITORING_SECRET
+npx wrangler secret put SERVERS_CONFIG
+npm run deploy</code></pre>
+        <h3 id="deploy-verify">Verify</h3>
+        <ul>
+          <li><code>GET /health</code> → <code>{"status":"ok"}</code></li>
+          <li><code>GET /</code> → dashboard with nodes</li>
+          <li>Send <code>/status</code> in Telegram</li>
+        </ul>
+        <h3 id="deploy-rollback">Rollback</h3>
+        <p>Dashboard → Deployments → Rollback. CLI: <code>npx wrangler rollback &lt;ID&gt;</code>.</p>
+      </div>
+
+      <div class="section" id="recovery">
+        <div class="section-label">disaster recovery</div>
+        <h3 id="dr-credentials">Credential Rotation</h3>
+        <ul>
+          <li><strong>Telegram:</strong> <code>/revoke</code> with BotFather, update secret, re-register webhook</li>
+          <li><strong>AWS:</strong> Delete compromised key in IAM, generate new, update secrets</li>
+          <li><strong>DO:</strong> Revoke token in API settings, generate new, update secret</li>
+        </ul>
+        <h3 id="dr-webhook">Webhook Troubleshooting</h3>
+        <ol>
+          <li>Check <code>getWebhookInfo</code> — verify URL, <code>last_error_message</code></li>
+          <li><code>npx wrangler tail</code> — look for 403, rejected requests, missing secrets</li>
+          <li>SSL: Cloudflare SSL/TLS → Full (Strict)</li>
+          <li>Clear queue: <code>deleteWebhook?drop_pending_updates=true</code>, re-register</li>
+        </ol>
+      </div>
+
+      <footer class="foot">
+        <span class="foot-copy">&copy; ${year} <a href="https://github.com/mosabbir-maruf/" target="_blank" rel="noopener">Mosabbir Maruf</a> · <a href="https://github.com/mosabbir-maruf/Infra-Bot" target="_blank" rel="noopener">Infra-Bot</a></span>
+      </footer>
+    </main>
+
+    <aside class="doc-toc">
+      <div class="doc-toc-label">On this page</div>
+      <nav id="toc"></nav>
+    </aside>
+  </div>
+  <script>
+    (()=>{
+      const toc=document.getElementById('toc');
+      const headings=document.querySelectorAll('.section h2, .section h3');
+      if(!toc||!headings.length)return;
+      headings.forEach(h=>{
+        const a=document.createElement('a');
+        a.href='#'+h.id;
+        a.textContent=h.textContent.trim();
+        if(h.tagName==='H3')a.style.paddingLeft='0.85rem';
+        toc.appendChild(a);
+      });
+
+      const tocLinks=document.querySelectorAll('.doc-toc a');
+      const sections=document.querySelectorAll('.section h2, .section h3');
+      if(!tocLinks.length||!sections.length)return;
+      const observer=new IntersectionObserver(entries=>{
+        let visible='';
+        for(const e of entries){
+          if(e.isIntersecting)visible=e.target.id;
+        }
+        if(!visible){
+          for(const e of entries){
+            if(e.boundingClientRect.top<200)visible=e.target.id;
+          }
+        }
+        tocLinks.forEach(a=>{
+          a.classList.toggle('active',a.getAttribute('href').slice(1)===visible);
+        });
+      },{rootMargin:'-80px 0px -60% 0px'});
+      sections.forEach(s=>observer.observe(s));
+
+      const btn=document.getElementById('theme-btn');
+      if(btn){
+        const key='infra-bot-theme';
+        const setTheme=l=>{
+          document.documentElement.classList.toggle('light',l);
+          const sun=btn.querySelector('.theme-sun');
+          const moon=btn.querySelector('.theme-moon');
+          if(sun)sun.style.display=l?'':'none';
+          if(moon)moon.style.display=l?'none':'';
+          try{localStorage.setItem(key,l?'light':'dark')}catch(e){}
+        };
+        try{const s=localStorage.getItem(key);if(s==='light')setTheme(true)}catch(e){}
+        btn.addEventListener('click',()=>setTheme(!document.documentElement.classList.contains('light')));
+      }
+    })();
+  </script>
+</body>
+</html>`;
+  return c.html(html, 200);
+});
+
 // Favicon endpoints
 const favicons: Record<string, { data: string; mime: string }> = {
   '/favicon.ico':       { data: faviconBase64,   mime: 'image/x-icon' },
@@ -1024,7 +1599,7 @@ app.post('/webhook', async (c) => {
       const client = new TelegramClient(env.TELEGRAM_BOT_TOKEN);
       await client.sendMessage(
         message.chat.id,
-        '⚠️ <b>Rate Limit Exceeded</b>\nLimit is 10 commands per minute. Please cool down.',
+        MessageRenderer.rateLimit(),
         'HTML',
       );
     } catch (err) {
@@ -1145,7 +1720,14 @@ app.post('/monitoring/report', async (c) => {
 
         // Dispatch alert messages to operators
         const client = new TelegramClient(env.TELEGRAM_BOT_TOKEN);
-        const warningMessage = `⚠️ <b>Bandwidth Threshold Warning: ${alias.toUpperCase()}</b>\nMonthly bandwidth usage has reached <b>${totalGB.toFixed(2)} GB</b>, crossing the <b>${threshold} GB</b> alert limit.`;
+        const warningMessage = MessageRenderer.warning(
+          alias.toUpperCase(),
+          `Bandwidth usage has exceeded ${threshold} GB.`,
+          {
+            'Current Usage': `${totalGB.toFixed(2)} GB`,
+            'Threshold': `${threshold} GB`,
+          },
+        );
 
         for (const userId of env.AUTHORIZED_USER_IDS) {
           const alertPromise = client.sendMessage(userId, warningMessage, 'HTML').catch((err) => {
@@ -1182,13 +1764,17 @@ async function handleDailyReport(env: unknown): Promise<void> {
     return;
   }
 
-  let report = '📊 <b>Daily Infrastructure Health Summary</b>\n\n';
+  let report = MessageRenderer.header('Daily Infrastructure Report');
+  report += `\n${MessageRenderer.line('Date', new Date().toISOString().split('T')[0])}\n`;
   let activeCount = 0;
 
   for (const server of servers) {
     const data = await kv.get(`metrics:${server.alias.toLowerCase()}`);
     if (!data) {
-      report += `⚪ <b>${server.alias}</b>: No telemetry received.\n\n`;
+      report += MessageRenderer.serverMetrics(server.alias, {
+        'Status': 'No telemetry data',
+      });
+      report += '\n';
       continue;
     }
 
@@ -1207,9 +1793,9 @@ async function handleDailyReport(env: unknown): Promise<void> {
       const lastSeen = new Date(metrics.timestamp * 1000);
       const ageMinutes = (Date.now() - lastSeen.getTime()) / (1000 * 60);
 
-      let statusEmoji = '🟢';
+      let status = 'Active';
       if (ageMinutes > 15) {
-        statusEmoji = '🔴 (Stale telemetry)';
+        status = 'Stale';
       } else {
         activeCount++;
       }
@@ -1226,18 +1812,26 @@ async function handleDailyReport(env: unknown): Promise<void> {
       const hours = Math.floor((metrics.uptime % (24 * 3600)) / 3600);
       const uptimeStr = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
 
-      report += `${statusEmoji} <b>${server.alias}</b>
-• <b>CPU:</b> <code>${metrics.cpu}%</code> | <b>Uptime:</b> <code>${uptimeStr}</code>
-• <b>RAM:</b> <code>${ramUsedGB} GB / ${ramTotalGB} GB</code>
-• <b>Disk:</b> <code>${diskUsedGB} GB / ${diskTotalGB} GB</code>
-• <b>Docker:</b> <code>${metrics.docker.running}/${metrics.docker.total} running</code>
-• <b>Monthly BW:</b> <code>${totalBandwidthGB} GB</code>\n\n`;
+      report += MessageRenderer.serverMetrics(server.alias, {
+        'Status': status,
+        'CPU': `${metrics.cpu}%`,
+        'Uptime': uptimeStr,
+        'RAM': `${ramUsedGB} GB / ${ramTotalGB} GB`,
+        'Disk': `${diskUsedGB} GB / ${diskTotalGB} GB`,
+        'Containers': `${metrics.docker.running}/${metrics.docker.total}`,
+        'Bandwidth': `${totalBandwidthGB} GB`,
+      });
+      report += '\n';
     } catch {
-      report += `⚠️ <b>${server.alias}</b>: Corrupted telemetry data.\n\n`;
+      report += MessageRenderer.serverMetrics(server.alias, {
+        'Status': 'Corrupted telemetry data',
+      });
+      report += '\n';
     }
   }
 
-  report += `Summary: ${activeCount} / ${servers.length} servers active.`;
+  report += MessageRenderer.header('Summary');
+  report += `\n${activeCount} / ${servers.length} servers active.\n`;
 
   const client = new TelegramClient(validatedEnv.TELEGRAM_BOT_TOKEN);
   for (const userId of validatedEnv.AUTHORIZED_USER_IDS) {

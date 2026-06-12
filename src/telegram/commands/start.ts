@@ -1,5 +1,6 @@
 import { TelegramContext } from '../../types';
 import { CommandHandler } from './CommandHandler';
+import { MessageRenderer } from '../MessageRenderer';
 
 export class StartHandler implements CommandHandler {
   public readonly name = 'start';
@@ -7,14 +8,8 @@ export class StartHandler implements CommandHandler {
 
   public async execute(ctx: TelegramContext): Promise<void> {
     if (ctx.args.length === 0) {
-      const welcomeMessage = `👋 **Welcome to the Mosabbir Infrastructure Bot!**
-
-You are authenticated with the Infrastructure Control Plane.
-
-Core Operations:
-• Run /status to check status of all instances
-• Run /help to view the full command menu`;
-      await ctx.reply(welcomeMessage, 'Markdown');
+      const welcome = MessageRenderer.header('Infrastructure Bot');
+      await ctx.reply(welcome, 'HTML');
       return;
     }
 
@@ -22,17 +17,15 @@ Core Operations:
     const server = ctx.serverRegistry.getServer(alias);
 
     if (!server) {
-      await ctx.reply(`⚠️ <b>Error:</b> Server alias <code>${alias}</code> not found in the registry.`, 'HTML');
+      await ctx.reply(MessageRenderer.notFound(alias), 'HTML');
       return;
     }
-
-    await ctx.reply(`⏳ <b>Starting server</b> <code>${alias}</code> (${server.provider.toUpperCase()})...`, 'HTML');
 
     const provider = ctx.providerRegistry.getProvider(server.provider);
     await provider.startServer(server.id, server.region);
 
     await ctx.reply(
-      `✅ <b>Start command issued successfully</b>\nServer <code>${alias}</code> is starting. Run /status to verify state changes.`,
+      MessageRenderer.operationStatus('Start', alias, provider.name, 'Accepted'),
       'HTML',
     );
   }

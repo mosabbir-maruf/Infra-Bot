@@ -52,8 +52,8 @@ describe('CommandRouter', () => {
     expect(mockSendMessage).toHaveBeenCalled();
     const [chatId, text, parseMode] = mockSendMessage.mock.calls[0];
     expect(chatId).toBe(999);
-    expect(text).toContain('Mosabbir Infrastructure Bot - Help Menu');
-    expect(parseMode).toBe('MarkdownV2');
+    expect(text).toContain('Infrastructure Bot');
+    expect(parseMode).toBe('HTML');
   });
 
   it('should extract command parameters and run start welcome when no arguments are provided', async () => {
@@ -72,8 +72,8 @@ describe('CommandRouter', () => {
 
     expect(mockSendMessage).toHaveBeenCalled();
     const [_, text, parseMode] = mockSendMessage.mock.calls[0];
-    expect(text).toContain('Welcome to the Mosabbir Infrastructure Bot!');
-    expect(parseMode).toBe('Markdown');
+    expect(text).toContain('Infrastructure Bot');
+    expect(parseMode).toBe('HTML');
   });
 
   it('should print unknown command warning for unknown commands', async () => {
@@ -92,7 +92,7 @@ describe('CommandRouter', () => {
 
     expect(mockSendMessage).toHaveBeenCalled();
     const [_, text, parseMode] = mockSendMessage.mock.calls[0];
-    expect(text).toContain('Unknown command: <b>/unsupportedcmd</b>');
+    expect(text).toContain('Unknown Command');
     expect(parseMode).toBe('HTML');
   });
 
