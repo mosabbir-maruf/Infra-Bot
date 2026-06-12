@@ -13,22 +13,23 @@ export class BandwidthHandler implements CommandHandler {
     const aliases = ctx.serverRegistry.getAliases();
     if (aliases.length === 0) { await ctx.reply(MessageRenderer.noServers(), 'HTML'); return; }
 
-    let report = '';
+    const cards: string[] = [];
     for (const alias of aliases) {
+      const serverConfig = ctx.serverRegistry.getServer(alias);
       const raw = await kv.get(`metrics:${alias.toLowerCase()}`);
-      if (!raw) { report += MessageRenderer.emptyCard(alias); continue; }
+      if (!raw) { cards.push(MessageRenderer.emptyCard(alias)); continue; }
 
       try {
         interface M { timestamp: number; bandwidth?: { rx: number; tx: number }; }
         const m = JSON.parse(raw) as M;
-        report += MessageRenderer.bandwidthCard(
-          alias, m.timestamp, m.bandwidth?.rx || 0, m.bandwidth?.tx || 0,
-        );
+        cards.push(MessageRenderer.bandwidthCard(
+          alias, m.timestamp, m.bandwidth?.rx || 0, m.bandwidth?.tx || 0, serverConfig?.bandwidthLimitGB,
+        ));
       } catch {
-        report += MessageRenderer.emptyCard(alias);
+        cards.push(MessageRenderer.emptyCard(alias));
       }
     }
 
-    await ctx.reply(report, 'HTML');
+    await ctx.reply(cards.join('\n\n───\n\n'), 'HTML');
   }
 }

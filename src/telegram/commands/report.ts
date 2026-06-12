@@ -13,12 +13,11 @@ export class ReportHandler implements CommandHandler {
     const aliases = ctx.serverRegistry.getAliases();
     if (aliases.length === 0) { await ctx.reply(MessageRenderer.noServers(), 'HTML'); return; }
 
-    let report = '';
-    let active = 0;
+    const cards: string[] = [];
 
     for (const alias of aliases) {
       const raw = await kv.get(`metrics:${alias.toLowerCase()}`);
-      if (!raw) { report += MessageRenderer.emptyCard(alias); continue; }
+      if (!raw) { cards.push(MessageRenderer.emptyCard(alias)); continue; }
 
       try {
         interface M { timestamp: number; cpu: string;
@@ -30,17 +29,16 @@ export class ReportHandler implements CommandHandler {
         const ageMin = (Date.now() - m.timestamp * 1000) / 60000;
         if (ageMin <= 15) active++;
 
-        report += MessageRenderer.reportCard(
+        cards.push(MessageRenderer.reportCard(
           alias, m.timestamp, m.cpu, cpuPct,
           m.ram.used, m.ram.total, m.disk.used, m.disk.total,
           m.uptime, m.docker?.running, m.docker?.total, m.docker?.unhealthy,
-        );
+        ));
       } catch {
-        report += MessageRenderer.emptyCard(alias);
+        cards.push(MessageRenderer.emptyCard(alias));
       }
     }
 
-    report += `\n${active}/${aliases.length} active`;
-    await ctx.reply(report, 'HTML');
+    await ctx.reply(cards.join('\n\n───\n\n'), 'HTML');
   }
 }

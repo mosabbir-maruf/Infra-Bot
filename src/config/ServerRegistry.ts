@@ -4,6 +4,7 @@ export interface RegistryServer {
   instanceId?: string; // Explicit identifier for AWS
   dropletId?: string; // Explicit identifier for DigitalOcean
   region?: string;
+  bandwidthLimitGB?: number;
 }
 
 export class ServerRegistry {
@@ -24,6 +25,7 @@ export class ServerRegistry {
         const serverObj = data as Record<string, unknown>;
         const provider = serverObj.provider;
         const region = serverObj.region;
+        const bandwidthLimitGB = serverObj.bandwidthLimitGB;
 
         if (
           typeof provider !== 'string' ||
@@ -68,12 +70,17 @@ export class ServerRegistry {
           throw new Error(`Invalid region type for server "${alias}"`);
         }
 
+        if (bandwidthLimitGB !== undefined && typeof bandwidthLimitGB !== 'number') {
+          throw new Error(`Invalid bandwidthLimitGB type for server "${alias}"`);
+        }
+
         this.servers.set(alias.toLowerCase(), {
           provider: normProvider as RegistryServer['provider'],
           id,
           instanceId,
           dropletId,
           region: region || undefined,
+          bandwidthLimitGB: bandwidthLimitGB || undefined,
         });
       }
     } catch (err) {

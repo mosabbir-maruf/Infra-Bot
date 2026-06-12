@@ -151,13 +151,16 @@ export class AWSProvider implements CloudProvider {
     else if (stateName === 'stopped') status = 'stopped';
     else if (stateName === 'shutting-down' || stateName === 'terminated') status = 'terminated';
 
+    const az = instance.Placement?.AvailabilityZone;
+    const resolvedRegion = az ? az.slice(0, -1) : region;
+
     return {
       id: instance.InstanceId || '',
       name,
       status,
       ipAddress: instance.PublicIpAddress || instance.PrivateIpAddress,
       provider: this.name,
-      region,
+      region: resolvedRegion,
       rawDetails: JSON.stringify({
         InstanceType: instance.InstanceType,
         LaunchTime: instance.LaunchTime,

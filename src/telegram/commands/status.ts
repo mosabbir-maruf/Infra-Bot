@@ -25,6 +25,7 @@ export class StatusHandler implements CommandHandler {
         MessageRenderer.serverDetails(alias, provider.name, {
           'Instance ID': meta.instanceId,
           'Instance Type': meta.instanceType,
+          'Region': meta.availabilityZone ? meta.availabilityZone.slice(0, -1) : (server.region || 'N/A'),
           'Availability Zone': meta.availabilityZone || 'N/A',
           'Status': status.status,
           'State': meta.state,

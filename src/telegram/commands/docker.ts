@@ -11,27 +11,27 @@ export class DockerHandler implements CommandHandler {
     if (!kv) { await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML'); return; }
 
     const aliases = ctx.serverRegistry.getAliases();
-    let report = '';
+    const cards: string[] = [];
 
     for (const alias of aliases) {
       const raw = await kv.get(`metrics:${alias.toLowerCase()}`);
-      if (!raw) { report += MessageRenderer.emptyCard(alias); continue; }
+      if (!raw) { cards.push(MessageRenderer.emptyCard(alias)); continue; }
 
       try {
-        interface M { docker?: { running: number; total: number; unhealthy: number;
+        interface M { timestamp: number; docker?: { running: number; total: number; unhealthy: number;
           containers?: Array<{ name: string; status: string; state: string }>; }; }
         const m = JSON.parse(raw) as M;
         const d = m.docker;
-        if (!d) { report += MessageRenderer.emptyCard(alias); continue; }
+        if (!d) { cards.push(MessageRenderer.emptyCard(alias)); continue; }
 
-        report += MessageRenderer.dockerCard(
-          alias, d.running, d.total, d.unhealthy, d.containers || [],
-        );
+        cards.push(MessageRenderer.dockerCard(
+          alias, d.running, d.total, d.unhealthy, d.containers || [], m.timestamp,
+        ));
       } catch {
-        report += MessageRenderer.emptyCard(alias);
+        cards.push(MessageRenderer.emptyCard(alias));
       }
     }
 
-    await ctx.reply(report, 'HTML');
+    await ctx.reply(cards.join('\n\n───\n\n'), 'HTML');
   }
 }

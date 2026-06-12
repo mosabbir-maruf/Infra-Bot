@@ -56,96 +56,183 @@ export class MessageRenderer {
   ): string {
     const ramPct = (ramUsed / ramTotal) * 100;
     const diskPct = (diskUsed / diskTotal) * 100;
-    const usedG = (v: number) => (v / 1024).toFixed(1);
+    const ageMin = Math.max(0, (Date.now() - ts * 1000) / 60000);
 
-    const mainHealth = this.healthIcon(Math.max(cpuPct, ramPct, diskPct));
-    let msg = `🖥️ <b>${escapeHtml(alias)}</b>  ${mainHealth}  <i>(${this.ago(ts)})</i>\n`;
-    msg += `• <b>CPU:</b> <code>${cpu}%</code>\n`;
-    msg += `• <b>Memory:</b> <code>${usedG(ramUsed)}/${usedG(ramTotal)} GB (${ramPct.toFixed(1)}%)</code>\n`;
-    msg += `• <b>Disk:</b> <code>${usedG(diskUsed)}/${usedG(diskTotal)} GB (${diskPct.toFixed(1)}%)</code>\n`;
-    msg += `• <b>Uptime:</b> <code>${this.duration(uptime)}</code>\n`;
+    const getHealthState = (val: number, thresholds: { warn: number; crit: number }) => {
+      if (val >= thresholds.crit) return 'Critical';
+      if (val >= thresholds.warn) return 'Warning';
+      return 'Healthy';
+    };
+
+    const cpuHealth = getHealthState(cpuPct, { warn: 70, crit: 90 });
+    const ramHealth = getHealthState(ramPct, { warn: 75, crit: 90 });
+    const diskHealth = getHealthState(diskPct, { warn: 80, crit: 95 });
+
+    let freshnessHealth: 'Healthy' | 'Warning' | 'Critical' = 'Healthy';
+    if (ageMin > 15) freshnessHealth = 'Critical';
+    else if (ageMin > 5) freshnessHealth = 'Warning';
+
+    let dockerHealth: 'Healthy' | 'Warning' | 'Critical' = 'Healthy';
+    if (dockerTotal !== undefined && dockerTotal > 0) {
+      if (dockerUnhealthy && dockerUnhealthy > 0) dockerHealth = 'Warning';
+      if (dockerRunning !== undefined && dockerRunning < dockerTotal) dockerHealth = 'Critical';
+    }
+
+    const healthList = [cpuHealth, ramHealth, diskHealth, freshnessHealth];
+    if (dockerTotal !== undefined && dockerTotal > 0) healthList.push(dockerHealth);
+
+    let overallHealth = 'Healthy';
+    let healthEmoji = '';
+    if (healthList.includes('Critical')) {
+      overallHealth = 'Critical';
+      healthEmoji = ' 🚨';
+    } else if (healthList.includes('Warning')) {
+      overallHealth = 'Warning';
+      healthEmoji = ' ⚠️';
+    }
+
+    let msg = `<b>Infrastructure Report</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Status</b>\n${ageMin <= 15 ? 'Running' : 'Offline'}\n\n`;
+    msg += `<b>Health</b>\n${overallHealth}${healthEmoji}\n\n`;
+    msg += `<b>Resources</b>\n`;
+    msg += `CPU: ${cpuPct.toFixed(0)}%\n`;
+    msg += `Memory: ${ramPct.toFixed(0)}%\n`;
+    msg += `Disk: ${diskPct.toFixed(0)}%\n\n`;
 
     if (dockerTotal !== undefined) {
-      const unhealthyPart = dockerUnhealthy && dockerUnhealthy > 0 ? ` (${dockerUnhealthy} unhealthy)` : '';
-      msg += `• <b>Docker:</b> <code>${dockerRunning ?? 0}/${dockerTotal} running${unhealthyPart}</code>\n`;
+      const healthyCount = (dockerRunning ?? 0) - (dockerUnhealthy ?? 0);
+      const issuesCount = (dockerTotal - (dockerRunning ?? 0)) + (dockerUnhealthy ?? 0);
+      msg += `<b>Containers</b>\n`;
+      msg += `Running: ${dockerRunning ?? 0}/${dockerTotal}\n`;
+      msg += `Healthy: ${healthyCount >= 0 ? healthyCount : 0}\n`;
+      msg += `Issues: ${issuesCount}\n\n`;
     }
+
+    msg += `<b>Uptime</b>\n${this.duration(uptime)}\n\n`;
+    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
     return msg;
   }
 
   /** Compact uptime card */
   static uptimeCard(alias: string, ts: number, uptime: number, cpu: string): string {
     const ageMin = Math.floor((Date.now() - ts * 1000) / 60000);
-    let statusIcon = '🟢';
-    if (ageMin > 60) statusIcon = '🔴';
-    else if (ageMin > 15) statusIcon = '🟡';
+    const statusText = ageMin <= 15 ? 'Running' : 'Offline';
 
-    let msg = `${statusIcon} <b>${escapeHtml(alias)}</b>  <i>(${this.ago(ts)})</i>\n`;
-    msg += `• <b>Uptime:</b> <code>${this.duration(uptime)}</code>\n`;
-    msg += `• <b>CPU:</b> <code>${cpu}%</code>\n`;
+    let msg = `<b>System Uptime</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Current Uptime</b>\n${this.duration(uptime)}\n\n`;
+    msg += `<b>Status</b>\n${statusText}\n\n`;
+    msg += `<b>Last Monitoring Report</b>\n${this.ago(ts)}`;
     return msg;
   }
 
   /** Bandwidth card */
-  static bandwidthCard(alias: string, ts: number, rx: number, tx: number): string {
+  static bandwidthCard(alias: string, ts: number, rx: number, tx: number, limitGB?: number): string {
     const totalGB = (rx + tx) / (1024 ** 3);
-    const rxGB = (rx / (1024 ** 3)).toFixed(2);
-    const txGB = (tx / (1024 ** 3)).toFixed(2);
+    const rxGB = (rx / (1024 ** 3)).toFixed(1);
+    const txGB = (tx / (1024 ** 3)).toFixed(1);
 
-    let msg = `📊 <b>${escapeHtml(alias)}</b>  <i>(${this.ago(ts)})</i>\n`;
-    msg += `• <b>Total:</b> <code>${totalGB.toFixed(2)} GB</code>\n`;
-    msg += `• <b>Download (RX):</b> <code>${rxGB} GB</code>\n`;
-    msg += `• <b>Upload (TX):</b> <code>${txGB} GB</code>\n`;
+    let msg = `<b>Bandwidth Usage</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Download</b>\n${rxGB} GB\n\n`;
+    msg += `<b>Upload</b>\n${txGB} GB\n\n`;
+    msg += `<b>Total</b>\n${totalGB.toFixed(1)} GB\n\n`;
+
+    if (limitGB && limitGB > 0) {
+      const usagePct = Math.round((totalGB / limitGB) * 100);
+      msg += `<b>Usage</b>\n${usagePct}%\n\n`;
+    }
+
+    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
     return msg;
   }
 
   /** Docker containers card */
   static dockerCard(alias: string, running: number, total: number, unhealthy: number,
-    containers: Array<{ name: string; status: string; state: string }>,
+    containers: Array<{ name: string; status: string; state: string }>, ts: number
   ): string {
-    const icon = unhealthy > 0 ? '🟡' : '🟢';
-    const unhealthyPart = unhealthy > 0 ? ` (${unhealthy} unhealthy)` : '';
+    const healthyCount = running - unhealthy;
+    const issuesCount = (total - running) + unhealthy;
 
-    let msg = `🐳 <b>${escapeHtml(alias)}</b>  ${icon}  <code>${running}/${total} running${unhealthyPart}</code>\n`;
+    let msg = `<b>Container Status</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Summary</b>\n`;
+    msg += `Running: ${running}\n`;
+    msg += `Healthy: ${healthyCount >= 0 ? healthyCount : 0}\n`;
+    msg += `Issues: ${issuesCount}\n\n`;
 
     if (containers.length > 0) {
+      msg += `<b>Services</b>\n\n`;
       for (const c of containers) {
-        const stateIcon = c.state === 'running' ? '🟢' : c.state === 'exited' ? '🔴' : '🟡';
-        msg += `• ${stateIcon} <code>${escapeHtml(c.name)}</code> (${escapeHtml(c.state)} - ${escapeHtml(c.status)})\n`;
+        const isRunning = c.state.toLowerCase() === 'running';
+        const isUnhealthy = c.status.toLowerCase().includes('unhealthy');
+
+        let stateText = isRunning ? 'Running' : 'Stopped';
+        let healthText = 'Healthy';
+        let healthEmoji = '';
+
+        if (!isRunning) {
+          healthText = 'Critical';
+          healthEmoji = ' 🚨';
+        } else if (isUnhealthy) {
+          healthText = 'Warning';
+          healthEmoji = ' ⚠️';
+        }
+
+        msg += `<b>${escapeHtml(c.name)}</b>\n`;
+        msg += `${stateText}\n`;
+        msg += `Health: ${healthText}${healthEmoji}\n\n`;
       }
     }
+
+    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
     return msg;
   }
 
   /** Container detail row for docker output */
   static containerRow(name: string, state: string, status: string): string {
-    const icon = state === 'running' ? '🟢' : state === 'exited' ? '🔴' : '🟡';
-    return `${icon} <code>${escapeHtml(name)}</code> (${escapeHtml(state)} - ${escapeHtml(status)})`;
+    const isRunning = state.toLowerCase() === 'running';
+    const isUnhealthy = status.toLowerCase().includes('unhealthy');
+    let healthText = 'Healthy';
+    if (!isRunning) healthText = 'Critical 🚨';
+    else if (isUnhealthy) healthText = 'Warning ⚠️';
+    return `<b>${escapeHtml(name)}</b>\n${isRunning ? 'Running' : 'Stopped'}\nHealth: ${healthText}`;
   }
 
   /** Compact empty/no-data placeholder */
   static emptyCard(alias: string): string {
-    let msg = `⚠️ <b>${escapeHtml(alias)}</b>\n`;
-    msg += `• <b>Status:</b> No data available\n`;
+    let msg = `<b>Infrastructure Report</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Status</b>\nOffline\n\n`;
+    msg += `<b>Health</b>\nCritical 🚨\n\n`;
+    msg += `<b>Last Report</b>\nNever`;
     return msg;
   }
 
   /** No data summary card */
   static noDataCard(alias: string): string {
-    return `⚠️ <b>${escapeHtml(alias)}</b>  <i>(No data)</i>\n`;
+    let msg = `<b>Infrastructure Report</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Status</b>\nOffline\n\n`;
+    msg += `<b>Health</b>\nCritical 🚨\n\n`;
+    msg += `<b>Last Report</b>\nNever`;
+    return msg;
   }
 
   /** /health dashboard */
   static healthDashboard(kvStatus: string, providers: string, region: string,
-    env: string, users: number,
+    env: string, users: number, lastReportText: string
   ): string {
-    const icon = kvStatus === 'Bound' ? '🟢' : '🟡';
-    let msg = `⚙️ <b>Control Plane</b>\n`;
-    msg += `• <b>Status:</b> <code>${kvStatus}</code> ${icon}\n`;
-    msg += `• <b>Providers:</b> <code>${providers || 'None'}</code>\n`;
-    msg += `• <b>Region:</b> <code>${region}</code>\n`;
-    msg += `• <b>Environment:</b> <code>${env}</code>\n`;
-    msg += `• <b>Users:</b> <code>${users} authorized</code>\n`;
-    msg += `• <b>Runtime:</b> <code>Cloudflare Workers</code>\n`;
+    const isOperational = kvStatus === 'Bound';
+    const statusText = isOperational ? 'Operational' : 'Degraded ⚠️';
+    let msg = `<b>Control Plane</b>\n\n`;
+    msg += `<b>Status</b>\n${statusText}\n\n`;
+    msg += `<b>Cloud Providers</b>\n${escapeHtml(providers)}\n\n`;
+    msg += `<b>Monitoring</b>\n${isOperational ? 'Connected' : 'Disconnected ⚠️'}\n\n`;
+    msg += `<b>Runtime</b>\nCloudflare Workers\n\n`;
+    msg += `<b>Authorized Operators</b>\n${users}\n\n`;
+    msg += `<b>Last Monitoring Report</b>\n${escapeHtml(lastReportText)}`;
     return msg;
   }
 
@@ -183,20 +270,28 @@ export class MessageRenderer {
   }
 
   static error(action: string, target: string, reason: string, reference?: string): string {
-    let msg = this.header('❌ Operation Failed');
-    msg += `\n${this.line('Action', action)}`;
-    msg += this.line('Target', target);
-    msg += `\n<b>Reason:</b>\n<code>${escapeHtml(reason)}</code>\n`;
+    let cleanReason = reason;
+    if (reason.toLowerCase().includes('error:') || reason.toLowerCase().includes('exception:') || reason.includes('at ')) {
+      cleanReason = 'An internal system error occurred.';
+    }
+
+    let msg = `<b>Operation Failed</b>\n\n`;
+    msg += `<b>Action</b>\n${escapeHtml(action)}\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(target)}\n\n`;
+    msg += `<b>Reason</b>\n${escapeHtml(cleanReason)}`;
+
     if (reference) {
-      msg += this.line('Reference', reference);
+      msg += `\n\n<b>Usage</b>\n<code>${escapeHtml(reference)}</code>`;
     }
     return msg;
   }
 
   static generalError(reason: string): string {
-    let msg = this.header('❌ Error');
-    msg += `\n<code>${escapeHtml(reason)}</code>`;
-    return msg;
+    let cleanReason = reason;
+    if (reason.toLowerCase().includes('error:') || reason.toLowerCase().includes('exception:') || reason.includes('at ')) {
+      cleanReason = 'An internal system error occurred.';
+    }
+    return `<b>Operation Failed</b>\n\n<b>Reason</b>\n${escapeHtml(cleanReason)}`;
   }
 
   static commandOutput(lines: string[]): string {

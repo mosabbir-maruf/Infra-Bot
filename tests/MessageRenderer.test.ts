@@ -46,29 +46,36 @@ describe('MessageRenderer', () => {
       const r = MessageRenderer.reportCard(
         'server-01', Date.now() / 1000, '12.5', 12.5, 4096, 8192, 20480, 51200, 360000, 3, 5, 0,
       );
-      expect(r).toContain('<b>server-01</b>');
-      expect(r).toContain('CPU:');
-      expect(r).toContain('Memory:');
-      expect(r).toContain('Disk:');
-      expect(r).toContain('Docker:');
+      expect(r).toContain('Infrastructure Report');
+      expect(r).toContain('server-01');
+      expect(r).toContain('\n');
+      expect(r).toContain('CPU: 13%');
+      expect(r).toContain('Memory: 50%');
+      expect(r).toContain('Disk: 40%');
+      expect(r).toContain('Running: 3/5');
+      expect(r).toContain('Healthy: 3');
+      expect(r).toContain('Issues: 2');
     });
   });
 
   describe('uptimeCard', () => {
     it('renders uptime card', () => {
       const r = MessageRenderer.uptimeCard('node', Date.now() / 1000, 86400, '5.2');
+      expect(r).toContain('System Uptime');
       expect(r).toContain('node');
-      expect(r).toContain('CPU:');
+      expect(r).toContain('Current Uptime');
     });
   });
 
   describe('bandwidthCard', () => {
     it('renders bandwidth card', () => {
-      const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 10737418240, 5368709120);
-      expect(r).toContain('<b>gw</b>');
-      expect(r).toContain('Total:');
+      const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 10737418240, 5368709120, 100);
+      expect(r).toContain('Bandwidth Usage');
+      expect(r).toContain('gw');
       expect(r).toContain('Download');
       expect(r).toContain('Upload');
+      expect(r).toContain('Total');
+      expect(r).toContain('Usage');
     });
   });
 
@@ -76,31 +83,37 @@ describe('MessageRenderer', () => {
     it('renders docker card with container list', () => {
       const r = MessageRenderer.dockerCard('node', 3, 5, 0, [
         { name: 'nginx', status: 'Up 2 days', state: 'running' },
-      ]);
-      expect(r).toContain('3/5 running');
-      expect(r).toContain('🟢');
+      ], Date.now() / 1000);
+      expect(r).toContain('Container Status');
+      expect(r).toContain('Running: 3');
+      // Healthy: 3 - 0 = 3
+      expect(r).toContain('Healthy: 3');
+      // Issues: (5 - 3) + 0 = 2
+      expect(r).toContain('Issues: 2');
+      expect(r).toContain('nginx');
     });
     it('shows warning when unhealthy containers', () => {
-      const r = MessageRenderer.dockerCard('node', 3, 5, 2, []);
-      expect(r).toContain('🟡');
-      expect(r).toContain('unhealthy');
+      const r = MessageRenderer.dockerCard('node', 3, 5, 2, [], Date.now() / 1000);
+      // Healthy: 3 - 2 = 1, Issues: (5 - 3) + 2 = 4
+      expect(r).toContain('Issues: 4');
     });
   });
 
   describe('emptyCard', () => {
     it('renders empty placeholder', () => {
       expect(MessageRenderer.emptyCard('missing')).toContain('missing');
-      expect(MessageRenderer.emptyCard('missing')).toContain('No data available');
+      expect(MessageRenderer.emptyCard('missing')).toContain('Critical 🚨');
     });
   });
 
   describe('healthDashboard', () => {
     it('renders control plane dashboard', () => {
-      const r = MessageRenderer.healthDashboard('Bound', 'AWS', 'us-east-1', 'production', 2);
+      const r = MessageRenderer.healthDashboard('Bound', 'AWS', 'us-east-1', 'production', 2, '2m ago');
       expect(r).toContain('Control Plane');
-      expect(r).toContain('Bound');
+      expect(r).toContain('Operational');
       expect(r).toContain('AWS');
       expect(r).toContain('Cloudflare Workers');
+      expect(r).toContain('Last Monitoring Report');
     });
   });
 
@@ -118,7 +131,7 @@ describe('MessageRenderer', () => {
       expect(MessageRenderer.help([{ command: '/help', description: 'Help' }])).toContain('Infra-Bot');
     });
     it('notFound returns general error', () => {
-      expect(MessageRenderer.notFound('x')).toContain('Error');
+      expect(MessageRenderer.notFound('x')).toContain('Operation Failed');
     });
     it('rateLimit renders compact', () => {
       expect(MessageRenderer.rateLimit()).toContain('Rate Limit');
@@ -160,7 +173,7 @@ describe('MessageRenderer', () => {
       expect(r).toContain('Operation Completed');
     });
     it('generalError renders compact', () => {
-      expect(MessageRenderer.generalError('fail').replace(/^\uFEFF/, '')).toContain('Error');
+      expect(MessageRenderer.generalError('fail').replace(/^\uFEFF/, '')).toContain('Operation Failed');
       expect(MessageRenderer.generalError('fail')).toContain('fail');
     });
   });
