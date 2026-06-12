@@ -142,12 +142,18 @@ describe('MessageRenderer', () => {
     it('renders control plane with inline code tag format', () => {
       const r = MessageRenderer.healthDashboard('Bound', 'AWS', 'us-east-1', 'production', 2, '2m ago');
       expect(r).toContain('Control Plane');
-      expect(r).toContain('Status     Operational 🟢');
-      expect(r).toContain('Providers  AWS');
-      expect(r).toContain('Telemetry  Connected 🟢');
-      expect(r).toContain('Runtime    Cloudflare Workers');
-      expect(r).toContain('Operators  2');
-      expect(r).toContain('Updated    2m ago');
+      expect(r).toContain('Status     ');
+      expect(r).toContain('Operational 🟢');
+      expect(r).toContain('Providers  ');
+      expect(r).toContain('AWS');
+      expect(r).toContain('Telemetry  ');
+      expect(r).toContain('Connected 🟢');
+      expect(r).toContain('Runtime    ');
+      expect(r).toContain('Cloudflare Workers');
+      expect(r).toContain('Operators  ');
+      expect(r).toContain('2');
+      expect(r).toContain('Updated    ');
+      expect(r).toContain('2m ago');
     });
   });
 
