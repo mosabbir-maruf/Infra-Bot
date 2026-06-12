@@ -41,10 +41,10 @@ sudo systemctl enable --now vnstat
    sudo nano /etc/infra-agent.conf
    ```
    Paste the following (replace with your values):
-   ```
-SERVER_ALIAS="ai-gateway-prod"
-MONITORING_SECRET="your_shared_hmac_secret"
-CONTROL_PLANE_URL="https://your-worker.workers.dev"
+   ```bash
+   SERVER_ALIAS="ai-gateway-prod"
+   MONITORING_SECRET="your_shared_hmac_secret"
+   CONTROL_PLANE_URL="https://your-worker.workers.dev"
    ```
 3. Make the script executable:
    ```bash
