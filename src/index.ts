@@ -735,22 +735,39 @@ app.get('/', (c) => {
       .main   { padding: 2rem 1rem 4rem; }
       .page-hdr { flex-direction: column; align-items: flex-start; }
       .page-title { font-size: 1.2rem; }
-      .page-meta { text-align: left; }
-      .page-meta .meta-line:first-child b { display: block; }
+      .page-meta {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-top: 1rem;
+      }
+      .page-meta .meta-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
       .topbar-right { gap: 0.75rem; }
-      .topbar-status { display: none; }
       .summary { flex-direction: column; }
       .summary-item { border-right: none; border-bottom: 1px solid var(--border); }
       .s-val { font-size: 1.1rem; }
       .sys-grid { grid-template-columns: repeat(2, 1fr); }
       .sys-item:nth-child(2) { border-right: none; }
       .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      .td-region { display: none; }
+      table th:nth-child(4), table td:nth-child(4) { display: none; }
+      table th, table td { padding: 0.5rem 0.6rem; font-size: 0.76rem; }
+      .id-wrap { font-size: 0.72rem; }
       .cmd-table th:first-child,
       .cmd-table .cmd-cat { display: none; }
       .cmd-name { width: auto; min-width: 9rem; }
       .cmd-desc { min-width: 8rem; }
       .foot-links { gap: 0.75rem; }
+      .hide-mobile { display: none; }
     }
     @media (max-width: 480px) {
       .topbar-right .clock { display: none; }
@@ -777,8 +794,8 @@ app.get('/', (c) => {
     </div>
     <div class="topbar-right">
       <span class="clock" id="clock">--:--:-- UTC</span>
-      <a href="/health" class="nav-link" target="_blank" rel="noopener">health ↗</a>
-      <a href="https://workers.cloudflare.com" target="_blank" rel="noopener" class="nav-link">cf workers ↗</a>
+      <a href="/health" class="nav-link hide-mobile" target="_blank" rel="noopener">health ↗</a>
+      <a href="https://workers.cloudflare.com" target="_blank" rel="noopener" class="nav-link hide-mobile">cf workers ↗</a>
       <a href="/docs" class="nav-link">docs</a>
       <button id="theme-btn" class="nav-link" style="background:none;border:none;cursor:pointer;padding:0;display:inline-flex;align-items:center" aria-label="Toggle theme">
         <svg class="theme-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -1104,6 +1121,7 @@ app.get('/docs', (c) => {
       font-family:var(--mono);
     }
     .doc-sidebar a:hover { color:var(--amber); background:var(--amber-d); }
+    .doc-sidebar a.active { color:var(--amber); background:var(--amber-d); font-weight:500; }
 
     /* Main content */
     .doc-content {
@@ -1172,7 +1190,8 @@ app.get('/docs', (c) => {
       flex-shrink:0;
       position:sticky;
       top:48px;
-      height:calc(100vh - 48px);
+      height:fit-content;
+      max-height:calc(100vh - 80px);
       overflow-y:auto;
       padding:2rem 1.25rem 2rem 1rem;
       border-left:1px solid var(--border);
@@ -1213,6 +1232,7 @@ app.get('/docs', (c) => {
       padding-left:1.1rem;
     }
     .doc-toc a:hover { color:var(--amber); opacity:1; }
+    .doc-toc a.active { color:var(--amber); font-weight:500; opacity:1; }
     /* copy button */
     .copy-btn {
       background: none;
@@ -1258,6 +1278,11 @@ app.get('/docs', (c) => {
       font-size:0.6rem; text-transform:uppercase; letter-spacing:0.1em;
       color:var(--fg3); font-weight:500; margin-bottom:0.5rem; margin-top:0.5rem;
     }
+    .mobile-nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.25rem 0.5rem 0.75rem;
+    }
     .mobile-nav a {
       font-size:0.78rem; color:var(--fg2); text-decoration:none;
       padding:0.4rem 0.5rem; border-radius:3px; font-family:var(--mono);
@@ -1280,9 +1305,8 @@ app.get('/docs', (c) => {
       .doc-content { padding:1.5rem 1rem 4rem; gap:2rem; }
     }
     @media (max-width:640px) {
-      .topbar-status { display:none; }
       .clock { display:none; }
-      .topbar-right .nav-link:not(:last-child) { display:none; }
+      .hide-mobile { display:none; }
       .page-title { font-size:1.2rem; }
       .section pre { padding:0.75rem 1rem; font-size:0.74rem; }
       .section h2 { font-size:1rem; }
@@ -1316,8 +1340,8 @@ app.get('/docs', (c) => {
     <div class="topbar-right">
       <span class="clock" id="clock-docs">--:--:-- UTC</span>
       <a href="/" class="nav-link">dashboard</a>
-      <a href="/health" class="nav-link" target="_blank" rel="noopener">health ↗</a>
-      <a href="https://workers.cloudflare.com" target="_blank" rel="noopener" class="nav-link">cf workers ↗</a>
+      <a href="/health" class="nav-link hide-mobile" target="_blank" rel="noopener">health ↗</a>
+      <a href="https://workers.cloudflare.com" target="_blank" rel="noopener" class="nav-link hide-mobile">cf workers ↗</a>
       <button id="theme-btn" class="nav-link" style="background:none;border:none;cursor:pointer;padding:0;display:inline-flex;align-items:center" aria-label="Toggle theme">
         <svg class="theme-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg class="theme-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -1343,6 +1367,12 @@ app.get('/docs', (c) => {
     <a href="#monitoring">monitoring</a>
     <a href="#deployment">deployment</a>
     <a href="#recovery">recovery</a>
+    <div class="mobile-nav-divider"></div>
+    <div class="mobile-nav-label">Navigation</div>
+    <a href="/">dashboard</a>
+    <a href="/health" target="_blank" rel="noopener">health ↗</a>
+    <a href="https://workers.cloudflare.com" target="_blank" rel="noopener">cf workers ↗</a>
+    <a href="https://github.com/mosabbir-maruf/Infra-Bot" target="_blank" rel="noopener">github repo ↗</a>
   </div>
   <div class="doc-layout">
     <aside class="doc-sidebar">
@@ -1371,7 +1401,7 @@ app.get('/docs', (c) => {
       <div class="section" id="architecture">
         <div class="section-label">architecture</div>
         <p>The Control Plane is a <strong>production-grade, vendor-independent edge service</strong> on Cloudflare Workers managing VPS infrastructure across <strong>AWS EC2</strong> and <strong>DigitalOcean</strong> via Telegram.</p>
-        <h3 id="arch-design">Key Design Decisions</h3>
+        <h2 id="arch-design">Key Design Decisions</h2>
         <ul>
           <li><strong>Edge serverless</strong> — No VMs to maintain. Immune to datacenter outages. Cost efficient with high free-tier.</li>
           <li><strong>Complete decoupling</strong> — Queries VM state directly from provider APIs. Can boot/reboot even a fully powered-down VPS.</li>
@@ -1424,7 +1454,7 @@ app.get('/docs', (c) => {
       <div class="section" id="config">
         <div class="section-label">server configuration</div>
         <p><code>SERVERS_CONFIG</code> is a flat JSON object keyed by alias.</p>
-        <h3 id="config-aws">AWS EC2</h3>
+        <h2 id="config-aws">AWS EC2</h2>
         <pre><code>{
   "ai-gateway-prod": {
     "provider": "aws",
@@ -1432,7 +1462,7 @@ app.get('/docs', (c) => {
     "instanceId": "i-0123456789abcdef0"
   }
 }</code></pre>
-        <h3 id="config-do">DigitalOcean</h3>
+        <h2 id="config-do">DigitalOcean</h2>
         <pre><code>{
   "docs-server": {
     "provider": "digitalocean",
@@ -1471,7 +1501,7 @@ app.get('/docs', (c) => {
             </tbody>
           </table>
         </div>
-        <h3 id="env-kv">KV Bindings</h3>
+        <h2 id="env-kv">KV Bindings</h2>
         <div class="tbl-wrap">
           <table>
             <thead><tr><th>Binding</th><th>Req</th><th>Purpose</th></tr></thead>
@@ -1485,7 +1515,7 @@ app.get('/docs', (c) => {
 
       <div class="section" id="providers">
         <div class="section-label">providers</div>
-        <h3 id="providers-aws">AWS EC2</h3>
+        <h2 id="providers-aws">AWS EC2</h2>
         <p>Uses <code>@aws-sdk/client-ec2</code>. Restricted IAM user policy:</p>
         <pre><code>{
   "Version": "2012-10-17",
@@ -1514,7 +1544,7 @@ app.get('/docs', (c) => {
 }</code></pre>
         <p>Status mapping: <code>pending</code>➔starting, <code>running</code>➔running, <code>stopping</code>➔stopping, <code>stopped</code>➔stopped, <code>shutting-down/terminated</code>➔terminated.</p>
 
-        <h3 id="providers-do">DigitalOcean</h3>
+        <h2 id="providers-do">DigitalOcean</h2>
         <p>REST at <code>https://api.digitalocean.com/v2</code>, <code>Authorization: Bearer &lt;token&gt;</code>.</p>
         <ol>
           <li>API → Tokens/Keys → Generate New Token (Read &amp; Write)</li>
@@ -1525,11 +1555,11 @@ app.get('/docs', (c) => {
 
       <div class="section" id="security">
         <div class="section-label">authentication &amp; security</div>
-        <h3 id="sec-webhook">Webhook Source Validation</h3>
+        <h2 id="sec-webhook">Webhook Source Validation</h2>
         <p><code>TELEGRAM_WEBHOOK_SECRET</code> matched against <code>X-Telegram-Bot-Api-Secret-Token</code> header. Mismatch returns <code>403</code>.</p>
-        <h3 id="sec-whitelist">Whitelisted Access</h3>
+        <h2 id="sec-whitelist">Whitelisted Access</h2>
         <p>Only <code>AUTHORIZED_USER_IDS</code> can execute commands. Unauthorized messages are silently dropped (<code>200 OK</code>, no reply) to prevent reconnaissance.</p>
-        <h3 id="sec-hmac">HMAC-Signed Telemetry</h3>
+        <h2 id="sec-hmac">HMAC-Signed Telemetry</h2>
         <p><code>X-Signature</code> (HMAC-SHA256) + <code>X-Server-Alias</code> headers. Replay protection rejects payloads with clock drift &gt;300s.</p>
       </div>
 
@@ -1548,10 +1578,10 @@ app.get('/docs', (c) => {
 
       <div class="section" id="monitoring">
         <div class="section-label">monitoring &amp; telemetry</div>
-        <h3 id="mon-arch">Architecture</h3>
+        <h2 id="mon-arch">Architecture</h2>
         <p>Push-based. Every 5 minutes, <code>agent.sh</code> collects metrics and posts to <code>POST /monitoring/report</code> with HMAC signing. Stored in <code>MONITORING_KV</code> under <code>metrics:&lt;alias&gt;</code>.</p>
 
-        <h3 id="mon-agent">Agent Setup</h3>
+        <h2 id="mon-agent">Agent Setup</h2>
         <p>Create the agent script and configuration file:</p>
         <pre><code>sudo nano /usr/local/bin/infra-agent.sh</code></pre>
         <p>Copy the contents of <a href="https://github.com/mosabbir-maruf/Infra-Bot/blob/main/monitoring/agent.sh" target="_blank" rel="noopener"><code>monitoring/agent.sh</code></a> from the repo, paste, and save. Then create the config:</p>
@@ -1566,25 +1596,25 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
         <pre><code>*/5 * * * * . /etc/infra-agent.conf; export SERVER_ALIAS MONITORING_SECRET CONTROL_PLANE_URL; /usr/local/bin/infra-agent.sh &gt;/dev/null 2&gt;&amp;1</code></pre>
         <p>Requires: <code>bash</code>, <code>curl</code>, <code>openssl</code>, <code>vnstat</code>, <code>docker</code> (optional).</p>
 
-        <h3 id="mon-alerts">Bandwidth Alerts</h3>
+        <h2 id="mon-alerts">Bandwidth Alerts</h2>
         <p>Thresholds: <strong>50 GB</strong>, <strong>80 GB</strong>, <strong>95 GB</strong>. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
 
-        <h3 id="mon-cron">Cron Report</h3>
+        <h2 id="mon-cron">Cron Report</h2>
         <p>Daily at <strong>08:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>
 
-        <h3 id="mon-recovery">Recovery</h3>
+        <h2 id="mon-recovery">Recovery</h2>
         <p>Stale server? SSH in, check <code>grep CRON /var/log/syslog</code>, run agent manually. Clock drift? <code>sudo systemctl restart systemd-timesyncd</code>. Rotate secret: <code>openssl rand -hex 24</code>, <code>wr secret put</code>, update agent configs.</p>
       </div>
 
       <div class="section" id="deployment">
         <div class="section-label">deployment</div>
-        <h3 id="deploy-dash">Cloudflare Dashboard</h3>
+        <h2 id="deploy-dash">Cloudflare Dashboard</h2>
         <ol>
           <li>Fork repo, connect Workers &amp; Pages → Create → Connect to Git</li>
           <li>Create KV namespace, bind as <code>MONITORING_KV</code></li>
           <li>Set variables, encrypt sensitive ones, Save &amp; Deploy</li>
         </ol>
-        <h3 id="deploy-cli">Wrangler CLI</h3>
+        <h2 id="deploy-cli">Wrangler CLI</h2>
         <pre><code>npx wrangler login
 npx wrangler kv namespace create MONITORING_KV
 npx wrangler secret put TELEGRAM_BOT_TOKEN
@@ -1593,25 +1623,25 @@ npx wrangler secret put MONITORING_SECRET
 npx wrangler secret put SERVERS_CONFIG
 npm run deploy</code></pre>
         <p>After creating the KV namespace, bind it in the Dashboard (<strong>Workers → your worker → Settings → Variables → KV Namespace Bindings</strong>). Do <strong>not</strong> add the namespace ID to <code>wrangler.toml</code> — it is account-specific and breaks portability.</p>
-        <h3 id="deploy-verify">Verify</h3>
+        <h2 id="deploy-verify">Verify</h2>
         <ul>
           <li><code>GET /health</code> → <code>{"status":"ok"}</code></li>
           <li><code>GET /</code> → dashboard with nodes</li>
           <li>Send <code>/status</code> in Telegram</li>
         </ul>
-        <h3 id="deploy-rollback">Rollback</h3>
+        <h2 id="deploy-rollback">Rollback</h2>
         <p>Dashboard → Deployments → Rollback. CLI: <code>npx wrangler rollback &lt;ID&gt;</code>.</p>
       </div>
 
       <div class="section" id="recovery">
         <div class="section-label">disaster recovery</div>
-        <h3 id="dr-credentials">Credential Rotation</h3>
+        <h2 id="dr-credentials">Credential Rotation</h2>
         <ul>
           <li><strong>Telegram:</strong> <code>/revoke</code> with BotFather, update secret, re-register webhook</li>
           <li><strong>AWS:</strong> Delete compromised key in IAM, generate new, update secrets</li>
           <li><strong>DO:</strong> Revoke token in API settings, generate new, update secret</li>
         </ul>
-        <h3 id="dr-webhook">Webhook Troubleshooting</h3>
+        <h2 id="dr-webhook">Webhook Troubleshooting</h2>
         <ol>
           <li>Check <code>getWebhookInfo</code> — verify URL, <code>last_error_message</code></li>
           <li><code>npx wrangler tail</code> — look for 403, rejected requests, missing secrets</li>
@@ -1636,48 +1666,99 @@ npm run deploy</code></pre>
       const sections=document.querySelectorAll('.section');
       if(!toc||!sections.length)return;
 
-      const spyElements = [];
-      sections.forEach(sec=>{
-        const labelEl = sec.querySelector('.section-label');
-        if (!labelEl) return;
-
-        // Add section link
-        const secLink = document.createElement('a');
-        secLink.href = '#' + sec.id;
-        const labelText = labelEl.textContent.trim().replace(/\b\w/g, c => c.toUpperCase());
-        secLink.textContent = labelText;
-        secLink.className = 'toc-sec';
-        toc.appendChild(secLink);
-        spyElements.push(sec);
-
-        // Add sub-headings
-        const headings = sec.querySelectorAll('h2, h3');
-        headings.forEach(h=>{
-          if (!h.id) return;
-          const subLink = document.createElement('a');
-          subLink.href = '#' + h.id;
-          subLink.textContent = h.textContent.trim();
-          subLink.className = h.tagName.toLowerCase() === 'h2' ? 'toc-sub toc-h2' : 'toc-sub toc-h3';
-          toc.appendChild(subLink);
-          spyElements.push(h);
-        });
-      });
+      let currentActiveSectionId = '';
 
       const handleScroll = () => {
         let activeEl = null;
-        for (const el of spyElements) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= 120) {
-            activeEl = el;
+        let minDistance = Infinity;
+        const threshold = 120; // Active scanning line in pixels from viewport top
+        
+        // Check sections first
+        sections.forEach(sec => {
+          const rect = sec.getBoundingClientRect();
+          const dist = Math.abs(rect.top - threshold);
+          if (rect.top <= threshold + 50 && rect.bottom >= threshold) {
+            if (dist < minDistance) {
+              minDistance = dist;
+              activeEl = sec;
+            }
+          }
+        });
+        
+        // Also check all subheadings inside sections for finer precision
+        const allHeadings = document.querySelectorAll('.section h2, .section h3');
+        allHeadings.forEach(h => {
+          if (!h.id) return;
+          const rect = h.getBoundingClientRect();
+          const dist = Math.abs(rect.top - threshold);
+          if (rect.top <= threshold + 50 && rect.bottom >= 0) {
+            if (dist < minDistance) {
+              minDistance = dist;
+              activeEl = h;
+            }
+          }
+        });
+        
+        // Fallback for page boundaries: if we are at the very bottom, activate the absolute last item
+        const isAtBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 30);
+        if (isAtBottom) {
+          const allSpyable = [];
+          sections.forEach(sec => {
+            allSpyable.push(sec);
+            sec.querySelectorAll('h2, h3').forEach(h => {
+              if (h.id) allSpyable.push(h);
+            });
+          });
+          if (allSpyable.length > 0) {
+            activeEl = allSpyable[allSpyable.length - 1];
           }
         }
         
-        const tocLinks = document.querySelectorAll('.doc-toc a');
-        tocLinks.forEach(a => {
-          const href = a.getAttribute('href');
-          const isActive = activeEl && href === '#' + activeEl.id;
-          a.classList.toggle('active', isActive);
-        });
+        if (activeEl) {
+          let activeSection = null;
+          let activeHeading = null;
+          
+          if (activeEl.classList.contains('section')) {
+            activeSection = activeEl;
+          } else {
+            activeHeading = activeEl;
+            activeSection = activeEl.closest('.section');
+          }
+          
+          if (activeSection) {
+            const activeSectionId = activeSection.id;
+            
+            // Rebuild TOC if the section changes
+            if (activeSectionId !== currentActiveSectionId) {
+              currentActiveSectionId = activeSectionId;
+              toc.innerHTML = '';
+              const headings = activeSection.querySelectorAll('h2, h3');
+              headings.forEach(h => {
+                if (!h.id) return;
+                const subLink = document.createElement('a');
+                subLink.href = '#' + h.id;
+                subLink.textContent = h.textContent.trim();
+                subLink.className = h.tagName.toLowerCase() === 'h2' ? 'toc-sub toc-h2' : 'toc-sub toc-h3';
+                toc.appendChild(subLink);
+              });
+            }
+            
+            // Highlight current heading in TOC
+            const activeHeadingId = activeHeading ? activeHeading.id : '';
+            const tocLinks = toc.querySelectorAll('a');
+            tocLinks.forEach(a => {
+              const href = a.getAttribute('href') || '';
+              a.classList.toggle('active', !!(activeHeadingId && href.endsWith('#' + activeHeadingId)));
+            });
+            
+            // Highlight active section in left sidebar & mobile nav
+            const sidebarLinks = document.querySelectorAll('.doc-sidebar a, .mobile-nav a');
+            sidebarLinks.forEach(a => {
+              const href = a.getAttribute('href') || '';
+              a.classList.toggle('active', href.endsWith('#' + activeSectionId));
+            });
+          }
+        }
       };
 
       window.addEventListener('scroll', handleScroll, { passive: true });
