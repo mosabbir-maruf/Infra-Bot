@@ -4,17 +4,36 @@ compatibility_date = "2024-05-29"
 workers_dev = true
 preview_urls = true
 
+# ------------------------------------------------------------
+# [vars] — Plain-text, NON-SENSITIVE defaults only.
+# These values are pushed to Cloudflare on every deployment
+# and will OVERWRITE anything you set in the Dashboard for
+# these keys. Do NOT put secrets here.
+# ------------------------------------------------------------
 [vars]
-NODE_ENV = "production"
-TELEGRAM_BOT_TOKEN = "your_bot_token_here"
-AUTHORIZED_USER_IDS = "12345678"
-MONITORING_SECRET = "your_monitoring_secret_here"
-SERVERS_CONFIG = '{"change-me": {"provider": "aws", "instanceId": "i-xxxxxx"}}'
-TELEGRAM_WEBHOOK_SECRET = ""
-AWS_ACCESS_KEY_ID = ""
-AWS_SECRET_ACCESS_KEY = ""
-AWS_REGION = "us-east-1"
-DIGITALOCEAN_TOKEN = ""
+NODE_ENV    = "production"
+AWS_REGION  = "ap-south-1"
+
+# ------------------------------------------------------------
+# SECRETS — Set these once in the Cloudflare Dashboard:
+#   Workers → infra-bot → Settings → Variables and Secrets
+#   → Add variable → type the value → click "Encrypt" → Save
+#
+# Secrets are stored encrypted, are NEVER included in
+# wrangler.toml, and survive every new deployment untouched.
+#
+# Required secrets:
+#   TELEGRAM_BOT_TOKEN         – from @BotFather
+#   AUTHORIZED_USER_IDS        – your Telegram chat/user ID(s), comma-separated
+#   MONITORING_SECRET          – any strong random string
+#   SERVERS_CONFIG             – your JSON server registry
+#
+# Optional secrets (only if you use those providers):
+#   AWS_ACCESS_KEY_ID          – IAM user access key
+#   AWS_SECRET_ACCESS_KEY      – IAM user secret key
+#   DIGITALOCEAN_TOKEN         – DO personal access token
+#   TELEGRAM_WEBHOOK_SECRET    – optional extra webhook protection
+# ------------------------------------------------------------
 
 [triggers]
 crons = ["0 8 * * *"]
