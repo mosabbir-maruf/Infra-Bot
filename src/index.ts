@@ -1709,11 +1709,21 @@ app.post('/webhook', async (c) => {
   }
 
   const message = update.message;
-  if (!message || !message.text) {
+  const callbackQuery = update.callback_query;
+
+  if (!message && !callbackQuery) {
     return c.text('Ignored non-text payload', 200);
   }
 
-  const userId = message.from!.id;
+  const userId = message?.from?.id || callbackQuery?.from?.id;
+  if (!userId) {
+    return c.text('Ignored non-text payload', 200);
+  }
+
+  const chatId = message?.chat?.id || callbackQuery?.message?.chat?.id;
+  if (!chatId) {
+    return c.text('Ignored non-text payload', 200);
+  }
 
   // 2. Distributed Rate Limiting (10 requests / 60 seconds)
   const rateLimitKey = `rl:${userId}`;
@@ -1724,7 +1734,7 @@ app.post('/webhook', async (c) => {
     try {
       const client = new TelegramClient(env.TELEGRAM_BOT_TOKEN);
       await client.sendMessage(
-        message.chat.id,
+        chatId,
         MessageRenderer.rateLimit(),
         'HTML',
       );
@@ -1734,13 +1744,35 @@ app.post('/webhook', async (c) => {
     return c.text('Rate Limit Active', 200);
   }
 
-  // 3. Process the command asynchronously
-  const routePromise = router.route(message, env, serverRegistry, providerRegistry, c.env as unknown as Record<string, unknown>).catch((err) => {
-    Logger.error('Background command execution failed', err, {
-      userId,
-      command: message.text,
+  // 3. Process the command/callback asynchronously
+  let routePromise: Promise<void>;
+  if (callbackQuery) {
+    routePromise = router.routeCallbackQuery(
+      callbackQuery,
+      env,
+      serverRegistry,
+      providerRegistry,
+      c.env as unknown as Record<string, unknown>
+    ).catch((err) => {
+      Logger.error('Background callback query execution failed', err, {
+        userId,
+        command: callbackQuery.data,
+      });
     });
-  });
+  } else {
+    routePromise = router.route(
+      message!,
+      env,
+      serverRegistry,
+      providerRegistry,
+      c.env as unknown as Record<string, unknown>
+    ).catch((err) => {
+      Logger.error('Background command execution failed', err, {
+        userId,
+        command: message!.text,
+      });
+    });
+  }
 
   try {
     c.executionCtx.waitUntil(routePromise);

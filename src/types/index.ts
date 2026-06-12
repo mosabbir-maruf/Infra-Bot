@@ -29,9 +29,20 @@ export interface TelegramMessage {
   text?: string;
 }
 
+export interface TelegramCallbackQuery {
+  id: string;
+  from: TelegramUser;
+  message?: TelegramMessage;
+  inline_message_id?: string;
+  chat_instance?: string;
+  data?: string;
+  game_short_name?: string;
+}
+
 export interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
+  callback_query?: TelegramCallbackQuery;
 }
 
 export interface TelegramContext {
@@ -40,9 +51,10 @@ export interface TelegramContext {
   userId: number;
   command: string;
   args: string[];
-  reply(text: string, parseMode?: 'MarkdownV2' | 'HTML' | 'Markdown'): Promise<void>;
+  reply(text: string, parseMode?: 'MarkdownV2' | 'HTML' | 'Markdown', replyMarkup?: any): Promise<void>;
   serverRegistry: ServerRegistry;
   providerRegistry: ProviderRegistry;
   telegramClient: TelegramClient;
   monitoringKv?: { get(key: string): Promise<string | null>; put(key: string, val: string, options?: { expirationTtl?: number }): Promise<void> };
 }
+

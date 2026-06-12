@@ -10,7 +10,16 @@ export class UptimeHandler implements CommandHandler {
     const kv = ctx.monitoringKv;
     if (!kv) { await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML'); return; }
 
-    const aliases = ctx.serverRegistry.getAliases();
+    let aliases = ctx.serverRegistry.getAliases();
+    if (ctx.args.length >= 1) {
+      const alias = ctx.args[0];
+      const server = ctx.serverRegistry.getServer(alias);
+      if (!server) {
+        await ctx.reply(MessageRenderer.notFound(alias), 'HTML');
+        return;
+      }
+      aliases = [alias];
+    }
     const cards: string[] = [];
 
     for (const alias of aliases) {

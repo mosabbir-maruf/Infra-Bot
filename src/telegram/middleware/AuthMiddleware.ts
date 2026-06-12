@@ -7,13 +7,8 @@ import { Logger } from '../../utils/Logger';
  * Returns true if authorized, false otherwise.
  */
 export function isAuthorized(update: TelegramUpdate, env: Env): boolean {
-  const message = update.message;
-  if (!message) {
-    // Drop silently as it contains no actionable command/message payload
-    return false;
-  }
-
-  const sender = message.from;
+  const sender = update.message?.from || update.callback_query?.from;
+  
   if (!sender) {
     Logger.warn('AuthMiddleware: Rejected request. Message payload is missing sender properties.');
     return false;
@@ -25,7 +20,7 @@ export function isAuthorized(update: TelegramUpdate, env: Env): boolean {
   if (!authorized) {
     Logger.warn('AuthMiddleware: Unauthorized access attempt rejected.', {
       userId,
-      command: message.text,
+      command: update.message?.text || update.callback_query?.data,
       result: 'failure',
     });
     return false;
@@ -33,7 +28,7 @@ export function isAuthorized(update: TelegramUpdate, env: Env): boolean {
 
   Logger.info(`AuthMiddleware: Access granted to user ID ${userId}`, {
     userId,
-    command: message.text,
+    command: update.message?.text || update.callback_query?.data,
   });
 
   return true;

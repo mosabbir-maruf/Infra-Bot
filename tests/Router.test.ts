@@ -56,7 +56,7 @@ describe('CommandRouter', () => {
     expect(parseMode).toBe('HTML');
   });
 
-  it('should extract command parameters and run start welcome when no arguments are provided', async () => {
+  it('should render server selection keyboard when /start is run without arguments', async () => {
     const mockSendMessage = vi.fn().mockResolvedValue(undefined);
     vi.spyOn(TelegramClient.prototype, 'sendMessage').mockImplementation(mockSendMessage);
 
@@ -71,9 +71,9 @@ describe('CommandRouter', () => {
     await router.route(message, mockEnv, serverRegistry, providerRegistry);
 
     expect(mockSendMessage).toHaveBeenCalled();
-    const [_, text, parseMode] = mockSendMessage.mock.calls[0];
-    expect(text).toContain('Infra-Bot');
-    expect(parseMode).toBe('HTML');
+    const [_, text, _parseMode, replyMarkup] = mockSendMessage.mock.calls[0];
+    expect(text).toContain('Select a server');
+    expect(replyMarkup).toBeDefined();
   });
 
   it('should print unknown command warning for unknown commands', async () => {
