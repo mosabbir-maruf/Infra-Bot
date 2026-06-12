@@ -171,13 +171,31 @@ app.get('/', (c) => {
   const now = new Date();
   const buildTime = now.toISOString();
   const year = now.getFullYear();
+  const requestUrl = new URL(c.req.url);
+  const siteUrl = requestUrl.origin;
 
   const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Mosabbir Infra Bot — server orchestration and telemetry control plane.">
+  <meta name="description" content="Infra-Bot Control Plane — server orchestration, VM power operations, and real-time telemetry.">
+  <meta name="robots" content="noindex, nofollow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${siteUrl}/">
+  <meta property="og:title" content="Infra-Bot · Control Plane">
+  <meta property="og:description" content="Infra-Bot Control Plane — server orchestration, VM power operations, and real-time telemetry.">
+  <meta property="og:image" content="${siteUrl}/favicon-32x32.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary">
+  <meta property="twitter:url" content="${siteUrl}/">
+  <meta property="twitter:title" content="Infra-Bot · Control Plane">
+  <meta property="twitter:description" content="Infra-Bot Control Plane — server orchestration, VM power operations, and real-time telemetry.">
+  <meta property="twitter:image" content="${siteUrl}/favicon-32x32.png">
+
   <title>Infra-Bot · Control Plane</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -1030,12 +1048,30 @@ app.get('/', (c) => {
 // Documentation page
 app.get('/docs', (c) => {
   const year = new Date().getFullYear();
+  const requestUrl = new URL(c.req.url);
+  const siteUrl = requestUrl.origin;
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Infra-Bot Documentation — server registry configurations, deployment operations, and monitoring integration guides.">
+  <meta name="robots" content="noindex, nofollow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${siteUrl}/docs">
+  <meta property="og:title" content="Infra-Bot · Documentation">
+  <meta property="og:description" content="Infra-Bot Documentation — server registry configurations, deployment operations, and monitoring integration guides.">
+  <meta property="og:image" content="${siteUrl}/favicon-32x32.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary">
+  <meta property="twitter:url" content="${siteUrl}/docs">
+  <meta property="twitter:title" content="Infra-Bot · Documentation">
+  <meta property="twitter:description" content="Infra-Bot Documentation — server registry configurations, deployment operations, and monitoring integration guides.">
+  <meta property="twitter:image" content="${siteUrl}/favicon-32x32.png">
+
   <title>Infra-Bot · Documentation</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -1861,6 +1897,14 @@ for (const [path, { data, mime }] of Object.entries(favicons)) {
     });
   });
 }
+
+// Robots exclusion to prevent crawling in production
+app.get('/robots.txt', (c) => {
+  return c.text('User-agent: *\nDisallow: /', 200, {
+    'Content-Type': 'text/plain',
+    'Cache-Control': 'public, max-age=86400',
+  });
+});
 
 // DevTools silent fallback to prevent local 404 log pollution
 app.get('/.well-known/appspecific/com.chrome.devtools.json', (c) => {

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Mosabbir Infrastructure Bot - VPS Monitoring Agent
+# Infrastructure Bot - VPS Monitoring Agent
 # Collects CPU, RAM, Swap, Disk, Uptime, Docker, and vnStat bandwidth metrics,
 # signs the payload using HMAC-SHA256, and uploads it to the Control Plane.
 

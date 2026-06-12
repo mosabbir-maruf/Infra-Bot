@@ -54,6 +54,15 @@ describe('HTTP Router Endpoints', () => {
     expect(arrayBuffer.byteLength).toBeGreaterThan(0);
   });
 
+  it('should return 200 OK and Disallow all for GET /robots.txt', async () => {
+    const res = await app.request('/robots.txt');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toContain('text/plain');
+    const text = await res.text();
+    expect(text).toContain('User-agent: *');
+    expect(text).toContain('Disallow: /');
+  });
+
   it('should return 404 Not Found for non-existing endpoints', async () => {
     const res = await app.request('/non-existent-endpoint');
     expect(res.status).toBe(404);

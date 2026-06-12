@@ -1,4 +1,4 @@
-# Architecture Overview - Mosabbir Infrastructure Bot
+# Architecture Overview - Infrastructure Bot
 
 This Control Plane is built as a production-grade, highly available, and vendor-independent edge service designed to manage virtual infrastructure securely via Telegram.
 

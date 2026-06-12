@@ -1,6 +1,6 @@
 # Operations and Deployment Guide
 
-This guide details the standard, dashboard-centric workflow for deploying the Mosabbir Infrastructure Bot to Cloudflare using Git integration, followed by local development and manual Wrangler CLI instructions for advanced use cases.
+This guide details the standard, dashboard-centric workflow for deploying the Infrastructure Bot to Cloudflare using Git integration, followed by local development and manual Wrangler CLI instructions for advanced use cases.
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "mosabbir-infra-bot",
   "version": "1.0.0",
-  "description": "Mosabbir Infrastructure Bot - Control Plane",
+  "description": "Infrastructure Bot - Control Plane",
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",

@@ -1,4 +1,4 @@
-# Monitoring Architecture - Mosabbir Infrastructure Bot
+# Monitoring Architecture - Infrastructure Bot
 
 The monitoring layer is designed as a secure, pull/push telemetry framework that monitors infrastructure health without database overhead.
 

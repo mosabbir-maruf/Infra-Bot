@@ -1,4 +1,4 @@
-# Mosabbir Infrastructure Bot
+# Infrastructure Bot
 
 A production-grade, highly available, and secure Infrastructure Control Plane built on Cloudflare Workers, TypeScript, and the Telegram Bot API, combined with a lightweight Linux VPS telemetry monitoring agent.
 
@@ -50,7 +50,7 @@ The system operates serverless at the edge, guaranteeing that the control pathwa
 ## 📂 Project Directory Structure
 
 ```text
-mosabbir-infra-bot/
+infra-bot/
 ├── .eslintrc.json           # Code quality rules
 ├── .prettierrc              # Code formatting rules
 ├── .env.example             # Template for secrets and variables
