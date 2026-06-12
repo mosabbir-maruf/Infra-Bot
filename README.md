@@ -182,5 +182,5 @@ To hook a Linux VPS into the telemetry monitoring pipeline:
 3. Set up a systemd service or a cron job executing the agent periodically:
    ```bash
    # Execute agent every 5 minutes and sign with your HMAC secret
-   */5 * * * * SERVER_ALIAS="ai-gateway-prod" MONITORING_SECRET="your_shared_secret" MONITORING_ENDPOINT="https://your-worker.workers.dev/monitoring/report" /usr/local/bin/agent.sh
+   */5 * * * * SERVER_ALIAS="ai-gateway-prod" MONITORING_SECRET="your_shared_secret" CONTROL_PLANE_URL="https://your-worker.workers.dev" /usr/local/bin/agent.sh
    ```

@@ -1070,13 +1070,12 @@ app.get('/docs', (c) => {
 
     .doc-layout {
       display:flex;
-      max-width:1660px;
-      margin:0 auto;
+      width:100%;
       min-height:calc(100vh - 48px);
     }
     /* Left sidebar */
     .doc-sidebar {
-      width:220px;
+      width:290px;
       flex-shrink:0;
       position:sticky;
       top:48px;
@@ -1109,6 +1108,8 @@ app.get('/docs', (c) => {
     /* Main content */
     .doc-content {
       flex:1;
+      max-width:1150px;
+      margin:0 auto;
       min-width:0;
       padding:2.5rem 2rem 6rem;
       display:flex;
@@ -1167,7 +1168,7 @@ app.get('/docs', (c) => {
 
     /* Right sidebar - On this page */
     .doc-toc {
-      width:200px;
+      width:270px;
       flex-shrink:0;
       position:sticky;
       top:48px;
@@ -1175,6 +1176,10 @@ app.get('/docs', (c) => {
       overflow-y:auto;
       padding:2rem 1.25rem 2rem 1rem;
       border-left:1px solid var(--border);
+      scrollbar-width:none; /* Firefox */
+    }
+    .doc-toc::-webkit-scrollbar {
+      display:none; /* Chrome/Safari/Webkit */
     }
     .doc-toc-label {
       font-size:0.6rem;
@@ -1208,7 +1213,22 @@ app.get('/docs', (c) => {
       padding-left:1.1rem;
     }
     .doc-toc a:hover { color:var(--amber); opacity:1; }
-    .doc-toc a.active { color:var(--amber); font-weight:500; opacity:1; }
+    /* copy button */
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      color: var(--fg3);
+      cursor: pointer;
+      padding: 1px 3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.12s, border-color 0.12s;
+      vertical-align: middle;
+    }
+    .copy-btn:hover { color: var(--fg2); border-color: var(--fg3); }
+    .copy-btn.ok    { color: var(--green); border-color: rgba(61,186,110,0.3); }
 
     .foot { display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; padding-top:1.5rem; border-top:1px solid var(--border); }
     .foot-copy { font-size:0.7rem; color:var(--fg2); font-family:var(--mono); }
@@ -1466,13 +1486,33 @@ app.get('/docs', (c) => {
       <div class="section" id="providers">
         <div class="section-label">providers</div>
         <h3 id="providers-aws">AWS EC2</h3>
-        <p>Uses <code>@aws-sdk/client-ec2</code>. IAM least-privilege policy:</p>
+        <p>Uses <code>@aws-sdk/client-ec2</code>. Restricted IAM user policy:</p>
         <pre><code>{
-  "Effect": "Allow",
-  "Action": ["ec2:StartInstances","ec2:StopInstances","ec2:RebootInstances"],
-  "Resource": ["arn:aws:ec2:...:instance/i-*"]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "InstancePowerOperations",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:StartInstances",
+        "ec2:StopInstances",
+        "ec2:RebootInstances"
+      ],
+      "Resource": [
+        "arn:aws:ec2:us-east-1:123456789012:instance/i-0123456789abcdef0"
+      ]
+    },
+    {
+      "Sid": "InstanceDescribeAndTelemetry",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances"
+      ],
+      "Resource": "*"
+    }
+  ]
 }</code></pre>
-        <p>Status: <code>pending</code>→starting, <code>running</code>→running, <code>stopping</code>→stopping, <code>stopped</code>→stopped, <code>shutting-down/terminated</code>→terminated.</p>
+        <p>Status mapping: <code>pending</code>➔starting, <code>running</code>➔running, <code>stopping</code>➔stopping, <code>stopped</code>➔stopped, <code>shutting-down/terminated</code>➔terminated.</p>
 
         <h3 id="providers-do">DigitalOcean</h3>
         <p>REST at <code>https://api.digitalocean.com/v2</code>, <code>Authorization: Bearer &lt;token&gt;</code>.</p>
@@ -1523,7 +1563,7 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
         <p>Make the script executable:</p>
         <pre><code>sudo chmod +x /usr/local/bin/infra-agent.sh</code></pre>
         <p>Add the cron job (runs every 5 minutes):</p>
-        <pre><code>*/5 * * * * . /etc/infra-agent.conf; /usr/local/bin/infra-agent.sh &gt;/dev/null 2&gt;&amp;1</code></pre>
+        <pre><code>*/5 * * * * . /etc/infra-agent.conf; export SERVER_ALIAS MONITORING_SECRET CONTROL_PLANE_URL; /usr/local/bin/infra-agent.sh &gt;/dev/null 2&gt;&amp;1</code></pre>
         <p>Requires: <code>bash</code>, <code>curl</code>, <code>openssl</code>, <code>vnstat</code>, <code>docker</code> (optional).</p>
 
         <h3 id="mon-alerts">Bandwidth Alerts</h3>
@@ -1642,6 +1682,36 @@ npm run deploy</code></pre>
 
       window.addEventListener('scroll', handleScroll, { passive: true });
       handleScroll();
+
+      // Add copy buttons to all pre elements in documentation
+      document.querySelectorAll('.section pre').forEach(pre => {
+        pre.style.position = 'relative';
+        
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.title = 'Copy code';
+        btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+        btn.style.position = 'absolute';
+        btn.style.top = '8px';
+        btn.style.right = '8px';
+        btn.style.zIndex = '10';
+        
+        btn.addEventListener('click', () => {
+          // Exclude the button text itself if any
+          const codeEl = pre.querySelector('code');
+          const text = (codeEl ? codeEl.innerText : pre.innerText).trim();
+          navigator.clipboard.writeText(text).then(() => {
+            btn.classList.add('ok');
+            btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+            setTimeout(() => {
+              btn.classList.remove('ok');
+              btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+            }, 1600);
+          });
+        });
+        
+        pre.appendChild(btn);
+      });
 
       const btn=document.getElementById('theme-btn');
       if(btn){
