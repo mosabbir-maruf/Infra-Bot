@@ -1498,13 +1498,13 @@ app.get('/docs', (c) => {
 
         <h3 id="mon-agent">Agent Setup</h3>
         <p>Copy the script and create the configuration file:</p>
-        <pre><code>sudo cp monitoring/agent.sh /usr/local/bin/infra-agent.sh
-sudo chmod +x /usr/local/bin/infra-agent.sh
-sudo nano /etc/infra-agent.conf</code></pre>
+        <pre><code>sudo nano /etc/infra-agent.conf</code></pre>
         <p>Paste the following (replace with your values):</p>
         <pre><code>SERVER_ALIAS="ai-gateway-prod"
 MONITORING_SECRET="your_shared_hmac_secret"
 CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
+        <p>Change the permission:</p>
+        <pre><code>sudo chmod +x /usr/local/bin/infra-agent.sh</code></pre>
         <p>Add the cron job (runs every 5 minutes):</p>
         <pre><code>*/5 * * * * . /etc/infra-agent.conf; /usr/local/bin/infra-agent.sh &gt;/dev/null 2&gt;&amp;1</code></pre>
         <p>Requires: <code>bash</code>, <code>curl</code>, <code>openssl</code>, <code>vnstat</code>, <code>docker</code> (optional).</p>
