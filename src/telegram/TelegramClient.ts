@@ -15,7 +15,7 @@ export class TelegramClient {
     chatId: number,
     text: string,
     parseMode?: 'MarkdownV2' | 'HTML' | 'Markdown',
-    replyMarkup?: any,
+    replyMarkup?: Record<string, unknown>,
   ): Promise<void> {
     const url = `${this.baseUrl}/sendMessage`;
     const safeText = parseMode === 'MarkdownV2' ? escapeMarkdownV2(text) : text;
@@ -53,7 +53,7 @@ export class TelegramClient {
     messageId: number,
     text: string,
     parseMode?: 'MarkdownV2' | 'HTML' | 'Markdown',
-    replyMarkup?: any,
+    replyMarkup?: Record<string, unknown>,
   ): Promise<void> {
     const url = `${this.baseUrl}/editMessageText`;
     const safeText = parseMode === 'MarkdownV2' ? escapeMarkdownV2(text) : text;

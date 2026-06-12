@@ -9,7 +9,7 @@ export class StartHandler implements CommandHandler {
   public async execute(ctx: TelegramContext): Promise<void> {
     if (ctx.args.length === 0) {
       let msg = MessageRenderer.header('🚀 Infra-Bot');
-      msg += `\nUse /help to see available commands.`;
+      msg += '\nUse /help to see available commands.';
       await ctx.reply(msg, 'HTML');
       return;
     }

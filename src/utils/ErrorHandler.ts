@@ -56,7 +56,7 @@ function normalizeProviderError(err: unknown): string {
   return 'An unexpected error occurred.';
 }
 
-export function handleError(error: unknown, ctx?: TelegramContext): void {
+export async function handleError(error: unknown, ctx?: TelegramContext): Promise<void> {
   const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
 
   Logger.error(`Error processing Telegram command: ${errorMessage}`, error, {
@@ -85,7 +85,7 @@ export function handleError(error: unknown, ctx?: TelegramContext): void {
         responseText = MessageRenderer.generalError(reason);
       }
 
-      ctx.reply(responseText, 'HTML');
+      await ctx.reply(responseText, 'HTML');
     } catch (replyErr) {
       Logger.error('Failed to dispatch error response to user', replyErr);
     }

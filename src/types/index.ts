@@ -51,7 +51,7 @@ export interface TelegramContext {
   userId: number;
   command: string;
   args: string[];
-  reply(text: string, parseMode?: 'MarkdownV2' | 'HTML' | 'Markdown', replyMarkup?: any): Promise<void>;
+  reply(text: string, parseMode?: 'MarkdownV2' | 'HTML' | 'Markdown', replyMarkup?: Record<string, unknown>): Promise<void>;
   serverRegistry: ServerRegistry;
   providerRegistry: ProviderRegistry;
   telegramClient: TelegramClient;

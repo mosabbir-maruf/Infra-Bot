@@ -64,7 +64,7 @@ export class CommandRouter {
     const reply = async (
       replyText: string,
       parseMode?: 'MarkdownV2' | 'HTML' | 'Markdown',
-      replyMarkup?: any,
+      replyMarkup?: Record<string, unknown>,
     ): Promise<void> => {
       await client.sendMessage(message.chat.id, replyText, parseMode, replyMarkup);
     };
@@ -195,7 +195,7 @@ export class CommandRouter {
     const reply = async (
       replyText: string,
       parseMode?: 'MarkdownV2' | 'HTML' | 'Markdown',
-      replyMarkup?: any,
+      replyMarkup?: Record<string, unknown>,
     ): Promise<void> => {
       await client.editMessageText(chatId, messageId, replyText, parseMode, replyMarkup);
     };

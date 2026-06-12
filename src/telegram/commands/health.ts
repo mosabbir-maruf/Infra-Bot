@@ -25,7 +25,7 @@ export class HealthHandler implements CommandHandler {
             if (parsed.timestamp > latestTs) {
               latestTs = parsed.timestamp;
             }
-          } catch {}
+          } catch { /* skip malformed JSON */ }
         }
       }
     }

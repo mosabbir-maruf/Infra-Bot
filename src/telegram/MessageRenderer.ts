@@ -62,7 +62,7 @@ export class MessageRenderer {
     const diskPct = (diskUsed / diskTotal) * 100;
     const ageMin = Math.max(0, (Date.now() - ts * 1000) / 60000);
 
-    const getHealthState = (val: number, thresholds: { warn: number; crit: number }) => {
+    const getHealthState = (val: number, thresholds: { warn: number; crit: number }): string => {
       if (val >= thresholds.crit) return 'Critical';
       if (val >= thresholds.warn) return 'Warning';
       return 'Healthy';
@@ -112,12 +112,12 @@ export class MessageRenderer {
     }
     const reasonText = reasons.length > 0 ? reasons.join(', ') : 'None';
 
-    let msg = `<b>Infrastructure Report</b>\n`;
+    let msg = '<b>Infrastructure Report</b>\n';
     msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += `<code>├ Health   </code> <code>${overallHealth} ${healthEmoji}</code>\n`;
     msg += `<code>└ Reason   </code> <code>${escapeHtml(reasonText)}</code>\n\n`;
 
-    msg += `<b>Resources</b>\n`;
+    msg += '<b>Resources</b>\n';
     msg += `<code>├ CPU      </code> <code>[${this.bar(cpuPct)}] ${cpuPct.toFixed(0)}%</code>\n`;
     msg += `<code>├ Memory   </code> <code>[${this.bar(ramPct)}] ${ramPct.toFixed(0)}%</code>\n`;
     msg += `<code>└ Disk     </code> <code>[${this.bar(diskPct)}] ${diskPct.toFixed(0)}%</code>\n`;
@@ -125,7 +125,7 @@ export class MessageRenderer {
     if (dockerTotal !== undefined) {
       const runningCount = dockerRunning ?? 0;
       const unhealthyCount = dockerUnhealthy ?? 0;
-      msg += `\n<b>Containers</b>\n`;
+      msg += '\n<b>Containers</b>\n';
       msg += `<code>├ Running  </code> <code>${runningCount}/${dockerTotal}</code>\n`;
       msg += `<code>└ Status   </code> <code>${unhealthyCount > 0 ? `${unhealthyCount} Unhealthy 🔴` : 'Healthy 🟢'}</code>\n`;
     }
@@ -141,7 +141,7 @@ export class MessageRenderer {
     if (health === 'Critical') healthEmoji = '🔴';
     else if (health === 'Warning') healthEmoji = '🟡';
 
-    let msg = `<b>System Uptime</b>\n`;
+    let msg = '<b>System Uptime</b>\n';
     msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += `<code>├ Uptime   </code> <code>${this.duration(uptime)}</code>\n`;
     msg += `<code>├ Health   </code> <code>${health} ${healthEmoji}</code>\n`;
@@ -155,7 +155,7 @@ export class MessageRenderer {
     const rxGB = (rx / (1024 ** 3)).toFixed(2);
     const txGB = (tx / (1024 ** 3)).toFixed(2);
 
-    let msg = `<b>Bandwidth Usage</b>\n`;
+    let msg = '<b>Bandwidth Usage</b>\n';
     msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += `<code>├ Download </code> <code>${rxGB} GB</code>\n`;
     msg += `<code>├ Upload   </code> <code>${txGB} GB</code>\n`;
@@ -163,7 +163,7 @@ export class MessageRenderer {
 
     if (limitGB && limitGB > 0) {
       const usagePct = Math.round((totalGB / limitGB) * 100);
-      msg += `\n<b>Quota Limit</b>\n`;
+      msg += '\n<b>Quota Limit</b>\n';
       msg += `<code>└ Usage    </code> <code>[${this.bar(usagePct)}] ${usagePct}% / ${limitGB} GB</code>\n`;
     }
 
@@ -178,7 +178,7 @@ export class MessageRenderer {
     const healthy = running - unhealthy;
     const issues = total - running + unhealthy;
 
-    let msg = `<b>Container Status</b>\n`;
+    let msg = '<b>Container Status</b>\n';
     msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += `<code>├ Running  </code> <code>${running}/${total}</code>\n`;
     msg += `<code>├ Healthy  </code> <code>${healthy}</code>\n`;
@@ -191,7 +191,7 @@ export class MessageRenderer {
     });
 
     if (affectedContainers.length > 0) {
-      msg += `\n<b>Affected Services</b>\n`;
+      msg += '\n<b>Affected Services</b>\n';
       for (let i = 0; i < affectedContainers.length; i++) {
         const c = affectedContainers[i];
         const isRunning = c.state.toLowerCase() === 'running';
@@ -231,21 +231,21 @@ export class MessageRenderer {
 
   /** Compact empty/no-data placeholder */
   static emptyCard(alias: string): string {
-    let msg = `<b>Infrastructure Report</b>\n`;
+    let msg = '<b>Infrastructure Report</b>\n';
     msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<code>├ Status   </code> <code>Offline 🔴</code>\n`;
-    msg += `<code>├ Health   </code> <code>Critical 🔴</code>\n`;
-    msg += `<code>└ Updated  </code> <code>Never</code>`;
+    msg += '<code>├ Status   </code> <code>Offline 🔴</code>\n';
+    msg += '<code>├ Health   </code> <code>Critical 🔴</code>\n';
+    msg += '<code>└ Updated  </code> <code>Never</code>';
     return msg;
   }
 
   /** No data summary card */
   static noDataCard(alias: string): string {
-    let msg = `<b>Infrastructure Report</b>\n\n`;
+    let msg = '<b>Infrastructure Report</b>\n\n';
     msg += `<code>Server</code>  <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<code>Status</code>  <code>Offline</code>\n`;
-    msg += `<code>Health</code>  <code>Critical 🔴</code>\n`;
-    msg += `<code>Last Report</code>  <code>Never</code>`;
+    msg += '<code>Status</code>  <code>Offline</code>\n';
+    msg += '<code>Health</code>  <code>Critical 🔴</code>\n';
+    msg += '<code>Last Report</code>  <code>Never</code>';
     return msg;
   }
 
@@ -257,11 +257,11 @@ export class MessageRenderer {
     const statusText = isOperational ? 'Operational' : 'Degraded';
     const statusEmoji = isOperational ? '🟢' : '🔴';
 
-    let msg = `<b>Control Plane Health</b>\n`;
+    let msg = '<b>Control Plane Health</b>\n';
     msg += `<code>┌ Status     </code> <code>${statusText} ${statusEmoji}</code>\n`;
     msg += `<code>├ Providers  </code> <code>${providers}</code>\n`;
     msg += `<code>├ Telemetry  </code> <code>${isOperational ? 'Connected 🟢' : 'Disconnected 🔴'}</code>\n`;
-    msg += `<code>├ Runtime    </code> <code>Cloudflare Workers</code>\n`;
+    msg += '<code>├ Runtime    </code> <code>Cloudflare Workers</code>\n';
     msg += `<code>├ Operators  </code> <code>${users}</code>\n`;
     msg += `<code>└ Updated    </code> <code>${lastReportText}</code>`;
     return msg;
@@ -270,11 +270,11 @@ export class MessageRenderer {
   // ── Existing methods (redesigned) ─────────────────────────
 
   static success(action: string, target: string, extra?: Record<string, string>): string {
-    let msg = `<b>✅ Operation Completed</b>\n`;
+    let msg = '<b>✅ Operation Completed</b>\n';
     msg += `<code>┌ Action     </code> <code>${escapeHtml(action)}</code>\n`;
     msg += `<code>└ Target     </code> <code>${escapeHtml(target)}</code>\n`;
     if (extra && Object.keys(extra).length > 0) {
-      msg += `\n<b>Details</b>\n`;
+      msg += '\n<b>Details</b>\n';
       const entries = Object.entries(extra);
       for (let i = 0; i < entries.length; i++) {
         const [k, v] = entries[i];
@@ -286,7 +286,7 @@ export class MessageRenderer {
   }
 
   static status(fields: Record<string, string>): string {
-    let msg = `<b>Server Status</b>\n`;
+    let msg = '<b>Server Status</b>\n';
     const entries = Object.entries(fields);
     for (let i = 0; i < entries.length; i++) {
       const [k, v] = entries[i];
@@ -297,7 +297,7 @@ export class MessageRenderer {
   }
 
   static monitoringReport(date: string, fields: Record<string, string>): string {
-    let msg = `<b>📊 Daily Report</b>\n`;
+    let msg = '<b>📊 Daily Report</b>\n';
     msg += `<code>┌ Date       </code> <code>${escapeHtml(date)}</code>\n\n`;
     const entries = Object.entries(fields);
     for (let i = 0; i < entries.length; i++) {
@@ -314,7 +314,7 @@ export class MessageRenderer {
       cleanReason = 'An internal system error occurred.';
     }
 
-    let msg = `<b>❌ Operation Failed</b>\n`;
+    let msg = '<b>❌ Operation Failed</b>\n';
     msg += `<code>┌ Action     </code> <code>${escapeHtml(action)}</code>\n`;
     msg += `<code>├ Target     </code> <code>${escapeHtml(target)}</code>\n`;
     msg += `<code>└ Reason     </code> <code>${escapeHtml(cleanReason)}</code>`;
@@ -330,7 +330,7 @@ export class MessageRenderer {
     if (reason.toLowerCase().includes('error:') || reason.toLowerCase().includes('exception:') || reason.includes('at ')) {
       cleanReason = 'An internal system error occurred.';
     }
-    let msg = `<b>❌ Operation Failed</b>\n`;
+    let msg = '<b>❌ Operation Failed</b>\n';
     msg += `<code>└ Reason     ${escapeHtml(cleanReason)}</code>`;
     return msg;
   }
@@ -340,11 +340,11 @@ export class MessageRenderer {
   }
 
   static warning(title: string, reason: string, extra?: Record<string, string>): string {
-    let msg = `<b>⚠️ Warning</b>\n`;
+    let msg = '<b>⚠️ Warning</b>\n';
     msg += `<code>┌ Subject    </code> <code>${escapeHtml(title)}</code>\n`;
     msg += `<code>└ Details    </code> <code>${escapeHtml(reason)}</code>\n`;
     if (extra && Object.keys(extra).length > 0) {
-      msg += `\n<b>Metadata</b>\n`;
+      msg += '\n<b>Metadata</b>\n';
       const entries = Object.entries(extra);
       for (let i = 0; i < entries.length; i++) {
         const [k, v] = entries[i];
@@ -371,8 +371,8 @@ export class MessageRenderer {
   }
 
   static help(commands: Array<{ command: string; description: string; args?: string }>): string {
-    let msg = `<b>🚀 Infra-Bot Control Console</b>\n\n`;
-    msg += `<b>Commands</b>\n`;
+    let msg = '<b>🚀 Infra-Bot Control Console</b>\n\n';
+    msg += '<b>Commands</b>\n';
     for (let i = 0; i < commands.length; i++) {
       const c = commands[i];
       const cmdLine = c.args ? `${c.command} ${c.args}` : c.command;
@@ -388,22 +388,22 @@ export class MessageRenderer {
   }
 
   static rateLimit(): string {
-    let msg = `<b>⏳ Rate Limit</b>\n`;
-    msg += `<code>└ Message    10 commands/min limit. Please wait.</code>`;
+    let msg = '<b>⏳ Rate Limit</b>\n';
+    msg += '<code>└ Message    10 commands/min limit. Please wait.</code>';
     return msg;
   }
 
   static unknownCommand(command: string): string {
-    let msg = `<b>❌ Unknown Command</b>\n`;
+    let msg = '<b>❌ Unknown Command</b>\n';
     msg += `<code>┌ Command    ${escapeHtml(command)}</code>\n`;
-    msg += `<code>└ Help       Use /help to view available commands.</code>`;
+    msg += '<code>└ Help       Use /help to view available commands.</code>';
     return msg;
   }
 
   static configError(binding: string): string {
-    let msg = `<b>❌ Config Error</b>\n`;
+    let msg = '<b>❌ Config Error</b>\n';
     msg += `<code>┌ Binding    ${escapeHtml(binding)}</code>\n`;
-    msg += `<code>└ Help       Required KV namespace unbound. See /docs.</code>`;
+    msg += '<code>└ Help       Required KV namespace unbound. See /docs.</code>';
     return msg;
   }
 
@@ -425,7 +425,7 @@ export class MessageRenderer {
       healthEmoji = '🟡';
     }
 
-    let msg = `<b>Infrastructure Status Report</b>\n`;
+    let msg = '<b>Infrastructure Status Report</b>\n';
     msg += `<code>┌ Server     </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += `<code>├ Status     </code> <code>${escapeHtml(status)}</code>\n`;
     msg += `<code>├ Health     </code> <code>${overallHealth} ${healthEmoji}</code>\n`;
@@ -453,7 +453,7 @@ export class MessageRenderer {
       healthEmoji = '🟡';
     }
 
-    let msg = `<b>Server Details</b>\n`;
+    let msg = '<b>Server Details</b>\n';
     msg += `<code>┌ Server     </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += `<code>├ Provider   </code> <code>${escapeHtml(provider)}</code>\n`;
     msg += `<code>├ Status     </code> <code>${escapeHtml(statusVal)}</code>\n`;
@@ -470,7 +470,7 @@ export class MessageRenderer {
   }
 
   static operationStatus(action: string, target: string, provider: string, status: string): string {
-    let msg = `<b>✅ Operation Completed</b>\n`;
+    let msg = '<b>✅ Operation Completed</b>\n';
     msg += `<code>┌ Action     </code> <code>${escapeHtml(action)}</code>\n`;
     msg += `<code>├ Target     </code> <code>${escapeHtml(target)}</code>\n`;
     msg += `<code>├ Provider   </code> <code>${escapeHtml(provider)}</code>\n`;
@@ -479,7 +479,7 @@ export class MessageRenderer {
   }
 
   static warningAlert(alias: string, metric: string, current: string, threshold: string): string {
-    let msg = `<b>⚠️ Alert</b>\n`;
+    let msg = '<b>⚠️ Alert</b>\n';
     msg += `<code>┌ Server     </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += `<code>├ Metric     </code> <code>${escapeHtml(metric)}</code>\n`;
     msg += `<code>├ Current    </code> <code>${escapeHtml(current)}</code>\n`;

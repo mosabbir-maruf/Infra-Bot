@@ -13,6 +13,7 @@ import { MessageRenderer } from './telegram/MessageRenderer';
 import { ServerRegistry } from './config/ServerRegistry';
 import { ProviderRegistry } from './providers/ProviderRegistry';
 import { faviconBase64, favicon32Base64, favicon16Base64 } from './assets/favicon';
+import { metaOgBase64 } from './assets/meta-og';
 
 // Strict type bindings for Hono environment
 interface Bindings {
@@ -134,11 +135,11 @@ app.get('/', (c) => {
 
         const regionCell = regionHref
           ? `<a href="${regionHref}" target="_blank" rel="noopener noreferrer" class="tbl-link">${srv.region}</a>`
-          : `<span class="dim">—</span>`;
+          : '<span class="dim">—</span>';
 
         const providerTag = isAws
-          ? `<span class="tag tag-aws">EC2</span>`
-          : `<span class="tag tag-do">DO</span>`;
+          ? '<span class="tag tag-aws">EC2</span>'
+          : '<span class="tag tag-do">DO</span>';
 
         serversHtml += `
           <tr class="node-row" style="--row-i:${idx}">
@@ -187,14 +188,16 @@ app.get('/', (c) => {
   <meta property="og:url" content="${siteUrl}/">
   <meta property="og:title" content="Infra-Bot · Control Plane">
   <meta property="og:description" content="Infra-Bot Control Plane — server orchestration, VM power operations, and real-time telemetry.">
-  <meta property="og:image" content="${siteUrl}/favicon-32x32.png">
+  <meta property="og:image" content="${siteUrl}/meta-og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
 
   <!-- Twitter -->
-  <meta property="twitter:card" content="summary">
+  <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="${siteUrl}/">
   <meta property="twitter:title" content="Infra-Bot · Control Plane">
   <meta property="twitter:description" content="Infra-Bot Control Plane — server orchestration, VM power operations, and real-time telemetry.">
-  <meta property="twitter:image" content="${siteUrl}/favicon-32x32.png">
+  <meta property="twitter:image" content="${siteUrl}/meta-og.png">
 
   <title>Infra-Bot · Control Plane</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -1063,14 +1066,16 @@ app.get('/docs', (c) => {
   <meta property="og:url" content="${siteUrl}/docs">
   <meta property="og:title" content="Infra-Bot · Documentation">
   <meta property="og:description" content="Infra-Bot Documentation — server registry configurations, deployment operations, and monitoring integration guides.">
-  <meta property="og:image" content="${siteUrl}/favicon-32x32.png">
+  <meta property="og:image" content="${siteUrl}/meta-og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
 
   <!-- Twitter -->
-  <meta property="twitter:card" content="summary">
+  <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="${siteUrl}/docs">
   <meta property="twitter:title" content="Infra-Bot · Documentation">
   <meta property="twitter:description" content="Infra-Bot Documentation — server registry configurations, deployment operations, and monitoring integration guides.">
-  <meta property="twitter:image" content="${siteUrl}/favicon-32x32.png">
+  <meta property="twitter:image" content="${siteUrl}/meta-og.png">
 
   <title>Infra-Bot · Documentation</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -1882,13 +1887,14 @@ npm run deploy</code></pre>
   return c.html(html, 200);
 });
 
-// Favicon endpoints
-const favicons: Record<string, { data: string; mime: string }> = {
+// Static asset endpoints
+const staticAssets: Record<string, { data: string; mime: string }> = {
   '/favicon.ico':       { data: faviconBase64,   mime: 'image/x-icon' },
   '/favicon-32x32.png': { data: favicon32Base64, mime: 'image/png' },
   '/favicon-16x16.png': { data: favicon16Base64, mime: 'image/png' },
+  '/meta-og.png':       { data: metaOgBase64,    mime: 'image/png' },
 };
-for (const [path, { data, mime }] of Object.entries(favicons)) {
+for (const [path, { data, mime }] of Object.entries(staticAssets)) {
   app.get(path, (c) => {
     const bytes = Uint8Array.from(atob(data), (ch) => ch.charCodeAt(0));
     return c.body(bytes.buffer, 200, {

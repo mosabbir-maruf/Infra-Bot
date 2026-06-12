@@ -42,7 +42,7 @@ export class UptimeHandler implements CommandHandler {
         const diskPct = m.disk ? (m.disk.used / m.disk.total) * 100 : 0;
         const ageMin = Math.max(0, (Date.now() - m.timestamp * 1000) / 60000);
 
-        const getHealthState = (val: number, thresholds: { warn: number; crit: number }) => {
+        const getHealthState = (val: number, thresholds: { warn: number; crit: number }): string => {
           if (val >= thresholds.crit) return 'Critical';
           if (val >= thresholds.warn) return 'Warning';
           return 'Healthy';

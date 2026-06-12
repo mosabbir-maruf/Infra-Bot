@@ -6,6 +6,7 @@ import { DOMParser as XDOMParser } from '@xmldom/xmldom';
 globalThis.DOMParser = XDOMParser;
 
 // Polyfill Node for AWS SDK EC2 XML deserialization which references global Node types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 if (!(globalThis as any).Node) {
   const FakeNode = class {};
   const constants = {
@@ -24,5 +25,6 @@ if (!(globalThis as any).Node) {
   };
   Object.assign(FakeNode, constants);
   Object.assign(FakeNode.prototype, constants);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
   (globalThis as any).Node = FakeNode;
 }
