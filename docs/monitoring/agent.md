@@ -30,17 +30,23 @@ sudo systemctl enable --now vnstat
 
 ## Installation Steps
 
-1. Copy the script and create the configuration file:
+1. Create the agent script:
+   ```bash
+   sudo nano /usr/local/bin/infra-agent.sh
+   ```
+   Copy the contents of `monitoring/agent.sh` from the repo, paste, and save.
+
+2. Create the configuration file:
    ```bash
    sudo nano /etc/infra-agent.conf
    ```
    Paste the following (replace with your values):
-   ```bash
-   SERVER_ALIAS="ai-gateway-prod"
-   MONITORING_SECRET="your_shared_hmac_secret"
-   CONTROL_PLANE_URL="https://your-worker.workers.dev"
    ```
-   Change the permission:
+SERVER_ALIAS="ai-gateway-prod"
+MONITORING_SECRET="your_shared_hmac_secret"
+CONTROL_PLANE_URL="https://your-worker.workers.dev"
+   ```
+3. Make the script executable:
    ```bash
    sudo chmod +x /usr/local/bin/infra-agent.sh
    ```
