@@ -113,25 +113,25 @@ export class MessageRenderer {
     const reasonText = reasons.length > 0 ? reasons.join(', ') : 'None';
 
     let msg = `<b>Infrastructure Report</b>\n`;
-    msg += `<b>┌ Server   </b> <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<b>├ Health   </b> <code>${overallHealth} ${healthEmoji}</code>\n`;
-    msg += `<b>└ Reason   </b> <code>${escapeHtml(reasonText)}</code>\n\n`;
+    msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Health   </code> <code>${overallHealth} ${healthEmoji}</code>\n`;
+    msg += `<code>└ Reason   </code> <code>${escapeHtml(reasonText)}</code>\n\n`;
 
     msg += `<b>Resources</b>\n`;
-    msg += `<b>├ CPU      </b> <code>[${this.bar(cpuPct)}] ${cpuPct.toFixed(0)}%</code>\n`;
-    msg += `<b>├ Memory   </b> <code>[${this.bar(ramPct)}] ${ramPct.toFixed(0)}%</code>\n`;
-    msg += `<b>└ Disk     </b> <code>[${this.bar(diskPct)}] ${diskPct.toFixed(0)}%</code>\n`;
+    msg += `<code>├ CPU      </code> <code>[${this.bar(cpuPct)}] ${cpuPct.toFixed(0)}%</code>\n`;
+    msg += `<code>├ Memory   </code> <code>[${this.bar(ramPct)}] ${ramPct.toFixed(0)}%</code>\n`;
+    msg += `<code>└ Disk     </code> <code>[${this.bar(diskPct)}] ${diskPct.toFixed(0)}%</code>\n`;
 
     if (dockerTotal !== undefined) {
       const runningCount = dockerRunning ?? 0;
       const unhealthyCount = dockerUnhealthy ?? 0;
       msg += `\n<b>Containers</b>\n`;
-      msg += `<b>├ Running  </b> <code>${runningCount}/${dockerTotal}</code>\n`;
-      msg += `<b>└ Status   </b> <code>${unhealthyCount > 0 ? `${unhealthyCount} Unhealthy 🔴` : 'Healthy 🟢'}</code>\n`;
+      msg += `<code>├ Running  </code> <code>${runningCount}/${dockerTotal}</code>\n`;
+      msg += `<code>└ Status   </code> <code>${unhealthyCount > 0 ? `${unhealthyCount} Unhealthy 🔴` : 'Healthy 🟢'}</code>\n`;
     }
 
-    msg += `\n<b>┌ Uptime   </b> <code>${this.duration(uptime)}</code>\n`;
-    msg += `<b>└ Updated  </b> <code>${this.ago(ts)}</code>`;
+    msg += `\n<code>┌ Uptime   </code> <code>${this.duration(uptime)}</code>\n`;
+    msg += `<code>└ Updated  </code> <code>${this.ago(ts)}</code>`;
     return msg;
   }
 
@@ -142,10 +142,10 @@ export class MessageRenderer {
     else if (health === 'Warning') healthEmoji = '🟡';
 
     let msg = `<b>System Uptime</b>\n`;
-    msg += `<b>┌ Server   </b> <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<b>├ Uptime   </b> <code>${this.duration(uptime)}</code>\n`;
-    msg += `<b>├ Health   </b> <code>${health} ${healthEmoji}</code>\n`;
-    msg += `<b>└ Updated  </b> <code>${this.ago(ts)}</code>`;
+    msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Uptime   </code> <code>${this.duration(uptime)}</code>\n`;
+    msg += `<code>├ Health   </code> <code>${health} ${healthEmoji}</code>\n`;
+    msg += `<code>└ Updated  </code> <code>${this.ago(ts)}</code>`;
     return msg;
   }
 
@@ -156,18 +156,18 @@ export class MessageRenderer {
     const txGB = (tx / (1024 ** 3)).toFixed(2);
 
     let msg = `<b>Bandwidth Usage</b>\n`;
-    msg += `<b>┌ Server   </b> <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<b>├ Download </b> <code>${rxGB} GB</code>\n`;
-    msg += `<b>├ Upload   </b> <code>${txGB} GB</code>\n`;
-    msg += `<b>└ Total    </b> <code>${totalGB.toFixed(2)} GB</code>\n`;
+    msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Download </code> <code>${rxGB} GB</code>\n`;
+    msg += `<code>├ Upload   </code> <code>${txGB} GB</code>\n`;
+    msg += `<code>└ Total    </code> <code>${totalGB.toFixed(2)} GB</code>\n`;
 
     if (limitGB && limitGB > 0) {
       const usagePct = Math.round((totalGB / limitGB) * 100);
       msg += `\n<b>Quota Limit</b>\n`;
-      msg += `<b>└ Usage    </b> <code>[${this.bar(usagePct)}] ${usagePct}% / ${limitGB} GB</code>\n`;
+      msg += `<code>└ Usage    </code> <code>[${this.bar(usagePct)}] ${usagePct}% / ${limitGB} GB</code>\n`;
     }
 
-    msg += `\n<b>└ Updated  </b> <code>${this.ago(ts)}</code>`;
+    msg += `\n<code>└ Updated  </code> <code>${this.ago(ts)}</code>`;
     return msg;
   }
 
@@ -179,10 +179,10 @@ export class MessageRenderer {
     const issues = total - running + unhealthy;
 
     let msg = `<b>Container Status</b>\n`;
-    msg += `<b>┌ Server   </b> <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<b>├ Running  </b> <code>${running}/${total}</code>\n`;
-    msg += `<b>├ Healthy  </b> <code>${healthy}</code>\n`;
-    msg += `<b>└ Issues   </b> <code>${issues} ${issues > 0 ? '🔴' : '🟢'}</code>\n`;
+    msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Running  </code> <code>${running}/${total}</code>\n`;
+    msg += `<code>├ Healthy  </code> <code>${healthy}</code>\n`;
+    msg += `<code>└ Issues   </code> <code>${issues} ${issues > 0 ? '🔴' : '🟢'}</code>\n`;
 
     const affectedContainers = containers.filter(c => {
       const isRunning = c.state.toLowerCase() === 'running';
@@ -211,11 +211,11 @@ export class MessageRenderer {
         const isLast = i === affectedContainers.length - 1;
         const prefixSymbol = isLast ? '└' : '├';
 
-        msg += `<b>${prefixSymbol} </b> <code>${escapeHtml(c.name)} (${stateText} · ${healthText} ${healthEmoji})</code>\n`;
+        msg += `<code>${prefixSymbol} </code> <code>${escapeHtml(c.name)} (${stateText} · ${healthText} ${healthEmoji})</code>\n`;
       }
     }
 
-    msg += `\n<b>└ Updated  </b> <code>${this.ago(ts)}</code>`;
+    msg += `\n<code>└ Updated  </code> <code>${this.ago(ts)}</code>`;
     return msg;
   }
 
@@ -232,20 +232,20 @@ export class MessageRenderer {
   /** Compact empty/no-data placeholder */
   static emptyCard(alias: string): string {
     let msg = `<b>Infrastructure Report</b>\n`;
-    msg += `<b>┌ Server   </b> <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<b>├ Status   </b> <code>Offline 🔴</code>\n`;
-    msg += `<b>├ Health   </b> <code>Critical 🔴</code>\n`;
-    msg += `<b>└ Updated  </b> <code>Never</code>`;
+    msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Status   </code> <code>Offline 🔴</code>\n`;
+    msg += `<code>├ Health   </code> <code>Critical 🔴</code>\n`;
+    msg += `<code>└ Updated  </code> <code>Never</code>`;
     return msg;
   }
 
   /** No data summary card */
   static noDataCard(alias: string): string {
     let msg = `<b>Infrastructure Report</b>\n\n`;
-    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<b>Status</b>  <code>Offline</code>\n`;
-    msg += `<b>Health</b>  <code>Critical 🔴</code>\n`;
-    msg += `<b>Last Report</b>  <code>Never</code>`;
+    msg += `<code>Server</code>  <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<code>Status</code>  <code>Offline</code>\n`;
+    msg += `<code>Health</code>  <code>Critical 🔴</code>\n`;
+    msg += `<code>Last Report</code>  <code>Never</code>`;
     return msg;
   }
 
@@ -258,12 +258,12 @@ export class MessageRenderer {
     const statusEmoji = isOperational ? '🟢' : '🔴';
 
     let msg = `<b>Control Plane Health</b>\n`;
-    msg += `<b>┌ Status     </b> <code>${statusText} ${statusEmoji}</code>\n`;
-    msg += `<b>├ Providers  </b> <code>${providers}</code>\n`;
-    msg += `<b>├ Telemetry  </b> <code>${isOperational ? 'Connected 🟢' : 'Disconnected 🔴'}</code>\n`;
-    msg += `<b>├ Runtime    </b> <code>Cloudflare Workers</code>\n`;
-    msg += `<b>├ Operators  </b> <code>${users}</code>\n`;
-    msg += `<b>└ Updated    </b> <code>${lastReportText}</code>`;
+    msg += `<code>┌ Status     </code> <code>${statusText} ${statusEmoji}</code>\n`;
+    msg += `<code>├ Providers  </code> <code>${providers}</code>\n`;
+    msg += `<code>├ Telemetry  </code> <code>${isOperational ? 'Connected 🟢' : 'Disconnected 🔴'}</code>\n`;
+    msg += `<code>├ Runtime    </code> <code>Cloudflare Workers</code>\n`;
+    msg += `<code>├ Operators  </code> <code>${users}</code>\n`;
+    msg += `<code>└ Updated    </code> <code>${lastReportText}</code>`;
     return msg;
   }
 
