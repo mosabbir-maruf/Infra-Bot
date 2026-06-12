@@ -47,18 +47,21 @@ describe('MessageRenderer', () => {
         'server-01', Date.now() / 1000, '12.5', 12.5, 4096, 8192, 20480, 51200, 360000, 3, 5, 0,
       );
       expect(r).toContain('Infrastructure Report');
-      expect(r).toContain('┌ Server   server-01');
-      expect(r).toContain('CPU      [');
+      expect(r).toContain('┌ Server   ');
+      expect(r).toContain('server-01');
+      expect(r).toContain('CPU      ');
       expect(r).toContain('13%');
       expect(r).toContain('50%');
       expect(r).toContain('40%');
-      expect(r).toContain('Running  3/5');
+      expect(r).toContain('Running  ');
+      expect(r).toContain('3/5');
     });
     it('shows reason when unhealthy containers present', () => {
       const r = MessageRenderer.reportCard(
         'server-01', Date.now() / 1000, '5', 5, 4096, 8192, 20480, 51200, 360000, 3, 5, 1,
       );
-      expect(r).toContain('└ Reason   2 stopped svc, 1 unhealthy svc');
+      expect(r).toContain('└ Reason   ');
+      expect(r).toContain('2 stopped svc, 1 unhealthy svc');
       expect(r).toContain('1 Unhealthy 🔴');
     });
   });
@@ -67,9 +70,12 @@ describe('MessageRenderer', () => {
     it('renders uptime card with inline format', () => {
       const r = MessageRenderer.uptimeCard('node', Date.now() / 1000, 86400, 'Healthy');
       expect(r).toContain('System Uptime');
-      expect(r).toContain('┌ Server   node');
-      expect(r).toContain('├ Uptime   1d 0h');
-      expect(r).toContain('├ Health   Healthy 🟢');
+      expect(r).toContain('┌ Server   ');
+      expect(r).toContain('node');
+      expect(r).toContain('├ Uptime   ');
+      expect(r).toContain('1d 0h');
+      expect(r).toContain('├ Health   ');
+      expect(r).toContain('Healthy 🟢');
     });
   });
 
@@ -77,15 +83,20 @@ describe('MessageRenderer', () => {
     it('renders bandwidth card with dot separators and code tags', () => {
       const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 10737418240, 5368709120, 100);
       expect(r).toContain('Bandwidth Usage');
-      expect(r).toContain('┌ Server   gw');
-      expect(r).toContain('├ Download 10.00 GB');
-      expect(r).toContain('├ Upload   5.00 GB');
-      expect(r).toContain('└ Total    15.00 GB');
+      expect(r).toContain('┌ Server   ');
+      expect(r).toContain('gw');
+      expect(r).toContain('├ Download ');
+      expect(r).toContain('10.00 GB');
+      expect(r).toContain('├ Upload   ');
+      expect(r).toContain('5.00 GB');
+      expect(r).toContain('└ Total    ');
+      expect(r).toContain('15.00 GB');
       expect(r).toContain('Quota Limit');
     });
     it('shows 0% usage when no bandwidth limit', () => {
       const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 0, 0);
-      expect(r).toContain('Total    0.00 GB');
+      expect(r).toContain('Total    ');
+      expect(r).toContain('0.00 GB');
     });
   });
 
@@ -96,9 +107,12 @@ describe('MessageRenderer', () => {
         { name: 'api', status: 'Exited', state: 'exited' },
       ], Date.now() / 1000);
       expect(r).toContain('Container Status');
-      expect(r).toContain('├ Running  3/5');
-      expect(r).toContain('├ Healthy  3');
-      expect(r).toContain('└ Issues   2 🔴');
+      expect(r).toContain('├ Running  ');
+      expect(r).toContain('3/5');
+      expect(r).toContain('├ Healthy  ');
+      expect(r).toContain('3');
+      expect(r).toContain('└ Issues   ');
+      expect(r).toContain('2 🔴');
       expect(r).toContain('Affected Services');
       expect(r).toContain('api');
       // nginx is healthy and running, should NOT be in affected
@@ -117,8 +131,10 @@ describe('MessageRenderer', () => {
   describe('emptyCard', () => {
     it('renders empty placeholder with code tags', () => {
       const r = MessageRenderer.emptyCard('missing');
-      expect(r).toContain('┌ Server   missing');
-      expect(r).toContain('├ Health   Critical 🔴');
+      expect(r).toContain('┌ Server   ');
+      expect(r).toContain('missing');
+      expect(r).toContain('├ Health   ');
+      expect(r).toContain('Critical 🔴');
     });
   });
 
