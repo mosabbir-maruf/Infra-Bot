@@ -1055,10 +1055,10 @@ app.get('/docs', (c) => {
       display:flex; align-items:center; justify-content:space-between;
       padding:0 2rem; height:48px;
     }
-    .wordmark { font-family:var(--mono); font-size:0.8rem; font-weight:500; color:var(--fg); display:flex; align-items:center; gap:0.5rem; }
+    .wordmark { font-family:var(--mono); font-size:0.8rem; font-weight:500; color:var(--fg); display:flex; align-items:center; gap:0.5rem; text-decoration:none; position:absolute; left:50%; transform:translateX(-50%); }
     .wordmark-sep { color:var(--fg3); font-weight:300; }
     .wordmark-sub { color:var(--fg2); font-weight:400; }
-    .topbar-left { display:flex; align-items:center; gap:1.25rem; }
+    .topbar-left { display:flex; align-items:center; gap:0.75rem; }
     .topbar-right { display:flex; align-items:center; gap:1.25rem; }
     .topbar-status { display:flex; align-items:center; gap:0.4rem; font-size:0.72rem; color:var(--green); font-family:var(--mono); }
     .dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; animation:blink 3s ease-in-out infinite; }
@@ -1202,29 +1202,82 @@ app.get('/docs', (c) => {
     ::-webkit-scrollbar-track { background:transparent; }
     ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
 
+    .hamburger {
+      display:none; background:none; border:none; cursor:pointer;
+      padding:4px; color:var(--fg2); transition:color .12s;
+    }
+    .hamburger:hover { color:var(--fg); }
+    .mobile-overlay {
+      display:none; position:fixed; inset:0; z-index:60;
+      background:rgba(0,0,0,0.5);
+    }
+    .mobile-overlay.open { display:block; }
+    .mobile-nav {
+      position:fixed; top:0; left:-280px; bottom:0; width:260px;
+      z-index:70; background:var(--sidebar); border-right:1px solid var(--border);
+      padding:1.25rem 1rem; overflow-y:auto;
+      transition:left .25s ease; display:flex; flex-direction:column; gap:0.25rem;
+    }
+    .mobile-nav.open { left:0; }
+    .mobile-nav-label {
+      font-size:0.6rem; text-transform:uppercase; letter-spacing:0.1em;
+      color:var(--fg3); font-weight:500; margin-bottom:0.5rem; margin-top:0.5rem;
+    }
+    .mobile-nav a {
+      font-size:0.78rem; color:var(--fg2); text-decoration:none;
+      padding:0.4rem 0.5rem; border-radius:3px; font-family:var(--mono);
+      transition:color .12s, background .12s;
+    }
+    .mobile-nav a:hover { color:var(--amber); background:var(--amber-d); }
+    .mobile-nav-close {
+      align-self:flex-end; background:none; border:none; cursor:pointer;
+      color:var(--fg2); padding:4px; margin-bottom:0.25rem;
+    }
+    .mobile-nav-close:hover { color:var(--fg); }
+
     @media (max-width:1024px) {
       .doc-toc { display:none; }
     }
     @media (max-width:768px) {
+      .hamburger { display:inline-flex; align-items:center; }
       .doc-sidebar { display:none; }
-      .topbar { padding:0 1rem; }
+      .topbar { padding:0 0.75rem; }
       .doc-content { padding:1.5rem 1rem 4rem; gap:2rem; }
+    }
+    @media (max-width:640px) {
+      .topbar-status { display:none; }
+      .clock { display:none; }
+      .topbar-right .nav-link:not(:last-child) { display:none; }
+      .page-title { font-size:1.2rem; }
+      .section pre { padding:0.75rem 1rem; font-size:0.74rem; }
+      .section h2 { font-size:1rem; }
+      .section h3 { font-size:0.85rem; }
+      .tbl-wrap th, .tbl-wrap td { padding:0.4rem 0.6rem; font-size:0.75rem; }
+      .tbl-wrap th:first-child, .tbl-wrap td:first-child { padding-left:0.75rem; }
+    }
+    @media (max-width:480px) {
+      .topbar-right .nav-link[aria-label="GitHub repo"] { display:none; }
+      .wordmark-sub { display:none; }
+      .foot-copy { font-size:0.62rem; }
     }
   </style>
 </head>
 <body>
   <div class="topbar">
     <div class="topbar-left">
-      <a href="/" class="wordmark" style="text-decoration:none">
-        <span>infra-bot</span>
-        <span class="wordmark-sep">/</span>
-        <span class="wordmark-sub">docs</span>
-      </a>
+      <button class="hamburger" id="hamburger-docs" aria-label="Open navigation">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <div class="topbar-status">
         <span class="dot"></span>
         operational
       </div>
     </div>
+    <a href="/" class="wordmark">
+      <span>infra-bot</span>
+      <span class="wordmark-sep">/</span>
+      <span class="wordmark-sub">docs</span>
+    </a>
     <div class="topbar-right">
       <span class="clock" id="clock-docs">--:--:-- UTC</span>
       <a href="/" class="nav-link">dashboard</a>
@@ -1238,6 +1291,24 @@ app.get('/docs', (c) => {
     </div>
   </div>
 
+  <div class="mobile-overlay" id="mobile-overlay-docs"></div>
+  <div class="mobile-nav" id="mobile-nav-docs">
+    <button class="mobile-nav-close" id="mobile-nav-close-docs" aria-label="Close navigation">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="mobile-nav-label">Sections</div>
+    <a href="#architecture">architecture</a>
+    <a href="#commands">commands</a>
+    <a href="#config">configuration</a>
+    <a href="#env">environment</a>
+    <a href="#providers">providers</a>
+    <a href="#security">security</a>
+    <a href="#webhook">webhook</a>
+    <a href="#rate-limit">rate limit</a>
+    <a href="#monitoring">monitoring</a>
+    <a href="#deployment">deployment</a>
+    <a href="#recovery">recovery</a>
+  </div>
   <div class="doc-layout">
     <aside class="doc-sidebar">
       <div class="doc-sidebar-label">Sections</div>
@@ -1551,6 +1622,27 @@ npm run deploy</code></pre>
           dc.textContent=p(n.getUTCHours())+':'+p(n.getUTCMinutes())+':'+p(n.getUTCSeconds())+' UTC';
         };
         tick(); setInterval(tick,1000);
+      }
+
+      const hamburger=document.getElementById('hamburger-docs');
+      const mobileNav=document.getElementById('mobile-nav-docs');
+      const mobileOverlay=document.getElementById('mobile-overlay-docs');
+      const mobileClose=document.getElementById('mobile-nav-close-docs');
+      if(hamburger&&mobileNav&&mobileOverlay){
+        const open=()=>{
+          mobileNav.classList.add('open');
+          mobileOverlay.classList.add('open');
+          document.body.style.overflow='hidden';
+        };
+        const close=()=>{
+          mobileNav.classList.remove('open');
+          mobileOverlay.classList.remove('open');
+          document.body.style.overflow='';
+        };
+        hamburger.addEventListener('click',open);
+        if(mobileClose)mobileClose.addEventListener('click',close);
+        mobileOverlay.addEventListener('click',close);
+        mobileNav.querySelectorAll('a').forEach(a=>a.addEventListener('click',close));
       }
     })();
   </script>
