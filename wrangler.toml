@@ -6,6 +6,15 @@ preview_urls = true
 
 [vars]
 NODE_ENV = "production"
+TELEGRAM_BOT_TOKEN = "your_bot_token_here"
+AUTHORIZED_USER_IDS = "12345678"
+MONITORING_SECRET = "your_monitoring_secret_here"
+SERVERS_CONFIG = '{"change-me": {"provider": "aws", "instanceId": "i-xxxxxx"}}'
+TELEGRAM_WEBHOOK_SECRET = ""
+AWS_ACCESS_KEY_ID = ""
+AWS_SECRET_ACCESS_KEY = ""
+AWS_REGION = "us-east-1"
+DIGITALOCEAN_TOKEN = ""
 
 [triggers]
 crons = ["0 8 * * *"]

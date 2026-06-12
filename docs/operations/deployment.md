@@ -29,10 +29,18 @@ The worker uses a KV namespace named `MONITORING_KV` to store target server tele
    * **KV namespace**: Select your newly created namespace from the dropdown.
 6. Click **Save and Deploy**.
 
-### Step 4: Configure Secrets
-Configure your production credentials directly in the Cloudflare Dashboard:
-1. Navigate to your worker service > **Settings** > **Variables** > **Variables & Secrets**.
-2. Click **Add** (or **Add secret**) to register the following variables:
+### Step 4: Configure Secrets & Variables
+Upon your first deployment, Cloudflare automatically provisions all required and optional configuration keys in the dashboard using the default placeholder values defined in `wrangler.toml`. You do not need to create these variable keys manually.
+
+To set your actual configurations:
+1. In the Cloudflare Dashboard, select your worker > **Settings** > **Variables**.
+2. Under **Variables & Secrets**, you will see the pre-populated keys.
+3. Click **Edit** (or **Edit variables**).
+4. Replace the default placeholder values with your actual credentials.
+5. For sensitive items (such as `TELEGRAM_BOT_TOKEN`, `AUTHORIZED_USER_IDS`, `MONITORING_SECRET`, `AWS_SECRET_ACCESS_KEY`, and `DIGITALOCEAN_TOKEN`), click the **Encrypt** button next to the variable name to convert them into secure write-only Secrets.
+6. Click **Save and Deploy**.
+
+#### Environment Configuration Table:
 
 | Key | Type | Required? | Description |
 | :--- | :--- | :--- | :--- |
@@ -44,8 +52,6 @@ Configure your production credentials directly in the Cloudflare Dashboard:
 | `AWS_ACCESS_KEY_ID` | Secret | No (Opt.) | AWS IAM User Access Key for EC2 integration. |
 | `AWS_SECRET_ACCESS_KEY` | Secret | No (Opt.) | AWS IAM User Secret Key for EC2 integration. |
 | `DIGITALOCEAN_TOKEN` | Secret | No (Opt.) | Personal Access Token for DigitalOcean integration. |
-
-3. Click **Save and Deploy** to apply all secrets.
 
 ### Step 5: Register the Telegram Webhook
 To route messages from Telegram to your worker:
