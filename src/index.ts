@@ -110,7 +110,7 @@ app.get('/', (c) => {
 
     if (servers.length === 0) {
       serversHtml = `
-        <tr><td colspan="4" class="empty-cell">
+        <tr><td colspan="6" class="empty-cell">
           <span class="empty-hint">— no nodes registered in SERVERS_CONFIG —</span>
         </td></tr>`;
     } else {
@@ -915,22 +915,22 @@ app.get('/', (c) => {
   </div>
 
   <script>
-    // UTC clock
-    function tick() {
-      const n = new Date(), p = v => String(v).padStart(2,'0');
-      document.getElementById('clock').textContent =
-        p(n.getUTCHours())+':'+p(n.getUTCMinutes())+':'+p(n.getUTCSeconds())+' UTC';
-    }
-    tick(); setInterval(tick, 1000);
-
-    // Uptime counter (from page load)
-    const start = Date.now();
-    setInterval(() => {
-      const s = Math.floor((Date.now()-start)/1000);
-      const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    (() => {
       const p = v => String(v).padStart(2,'0');
-      document.getElementById('uptime').textContent = p(h)+'h '+p(m)+'m '+p(sec)+'s';
-    }, 1000);
+      const start = Date.now();
+
+      function tick() {
+        const n = new Date();
+        document.getElementById('clock').textContent =
+          p(n.getUTCHours())+':'+p(n.getUTCMinutes())+':'+p(n.getUTCSeconds())+' UTC';
+
+        const s = Math.floor((Date.now()-start)/1000);
+        const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+        document.getElementById('uptime').textContent = p(h)+'h '+p(m)+'m '+p(sec)+'s';
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
 
     // Human-readable rendered-at
     const rt = document.getElementById('rendered-at');
@@ -958,31 +958,21 @@ app.get('/', (c) => {
 
   return c.html(htmlContent, 200);
 });
-// Favicon endpoints serving actual image data
-app.get('/favicon.ico', (c) => {
-  const bytes = Uint8Array.from(atob(faviconBase64), (ch) => ch.charCodeAt(0));
-  return c.body(bytes.buffer, 200, {
-    'Content-Type': 'image/x-icon',
-    'Cache-Control': 'public, max-age=86400',
+// Favicon endpoints
+const favicons: Record<string, { data: string; mime: string }> = {
+  '/favicon.ico':       { data: faviconBase64,   mime: 'image/x-icon' },
+  '/favicon-32x32.png': { data: favicon32Base64, mime: 'image/png' },
+  '/favicon-16x16.png': { data: favicon16Base64, mime: 'image/png' },
+};
+for (const [path, { data, mime }] of Object.entries(favicons)) {
+  app.get(path, (c) => {
+    const bytes = Uint8Array.from(atob(data), (ch) => ch.charCodeAt(0));
+    return c.body(bytes.buffer, 200, {
+      'Content-Type': mime,
+      'Cache-Control': 'public, max-age=86400',
+    });
   });
-});
-
-
-app.get('/favicon-32x32.png', (c) => {
-  const bytes = Uint8Array.from(atob(favicon32Base64), (ch) => ch.charCodeAt(0));
-  return c.body(bytes.buffer, 200, {
-    'Content-Type': 'image/png',
-    'Cache-Control': 'public, max-age=86400',
-  });
-});
-
-app.get('/favicon-16x16.png', (c) => {
-  const bytes = Uint8Array.from(atob(favicon16Base64), (ch) => ch.charCodeAt(0));
-  return c.body(bytes.buffer, 200, {
-    'Content-Type': 'image/png',
-    'Cache-Control': 'public, max-age=86400',
-  });
-});
+}
 
 // Telegram Webhook Handler
 app.post('/webhook', async (c) => {
@@ -1130,8 +1120,6 @@ app.post('/monitoring/report', async (c) => {
     Logger.warn(`Monitoring report: Rejected report for "${alias}" due to clock drift (>300s)`);
     return c.text('Request timestamp expired (clock drift)', 400);
   }
-
-
 
   // Store metrics in KV
   const key = `metrics:${alias.toLowerCase()}`;
