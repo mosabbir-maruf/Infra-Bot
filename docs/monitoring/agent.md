@@ -35,11 +35,7 @@ sudo systemctl enable --now vnstat
    sudo cp monitoring/agent.sh /usr/local/bin/infra-agent.sh
    sudo chmod +x /usr/local/bin/infra-agent.sh
    ```
-2. Create the configuration file `/etc/infra-agent.conf`:
-   ```bash
-   sudo nano /etc/infra-agent.conf
-   ```
-   Paste the following and replace with your values:
+2. Create the configuration file `/etc/infra-agent.conf` with `sudo nano` and paste the following (replace with your values):
    ```
 SERVER_ALIAS="ai-gateway-prod"
 MONITORING_SECRET="your_shared_hmac_secret"
