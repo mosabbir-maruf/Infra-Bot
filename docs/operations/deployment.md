@@ -64,6 +64,14 @@ curl -F "url=https://<YOUR-WORKER-SUBDOMAIN>.workers.dev/webhook" \
 { "ok": true, "result": true, "description": "Webhook was set" }
 ```
 
+### Step 6: Configure GitHub Actions Secrets (for CI/CD)
+To enable automated deployments from GitHub:
+1. In your GitHub repository, navigate to **Settings** > **Secrets and Variables** > **Actions**.
+2. Click **New repository secret**.
+3. Name the secret `CLOUDFLARE_API_TOKEN`.
+4. Set its value to your Cloudflare API token. You can create this token in your Cloudflare dashboard under **My Profile** > **API Tokens** > **Create Token** > using the **Edit Cloudflare Workers** template.
+5. Once saved, any push to the `main` branch will automatically build, test, and deploy the worker to your Cloudflare account.
+
 ---
 
 ## 2. Local Development
