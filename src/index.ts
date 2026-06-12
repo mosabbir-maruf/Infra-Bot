@@ -1055,7 +1055,7 @@ app.get('/docs', (c) => {
       display:flex; align-items:center; justify-content:space-between;
       padding:0 2rem; height:48px;
     }
-    .wordmark { font-family:var(--mono); font-size:0.8rem; font-weight:500; color:var(--fg); display:flex; align-items:center; gap:0.5rem; text-decoration:none; position:absolute; left:50%; transform:translateX(-50%); }
+    .wordmark { font-family:var(--mono); font-size:0.8rem; font-weight:500; color:var(--fg); display:flex; align-items:center; gap:0.5rem; text-decoration:none; }
     .wordmark-sep { color:var(--fg3); font-weight:300; }
     .wordmark-sub { color:var(--fg2); font-weight:400; }
     .topbar-left { display:flex; align-items:center; gap:0.75rem; }
@@ -1268,16 +1268,16 @@ app.get('/docs', (c) => {
       <button class="hamburger" id="hamburger-docs" aria-label="Open navigation">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
+      <a href="/" class="wordmark">
+        <span>infra-bot</span>
+        <span class="wordmark-sep">/</span>
+        <span class="wordmark-sub">docs</span>
+      </a>
       <div class="topbar-status">
         <span class="dot"></span>
         operational
       </div>
     </div>
-    <a href="/" class="wordmark">
-      <span>infra-bot</span>
-      <span class="wordmark-sep">/</span>
-      <span class="wordmark-sub">docs</span>
-    </a>
     <div class="topbar-right">
       <span class="clock" id="clock-docs">--:--:-- UTC</span>
       <a href="/" class="nav-link">dashboard</a>
