@@ -7,9 +7,7 @@ export class BandwidthHandler implements CommandHandler {
   public readonly description = 'Shows monthly bandwidth usage metrics from telemetry store';
 
   public async execute(ctx: TelegramContext): Promise<void> {
-    const kv = (ctx.env as unknown as Record<string, unknown>).MONITORING_KV as {
-      get(key: string): Promise<string | null>;
-    } | null;
+    const kv = ctx.monitoringKv;
 
     if (!kv) {
       await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML');

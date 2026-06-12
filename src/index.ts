@@ -1728,7 +1728,7 @@ app.post('/webhook', async (c) => {
   }
 
   // 3. Process the command asynchronously
-  const routePromise = router.route(message, env, serverRegistry, providerRegistry).catch((err) => {
+  const routePromise = router.route(message, env, serverRegistry, providerRegistry, c.env as unknown as Record<string, unknown>).catch((err) => {
     Logger.error('Background command execution failed', err, {
       userId,
       command: message.text,

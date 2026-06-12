@@ -44,4 +44,5 @@ export interface TelegramContext {
   serverRegistry: ServerRegistry;
   providerRegistry: ProviderRegistry;
   telegramClient: TelegramClient;
+  monitoringKv?: { get(key: string): Promise<string | null>; put(key: string, val: string, options?: { expirationTtl?: number }): Promise<void> };
 }

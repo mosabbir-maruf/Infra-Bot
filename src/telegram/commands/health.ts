@@ -11,7 +11,7 @@ export class HealthHandler implements CommandHandler {
     const registry = new ProviderRegistry(ctx.env);
     const activeProviders = registry.getActiveProviders().map((p) => p.name);
 
-    const kv = (ctx.env as unknown as Record<string, unknown>).MONITORING_KV;
+    const kv = ctx.monitoringKv;
     const kvStatus = kv ? 'Bound' : 'Not Bound';
 
     let report = MessageRenderer.header('Control Plane Health');

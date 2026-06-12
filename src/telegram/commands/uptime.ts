@@ -7,9 +7,7 @@ export class UptimeHandler implements CommandHandler {
   public readonly description = 'Checks system uptime and telemetry age of paired VPS instances';
 
   public async execute(ctx: TelegramContext): Promise<void> {
-    const kv = (ctx.env as unknown as Record<string, unknown>).MONITORING_KV as {
-      get(key: string): Promise<string | null>;
-    } | null;
+    const kv = ctx.monitoringKv;
 
     if (!kv) {
       await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML');

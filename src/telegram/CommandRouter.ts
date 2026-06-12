@@ -48,6 +48,7 @@ export class CommandRouter {
     env: Env,
     serverRegistry: ServerRegistry,
     providerRegistry: ProviderRegistry,
+    rawEnv?: Record<string, unknown>,
   ): Promise<void> {
     const text = message.text?.trim() || '';
     if (!text.startsWith('/')) {
@@ -78,6 +79,7 @@ export class CommandRouter {
       serverRegistry,
       providerRegistry,
       telegramClient: client,
+      monitoringKv: (rawEnv?.MONITORING_KV) as TelegramContext['monitoringKv'],
     };
 
     const handler = this.handlers.get(command);
