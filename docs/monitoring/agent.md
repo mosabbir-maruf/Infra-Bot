@@ -30,16 +30,18 @@ sudo systemctl enable --now vnstat
 
 ## Installation Steps
 
-1. Copy the script from [agent.sh](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/monitoring/agent.sh) to `/usr/local/bin/infra-agent.sh`.
-2. Make it executable:
+1. Copy the script to `/usr/local/bin/infra-agent.sh` and make it executable:
    ```bash
-   chmod +x /usr/local/bin/infra-agent.sh
+   sudo cp monitoring/agent.sh /usr/local/bin/infra-agent.sh
+   sudo chmod +x /usr/local/bin/infra-agent.sh
    ```
-3. Create a configuration file `/etc/infra-agent.conf`:
+2. Create the configuration file `/etc/infra-agent.conf`:
    ```bash
-   SERVER_ALIAS="ai-gateway-prod"
-   MONITORING_SECRET="your_shared_hmac_secret"
-   CONTROL_PLANE_URL="https://mosabbir-infra-bot.username.workers.dev"
+   sudo tee /etc/infra-agent.conf <<'EOF'
+SERVER_ALIAS="ai-gateway-prod"
+MONITORING_SECRET="your_shared_hmac_secret"
+CONTROL_PLANE_URL="https://your-worker.workers.dev"
+EOF
    ```
 
 ---
