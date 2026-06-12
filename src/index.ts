@@ -694,16 +694,11 @@ app.get('/', (c) => {
         <span class="s-val">${doCount}</span>
         <span class="s-note">droplets</span>
       </div>
-      <div class="summary-item">
-        <span class="s-label">Edge Status</span>
-        <span class="s-val" style="font-size:0.875rem;color:var(--green);padding-top:0.1rem">online</span>
-        <span class="s-note">all regions</span>
-      </div>
     </div>
 
     <!-- Nodes Table -->
     <section>
-      <div class="section-label">nodes (${serverCount})</div>
+      <div class="section-label">nodes</div>
       <div class="tbl-wrap">
         <table>
           <thead>
@@ -749,10 +744,6 @@ app.get('/', (c) => {
     <!-- Footer -->
     <footer class="foot">
       <span class="foot-copy">&copy; ${year} <b>Mosabbir</b> · infra-bot</span>
-      <div class="foot-links">
-        <a href="/health" class="foot-link">→ /health</a>
-        <a href="/webhook" class="foot-link">→ /webhook</a>
-      </div>
     </footer>
 
   </div>
