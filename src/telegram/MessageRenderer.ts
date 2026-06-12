@@ -419,11 +419,7 @@ export class MessageRenderer {
     msg += `Region: ${escapeHtml(region)}`;
 
     if (isError && errorMsg) {
-      let cleanReason = errorMsg;
-      if (errorMsg.toLowerCase().includes('error:') || errorMsg.toLowerCase().includes('exception:') || errorMsg.includes('at ')) {
-        cleanReason = 'Cloud provider API or configuration error.';
-      }
-      msg += `\n\n<b>Operational Status</b>\n${escapeHtml(cleanReason)}`;
+      msg += `\n\n<b>Operational Status</b>\n${escapeHtml(errorMsg)}`;
     }
     return msg;
   }
