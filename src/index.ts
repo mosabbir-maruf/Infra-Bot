@@ -665,11 +665,6 @@ app.get('/', (c) => {
       font-size: 0.72rem;
     }
 
-    @media (max-width: 640px) {
-      .cmd-cat { display: none; }
-      .cmd-name { width: auto; }
-    }
-
     /* ── Footer ──────────────────────────────── */
     .foot {
       display: flex;
@@ -716,12 +711,29 @@ app.get('/', (c) => {
       .topbar { padding: 0 1rem; }
       .main   { padding: 2rem 1rem 4rem; }
       .page-hdr { flex-direction: column; align-items: flex-start; }
+      .page-title { font-size: 1.2rem; }
       .page-meta { text-align: left; }
+      .page-meta .meta-line:first-child b { display: block; }
+      .topbar-right { gap: 0.75rem; }
+      .topbar-status { display: none; }
       .summary { flex-direction: column; }
       .summary-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .s-val { font-size: 1.1rem; }
       .sys-grid { grid-template-columns: repeat(2, 1fr); }
       .sys-item:nth-child(2) { border-right: none; }
+      .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .td-region { display: none; }
+      .cmd-table th:first-child,
+      .cmd-table .cmd-cat { display: none; }
+      .cmd-name { width: auto; min-width: 9rem; }
+      .cmd-desc { min-width: 8rem; }
+      .foot-links { gap: 0.75rem; }
+    }
+    @media (max-width: 480px) {
+      .topbar-right .clock { display: none; }
+      .wordmark-sub { display: none; }
+      .summary-item { padding: 0.75rem 1rem; }
+      td { padding: 0.6rem 0.75rem; }
     }
   </style>
 </head>
