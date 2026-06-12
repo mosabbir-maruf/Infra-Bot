@@ -160,12 +160,14 @@ describe('MessageRenderer', () => {
     });
     it('providerStatus renders server info', () => {
       const r = MessageRenderer.providerStatus('svr', 'running', '1.2.3.4', 'i-123', 'us-east-1');
-      expect(r).toContain('Server: svr');
+      expect(r).toContain('Infrastructure Status Report');
+      expect(r).toContain('svr');
       expect(r).toContain('running');
     });
     it('serverDetails renders with provider', () => {
-      const r = MessageRenderer.serverDetails('svr', 'AWS', { Type: 't3' });
-      expect(r).toContain('Server: svr');
+      const r = MessageRenderer.serverDetails('svr', 'AWS', { Status: 'running', Type: 't3' });
+      expect(r).toContain('Server Details');
+      expect(r).toContain('svr');
       expect(r).toContain('AWS');
     });
     it('operationStatus renders compact', () => {

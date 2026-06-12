@@ -361,21 +361,64 @@ export class MessageRenderer {
     return this.generalError('No servers configured in registry.');
   }
 
-  static providerStatus(alias: string, status: string, ip: string, id: string, region: string): string {
-    let msg = this.header(`Server: ${alias}`);
-    msg += '\n';
-    msg += this.line('Status', status);
-    msg += this.line('IP', ip || 'N/A');
-    msg += this.line('ID', id);
-    msg += this.line('Region', region);
+  static providerStatus(alias: string, status: string, ip: string, id: string, region: string, errorMsg?: string): string {
+    const isRunning = status.toLowerCase() === 'running';
+    const isError = status.toLowerCase() === 'error';
+
+    let overallHealth = 'Healthy';
+    let healthEmoji = '';
+    if (isError) {
+      overallHealth = 'Critical';
+      healthEmoji = ' 🚨';
+    } else if (!isRunning) {
+      overallHealth = 'Warning';
+      healthEmoji = ' ⚠️';
+    }
+
+    let msg = `<b>Infrastructure Status Report</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Status</b>\n${escapeHtml(status)}\n\n`;
+    msg += `<b>Health</b>\n${overallHealth}${healthEmoji}\n\n`;
+
+    msg += `<b>Detailed Information</b>\n`;
+    msg += `IP Address: ${escapeHtml(ip)}\n`;
+    msg += `Instance ID: ${escapeHtml(id)}\n`;
+    msg += `Region: ${escapeHtml(region)}`;
+
+    if (isError && errorMsg) {
+      let cleanReason = errorMsg;
+      if (errorMsg.toLowerCase().includes('error:') || errorMsg.toLowerCase().includes('exception:') || errorMsg.includes('at ')) {
+        cleanReason = 'Cloud provider API or configuration error.';
+      }
+      msg += `\n\n<b>Operational Status</b>\n${escapeHtml(cleanReason)}`;
+    }
     return msg;
   }
 
   static serverDetails(alias: string, provider: string, fields: Record<string, string>): string {
-    let msg = this.header(`Server: ${alias}`);
-    msg += `\n${this.line('Provider', provider)}`;
+    const statusVal = fields['Status'] || 'Unknown';
+    const isRunning = statusVal.toLowerCase() === 'running';
+
+    let overallHealth = 'Healthy';
+    let healthEmoji = '';
+    if (statusVal.toLowerCase() === 'error' || statusVal.toLowerCase() === 'stopped') {
+      overallHealth = 'Critical';
+      healthEmoji = ' 🚨';
+    } else if (!isRunning) {
+      overallHealth = 'Warning';
+      healthEmoji = ' ⚠️';
+    }
+
+    let msg = `<b>Server Details</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Status</b>\n${escapeHtml(statusVal)}\n\n`;
+    msg += `<b>Health</b>\n${overallHealth}${healthEmoji}\n\n`;
+
+    msg += `<b>Detailed Information</b>\n`;
+    msg += `Provider: ${escapeHtml(provider)}\n`;
     for (const [k, v] of Object.entries(fields)) {
-      msg += this.line(k, v);
+      if (k === 'Status') continue;
+      msg += `${escapeHtml(k)}: ${escapeHtml(v)}\n`;
     }
     return msg;
   }

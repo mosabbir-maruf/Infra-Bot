@@ -57,27 +57,24 @@ export class StatusHandler implements CommandHandler {
       }),
     );
 
-    let report = MessageRenderer.header('Infrastructure Status Report');
-    report += '\n';
+    const cards: string[] = [];
 
     for (const res of results) {
       if (!res.success) {
-        report += MessageRenderer.providerStatus(res.alias, 'Error', 'N/A', 'N/A', 'N/A');
-        report += '\n';
+        cards.push(MessageRenderer.providerStatus(res.alias, 'Error', 'N/A', 'N/A', 'N/A', (res.error as Error).message));
         continue;
       }
 
       const s = res.status!;
-      report += MessageRenderer.providerStatus(
+      cards.push(MessageRenderer.providerStatus(
         res.alias,
         s.status,
         s.ipAddress || 'N/A',
         s.id,
         s.region,
-      );
-      report += '\n';
+      ));
     }
 
-    await ctx.reply(report, 'HTML');
+    await ctx.reply(cards.join('\n\n───\n\n'), 'HTML');
   }
 }
