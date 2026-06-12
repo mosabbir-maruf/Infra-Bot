@@ -40,6 +40,9 @@ To set your actual configurations:
 5. For sensitive items (such as `TELEGRAM_BOT_TOKEN`, `AUTHORIZED_USER_IDS`, `MONITORING_SECRET`, `AWS_SECRET_ACCESS_KEY`, and `DIGITALOCEAN_TOKEN`), click the **Encrypt** button next to the variable name to convert them into secure write-only Secrets.
 6. Click **Save and Deploy**.
 
+> [!IMPORTANT]
+> **Security Requirement**: When configuring these variables in the Cloudflare Dashboard, you **must** click the **Encrypt** button next to each sensitive credential (such as bot tokens, API keys, and provider secrets). This permanently converts them into secure, write-only **Secrets**, preventing them from being exposed in plain text in your dashboard.
+
 #### Environment Configuration Table:
 
 | Key | Type | Required? | Description |
