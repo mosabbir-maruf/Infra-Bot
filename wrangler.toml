@@ -46,3 +46,19 @@ crons = ["0 8 * * *"]
 [observability]
 enabled = true
 head_sampling_rate = 1
+
+# ------------------------------------------------------------
+# KV Namespace Bindings
+# Declared for config parity between local and remote.
+# `id` is intentionally omitted — it is account-specific and
+# would break portability if committed.
+#
+# Production (Dashboard Git): bind MONITORING_KV under
+#   Settings → Variables → KV Namespace Bindings
+#
+# Local dev (wrangler dev): create a KV namespace and set
+# preview_id below (do NOT commit):
+# ------------------------------------------------------------
+[[kv_namespaces]]
+binding = "MONITORING_KV"
+# preview_id = "your-local-namespace-id"
