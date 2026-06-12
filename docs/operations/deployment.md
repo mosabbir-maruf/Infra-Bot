@@ -30,18 +30,19 @@ The worker uses a KV namespace named `MONITORING_KV` to store target server tele
 6. Click **Save and Deploy**.
 
 ### Step 4: Configure Secrets & Variables
-Upon your first deployment, Cloudflare automatically provisions all required and optional configuration keys in the dashboard using the default placeholder values defined in `wrangler.toml`. You do not need to create these variable keys manually.
 
-To set your actual configurations:
+`wrangler.toml` defines only one plain-text **var** (`NODE_ENV`). `AWS_REGION` defaults to `us-east-1` in code and can be overridden as a plain-text Variable in the Dashboard. All other configuration must be added manually. You will need to create each entry, paste your value, and encrypt the sensitive ones.
+
+To set your configuration:
 1. In the Cloudflare Dashboard, select your worker > **Settings** > **Variables**.
-2. Under **Variables & Secrets**, you will see the pre-populated keys.
-3. Click **Edit** (or **Edit variables**).
-4. Replace the default placeholder values with your actual credentials.
-5. For sensitive items (such as `TELEGRAM_BOT_TOKEN`, `AUTHORIZED_USER_IDS`, `MONITORING_SECRET`, `AWS_SECRET_ACCESS_KEY`, and `DIGITALOCEAN_TOKEN`), click the **Encrypt** button next to the variable name to convert them into secure write-only Secrets.
+2. Under **Variables & Secrets**, click **Add variable**.
+3. Choose **Secret** for all items flagged as "Secret" in the table below.
+4. Enter the variable name and value, then click **Add**.
+5. Repeat for every required key in the table below.
 6. Click **Save and Deploy**.
 
 > [!IMPORTANT]
-> **Security Requirement**: When configuring these variables in the Cloudflare Dashboard, you **must** click the **Encrypt** button next to each sensitive credential (such as bot tokens, API keys, and provider secrets). This permanently converts them into secure, write-only **Secrets**, preventing them from being exposed in plain text in your dashboard.
+> **You must click the "Secret" option** (the lock icon) when adding sensitive credentials (bot tokens, API keys, provider secrets). Plain-text variables are visible in the Dashboard and logs. Secrets are write-only and encrypted at rest.
 
 #### Environment Configuration Table:
 
@@ -55,6 +56,7 @@ To set your actual configurations:
 | `AWS_ACCESS_KEY_ID` | Secret | No (Opt.) | AWS IAM User Access Key for EC2 integration. |
 | `AWS_SECRET_ACCESS_KEY` | Secret | No (Opt.) | AWS IAM User Secret Key for EC2 integration. |
 | `DIGITALOCEAN_TOKEN` | Secret | No (Opt.) | Personal Access Token for DigitalOcean integration. |
+| `AWS_REGION` | Plain text | No (Opt.) | AWS region for EC2 API calls. Default: `us-east-1`. |
 
 ### How to Find Your Telegram Chat ID (User ID)
 The `AUTHORIZED_USER_IDS` configuration requires your numeric Telegram User ID (which also serves as your private chat ID for telemetry reports and warnings). To find your ID:
@@ -122,12 +124,7 @@ If you prefer deploying manually from your terminal using Wrangler CLI instead o
    ```bash
    npx wrangler kv namespace create MONITORING_KV
    ```
-3. Copy the namespace `id` from the terminal output and add it manually to your [wrangler.toml](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/wrangler.toml) configuration:
-   ```toml
-   [[kv_namespaces]]
-   binding = "MONITORING_KV"
-   id = "YOUR_COPIED_KV_NAMESPACE_ID"
-   ```
+3. Copy the namespace `id` from the terminal output, then bind it via the Cloudflare Dashboard (**Workers > your worker > Settings > Variables > KV Namespace Bindings**). Do **not** add the namespace ID to `wrangler.toml` — doing so would commit your account-specific ID to version control and prevent the repo from being portable.
 4. Set secrets one-by-one:
    ```bash
    npx wrangler secret put TELEGRAM_BOT_TOKEN

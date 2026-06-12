@@ -13,7 +13,11 @@ preview_urls = true
 # ------------------------------------------------------------
 [vars]
 NODE_ENV    = "production"
-AWS_REGION  = "ap-south-1"
+
+# AWS_REGION is NOT set here. It defaults to "us-east-1" in code.
+# To override, add it as a plain-text Variable in the Cloudflare Dashboard.
+# Keeping it out of [vars] prevents dashboard overrides from being
+# overwritten on every deployment.
 
 # ------------------------------------------------------------
 # SECRETS — Set these once in the Cloudflare Dashboard:

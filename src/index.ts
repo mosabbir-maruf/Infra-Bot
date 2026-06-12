@@ -25,7 +25,7 @@ interface Bindings {
   NODE_ENV?: string;
   SERVERS_CONFIG: string;
   MONITORING_SECRET: string;
-  MONITORING_KV: KVNamespace;
+  MONITORING_KV?: KVNamespace;
   RATE_LIMIT_KV?: KVNamespace;
   TELEGRAM_WEBHOOK_SECRET?: string;
 }
@@ -1419,7 +1419,7 @@ app.get('/docs', (c) => {
 
       <div class="section" id="env">
         <div class="section-label">environment variables</div>
-        <p>Set as Cloudflare Secrets via dashboard or <code>npx wrangler secret put</code>.</p>
+        <p>Set via Cloudflare Dashboard or CLI. Secrets use <code>npx wrangler secret put</code>; plain-text vars use <code>wrangler.toml</code> <code>[vars]</code> or the Dashboard.</p>
         <div class="tbl-wrap">
           <table>
             <thead><tr><th>Variable</th><th>Req</th><th>Description</th></tr></thead>
@@ -1430,7 +1430,7 @@ app.get('/docs', (c) => {
               <tr><td><code>MONITORING_SECRET</code></td><td><span class="tag tag-req">req</span></td><td>HMAC-SHA256 secret for telemetry</td></tr>
               <tr><td><code>AWS_ACCESS_KEY_ID</code></td><td><span class="tag tag-opt">opt</span></td><td>AWS IAM access key</td></tr>
               <tr><td><code>AWS_SECRET_ACCESS_KEY</code></td><td><span class="tag tag-opt">opt</span></td><td>AWS IAM secret key</td></tr>
-              <tr><td><code>AWS_REGION</code></td><td><span class="tag tag-opt">opt</span></td><td>Default: <code>us-east-1</code></td></tr>
+              <tr><td><code>AWS_REGION</code></td><td><span class="tag tag-opt">opt</span></td><td>Plain-text variable. Default: <code>us-east-1</code></td></tr>
               <tr><td><code>DIGITALOCEAN_TOKEN</code></td><td><span class="tag tag-opt">opt</span></td><td>DO personal access token</td></tr>
               <tr><td><code>TELEGRAM_WEBHOOK_SECRET</code></td><td><span class="tag tag-rec">rec</span></td><td>Webhook header validation</td></tr>
             </tbody>
@@ -1441,7 +1441,7 @@ app.get('/docs', (c) => {
           <table>
             <thead><tr><th>Binding</th><th>Req</th><th>Purpose</th></tr></thead>
             <tbody>
-              <tr><td><code>MONITORING_KV</code></td><td><span class="tag tag-req">req</span></td><td>Telemetry storage &amp; alert dedup</td></tr>
+              <tr><td><code>MONITORING_KV</code></td><td><span class="tag tag-rec">rec</span></td><td>Telemetry storage &amp; alert dedup</td></tr>
               <tr><td><code>RATE_LIMIT_KV</code></td><td><span class="tag tag-opt">opt</span></td><td>Distributed rate limiting</td></tr>
             </tbody>
           </table>
@@ -1530,6 +1530,7 @@ npx wrangler secret put AUTHORIZED_USER_IDS
 npx wrangler secret put MONITORING_SECRET
 npx wrangler secret put SERVERS_CONFIG
 npm run deploy</code></pre>
+        <p>After creating the KV namespace, bind it in the Dashboard (<strong>Workers → your worker → Settings → Variables → KV Namespace Bindings</strong>). Do <strong>not</strong> add the namespace ID to <code>wrangler.toml</code> — it is account-specific and breaks portability.</p>
         <h3 id="deploy-verify">Verify</h3>
         <ul>
           <li><code>GET /health</code> → <code>{"status":"ok"}</code></li>
