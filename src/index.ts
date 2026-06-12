@@ -1497,10 +1497,11 @@ app.get('/docs', (c) => {
         <p>Push-based. Every 5 minutes, <code>agent.sh</code> collects metrics and posts to <code>POST /monitoring/report</code> with HMAC signing. Stored in <code>MONITORING_KV</code> under <code>metrics:&lt;alias&gt;</code>.</p>
 
         <h3 id="mon-agent">Agent Setup</h3>
-        <p>Copy <code>monitoring/agent.sh</code> to <code>/usr/local/bin/infra-agent.sh</code> and make it executable:</p>
+        <p>Copy the script and create the configuration file:</p>
         <pre><code>sudo cp monitoring/agent.sh /usr/local/bin/infra-agent.sh
-sudo chmod +x /usr/local/bin/infra-agent.sh</code></pre>
-        <p>Create the configuration file <code>/etc/infra-agent.conf</code> with <code>sudo nano</code> and paste the following (replace with your values):</p>
+sudo chmod +x /usr/local/bin/infra-agent.sh
+sudo nano /etc/infra-agent.conf</code></pre>
+        <p>Paste the following (replace with your values):</p>
         <pre><code>SERVER_ALIAS="ai-gateway-prod"
 MONITORING_SECRET="your_shared_hmac_secret"
 CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
