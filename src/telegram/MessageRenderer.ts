@@ -58,50 +58,43 @@ export class MessageRenderer {
     const diskPct = (diskUsed / diskTotal) * 100;
     const usedG = (v: number) => (v / 1024).toFixed(1);
 
-    let msg = `<b>${escapeHtml(alias)}</b>  ${this.healthIcon(Math.max(cpuPct, ramPct, diskPct))}  <code>${this.ago(ts)}</code>\n`;
+    const mainHealth = this.healthIcon(Math.max(cpuPct, ramPct, diskPct));
+    let msg = `🖥️ <b>${escapeHtml(alias)}</b>  ${mainHealth}  <i>(${this.ago(ts)})</i>\n`;
+    msg += `• <b>CPU:</b> <code>${cpu}%</code>\n`;
+    msg += `• <b>Memory:</b> <code>${usedG(ramUsed)}/${usedG(ramTotal)} GB (${ramPct.toFixed(1)}%)</code>\n`;
+    msg += `• <b>Disk:</b> <code>${usedG(diskUsed)}/${usedG(diskTotal)} GB (${diskPct.toFixed(1)}%)</code>\n`;
+    msg += `• <b>Uptime:</b> <code>${this.duration(uptime)}</code>\n`;
 
-    msg += '<pre style="margin:0;padding:0">';
-    msg += `CPU  ${this.bar(cpuPct)}  ${cpu}%`.padEnd(32);
-    msg += `  MEM  ${this.bar(ramPct)}  ${ramPct.toFixed(1)}%\n`;
-    msg += `     ${usedG(diskUsed)}/${usedG(diskTotal)}G disk (${diskPct.toFixed(1)}%)`.padEnd(32);
-    msg += `  ${usedG(ramUsed)}/${usedG(ramTotal)}G\n`;
-    msg += `Up   ${this.duration(uptime)}`;
     if (dockerTotal !== undefined) {
-      const h = dockerUnhealthy && dockerUnhealthy > 0 ? ` ${dockerUnhealthy} unhealthy` : '';
-      msg += `     · Ctr ${dockerRunning ?? 0}/${dockerTotal} running${h}`;
+      const unhealthyPart = dockerUnhealthy && dockerUnhealthy > 0 ? ` (${dockerUnhealthy} unhealthy)` : '';
+      msg += `• <b>Docker:</b> <code>${dockerRunning ?? 0}/${dockerTotal} running${unhealthyPart}</code>\n`;
     }
-    msg += '\n</pre>\n';
     return msg;
   }
 
   /** Compact uptime card */
   static uptimeCard(alias: string, ts: number, uptime: number, cpu: string): string {
     const ageMin = Math.floor((Date.now() - ts * 1000) / 60000);
-    let icon = '🟢';
-    if (ageMin > 60) icon = '🔴';
-    else if (ageMin > 15) icon = '🟡';
+    let statusIcon = '🟢';
+    if (ageMin > 60) statusIcon = '🔴';
+    else if (ageMin > 15) statusIcon = '🟡';
 
-    let msg = '<pre style="margin:0;padding:0">';
-    msg += `${icon}  ${escapeHtml(alias).padEnd(19)} `;
-    msg += `${this.duration(uptime).padEnd(8)}`;
-    msg += `  cpu ${cpu}%`;
-    msg += '\n</pre>\n';
+    let msg = `${statusIcon} <b>${escapeHtml(alias)}</b>  <i>(${this.ago(ts)})</i>\n`;
+    msg += `• <b>Uptime:</b> <code>${this.duration(uptime)}</code>\n`;
+    msg += `• <b>CPU:</b> <code>${cpu}%</code>\n`;
     return msg;
   }
 
   /** Bandwidth card */
   static bandwidthCard(alias: string, ts: number, rx: number, tx: number): string {
     const totalGB = (rx + tx) / (1024 ** 3);
-    const pct = Math.min(100, (totalGB / 100) * 100);
     const rxGB = (rx / (1024 ** 3)).toFixed(2);
     const txGB = (tx / (1024 ** 3)).toFixed(2);
 
-    let msg = `<b>${escapeHtml(alias)}</b>  ⬇${rxGB} ⬆${txGB}  <code>${this.ago(ts)}</code>\n`;
-    msg += '<pre style="margin:0;padding:0">';
-    msg += `Total  ${totalGB.toFixed(2)} GB  ${this.bar(pct)}\n`;
-    msg += `RX     ${rxGB.padStart(7)} GB  ${this.bar((rx / (1024 ** 3)) / 100 * 100)}\n`;
-    msg += `TX     ${txGB.padStart(7)} GB  ${this.bar((tx / (1024 ** 3)) / 100 * 100)}\n`;
-    msg += '</pre>\n';
+    let msg = `📊 <b>${escapeHtml(alias)}</b>  <i>(${this.ago(ts)})</i>\n`;
+    msg += `• <b>Total:</b> <code>${totalGB.toFixed(2)} GB</code>\n`;
+    msg += `• <b>Download (RX):</b> <code>${rxGB} GB</code>\n`;
+    msg += `• <b>Upload (TX):</b> <code>${txGB} GB</code>\n`;
     return msg;
   }
 
@@ -110,57 +103,49 @@ export class MessageRenderer {
     containers: Array<{ name: string; status: string; state: string }>,
   ): string {
     const icon = unhealthy > 0 ? '🟡' : '🟢';
-    const hdr = unhealthy > 0 ? `  (${unhealthy} unhealthy)` : '';
+    const unhealthyPart = unhealthy > 0 ? ` (${unhealthy} unhealthy)` : '';
 
-    let msg = `<b>${escapeHtml(alias)}</b>  ${icon}  ${running}/${total} running${hdr}\n`;
+    let msg = `🐳 <b>${escapeHtml(alias)}</b>  ${icon}  <code>${running}/${total} running${unhealthyPart}</code>\n`;
 
     if (containers.length > 0) {
-      msg += '<pre style="margin:0;padding:0">';
       for (const c of containers) {
-        const stateIcon = c.state === 'running' ? '●' : c.state === 'exited' ? '○' : '◐';
-        const name = escapeHtml(c.name).padEnd(20).slice(0, 20);
-        const st = c.state.padEnd(8);
-        const status = escapeHtml(c.status).slice(0, 20);
-        msg += `${stateIcon} ${name} ${st} ${status}\n`;
+        const stateIcon = c.state === 'running' ? '🟢' : c.state === 'exited' ? '🔴' : '🟡';
+        msg += `• ${stateIcon} <code>${escapeHtml(c.name)}</code> (${escapeHtml(c.state)} - ${escapeHtml(c.status)})\n`;
       }
-      msg += '</pre>\n';
     }
     return msg;
   }
 
   /** Container detail row for docker output */
   static containerRow(name: string, state: string, status: string): string {
-    const stIcons: Record<string, string> = { running: '●', exited: '○', restarting: '◐' };
-    const icon = stIcons[state] || '◐';
-    return `${icon} ${escapeHtml(name).padEnd(20).slice(0, 20)} ${state.padEnd(9)} ${escapeHtml(status)}`;
+    const icon = state === 'running' ? '🟢' : state === 'exited' ? '🔴' : '🟡';
+    return `${icon} <code>${escapeHtml(name)}</code> (${escapeHtml(state)} - ${escapeHtml(status)})`;
   }
 
   /** Compact empty/no-data placeholder */
   static emptyCard(alias: string): string {
-    let msg = '<pre style="margin:0;padding:0">';
-    msg += `⬜  ${escapeHtml(alias).padEnd(19)} — no data`;
-    msg += '\n</pre>\n';
+    let msg = `⚠️ <b>${escapeHtml(alias)}</b>\n`;
+    msg += `• <b>Status:</b> No data available\n`;
     return msg;
   }
 
   /** No data summary card */
   static noDataCard(alias: string): string {
-    return `<b>${escapeHtml(alias)}</b>  ⬜  <code>no data</code>\n\n`;
+    return `⚠️ <b>${escapeHtml(alias)}</b>  <i>(No data)</i>\n`;
   }
 
   /** /health dashboard */
   static healthDashboard(kvStatus: string, providers: string, region: string,
     env: string, users: number,
   ): string {
-    let msg = '<b>Control Plane</b>\n\n';
-    msg += '<pre style="margin:0;padding:0">';
-    msg += `Status        ${kvStatus === 'Bound' ? '🟢' : '🟡'}  ${kvStatus}\n`;
-    msg += `Providers     ${providers || 'None'}\n`;
-    msg += `Region        ${region}\n`;
-    msg += `Environment   ${env}\n`;
-    msg += `Users         ${users} authorized\n`;
-    msg += `Runtime       Cloudflare Workers`;
-    msg += '\n</pre>';
+    const icon = kvStatus === 'Bound' ? '🟢' : '🟡';
+    let msg = `⚙️ <b>Control Plane</b>\n`;
+    msg += `• <b>Status:</b> <code>${kvStatus}</code> ${icon}\n`;
+    msg += `• <b>Providers:</b> <code>${providers || 'None'}</code>\n`;
+    msg += `• <b>Region:</b> <code>${region}</code>\n`;
+    msg += `• <b>Environment:</b> <code>${env}</code>\n`;
+    msg += `• <b>Users:</b> <code>${users} authorized</code>\n`;
+    msg += `• <b>Runtime:</b> <code>Cloudflare Workers</code>\n`;
     return msg;
   }
 

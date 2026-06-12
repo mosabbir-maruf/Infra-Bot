@@ -42,15 +42,15 @@ describe('MessageRenderer', () => {
   });
 
   describe('reportCard', () => {
-    it('renders full report card with progress bars', () => {
+    it('renders full report card with clean operations console style', () => {
       const r = MessageRenderer.reportCard(
         'server-01', Date.now() / 1000, '12.5', 12.5, 4096, 8192, 20480, 51200, 360000, 3, 5, 0,
       );
       expect(r).toContain('<b>server-01</b>');
-      expect(r).toContain('CPU');
-      expect(r).toContain('MEM');
-      expect(r).toContain('disk');
-      expect(r).toContain('Ctr');
+      expect(r).toContain('CPU:');
+      expect(r).toContain('Memory:');
+      expect(r).toContain('Disk:');
+      expect(r).toContain('Docker:');
     });
   });
 
@@ -58,17 +58,17 @@ describe('MessageRenderer', () => {
     it('renders uptime card', () => {
       const r = MessageRenderer.uptimeCard('node', Date.now() / 1000, 86400, '5.2');
       expect(r).toContain('node');
-      expect(r).toContain('cpu');
+      expect(r).toContain('CPU:');
     });
   });
 
   describe('bandwidthCard', () => {
-    it('renders bandwidth card with bars', () => {
+    it('renders bandwidth card', () => {
       const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 10737418240, 5368709120);
       expect(r).toContain('<b>gw</b>');
-      expect(r).toContain('Total');
-      expect(r).toContain('RX');
-      expect(r).toContain('TX');
+      expect(r).toContain('Total:');
+      expect(r).toContain('Download');
+      expect(r).toContain('Upload');
     });
   });
 
@@ -78,7 +78,7 @@ describe('MessageRenderer', () => {
         { name: 'nginx', status: 'Up 2 days', state: 'running' },
       ]);
       expect(r).toContain('3/5 running');
-      expect(r).toContain('●');
+      expect(r).toContain('🟢');
     });
     it('shows warning when unhealthy containers', () => {
       const r = MessageRenderer.dockerCard('node', 3, 5, 2, []);
@@ -90,7 +90,7 @@ describe('MessageRenderer', () => {
   describe('emptyCard', () => {
     it('renders empty placeholder', () => {
       expect(MessageRenderer.emptyCard('missing')).toContain('missing');
-      expect(MessageRenderer.emptyCard('missing')).toContain('no data');
+      expect(MessageRenderer.emptyCard('missing')).toContain('No data available');
     });
   });
 
