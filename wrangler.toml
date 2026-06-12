@@ -1,0 +1,9 @@
+name = "mosabbir-infra-bot"
+main = "src/index.ts"
+compatibility_date = "2024-05-29"
+
+[vars]
+NODE_ENV = "production"
+
+[triggers]
+crons = ["0 8 * * *"]

@@ -98,14 +98,11 @@ If you prefer deploying manually from your terminal using Wrangler CLI instead o
    ```bash
    npx wrangler kv namespace create MONITORING_KV
    ```
-3. Copy the namespace `id` from the terminal output and add it manually to your [wrangler.json](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/wrangler.json) configuration:
-   ```json
-     "kv_namespaces": [
-       {
-         "binding": "MONITORING_KV",
-         "id": "YOUR_COPIED_KV_NAMESPACE_ID"
-       }
-     ]
+3. Copy the namespace `id` from the terminal output and add it manually to your [wrangler.toml](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/wrangler.toml) configuration:
+   ```toml
+   [[kv_namespaces]]
+   binding = "MONITORING_KV"
+   id = "YOUR_COPIED_KV_NAMESPACE_ID"
    ```
 4. Set secrets one-by-one:
    ```bash

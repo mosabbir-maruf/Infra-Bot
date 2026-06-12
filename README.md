@@ -56,7 +56,7 @@ mosabbir-infra-bot/
 ├── .env.example             # Template for secrets and variables
 ├── package.json             # Build and test dependencies
 ├── tsconfig.json            # Strict TypeScript compiler options
-├── wrangler.json            # Cloudflare Workers configuration
+├── wrangler.toml            # Cloudflare Workers configuration
 ├── docs/                    # Architectural and integration docs (see Documentation Index)
 ├── monitoring/
 │   └── agent.sh             # Portable VPS telemetry bash script
