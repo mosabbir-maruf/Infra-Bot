@@ -1192,8 +1192,23 @@ app.get('/docs', (c) => {
       padding:0.15rem 0;
       transition:color .12s;
     }
-    .doc-toc a:hover { color:var(--amber); }
-    .doc-toc a.active { color:var(--amber); font-weight:500; }
+    .doc-toc a.toc-sec {
+      font-weight:500;
+      font-size:0.74rem;
+      color:var(--fg2);
+      margin-top:0.4rem;
+    }
+    .doc-toc a.toc-sub {
+      font-size:0.68rem;
+      color:var(--fg3);
+      padding-left:0.6rem;
+      opacity:0.85;
+    }
+    .doc-toc a.toc-h3 {
+      padding-left:1.1rem;
+    }
+    .doc-toc a:hover { color:var(--amber); opacity:1; }
+    .doc-toc a.active { color:var(--amber); font-weight:500; opacity:1; }
 
     .foot { display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; padding-top:1.5rem; border-top:1px solid var(--border); }
     .foot-copy { font-size:0.7rem; color:var(--fg2); font-family:var(--mono); }
@@ -1578,34 +1593,55 @@ npm run deploy</code></pre>
   <script>
     (()=>{
       const toc=document.getElementById('toc');
-      const headings=document.querySelectorAll('.section h2, .section h3');
-      if(!toc||!headings.length)return;
-      headings.forEach(h=>{
-        const a=document.createElement('a');
-        a.href='#'+h.id;
-        a.textContent=h.textContent.trim();
-        if(h.tagName==='H3')a.style.paddingLeft='0.85rem';
-        toc.appendChild(a);
+      const sections=document.querySelectorAll('.section');
+      if(!toc||!sections.length)return;
+
+      const spyElements = [];
+      sections.forEach(sec=>{
+        const labelEl = sec.querySelector('.section-label');
+        if (!labelEl) return;
+
+        // Add section link
+        const secLink = document.createElement('a');
+        secLink.href = '#' + sec.id;
+        const labelText = labelEl.textContent.trim().replace(/\b\w/g, c => c.toUpperCase());
+        secLink.textContent = labelText;
+        secLink.className = 'toc-sec';
+        toc.appendChild(secLink);
+        spyElements.push(sec);
+
+        // Add sub-headings
+        const headings = sec.querySelectorAll('h2, h3');
+        headings.forEach(h=>{
+          if (!h.id) return;
+          const subLink = document.createElement('a');
+          subLink.href = '#' + h.id;
+          subLink.textContent = h.textContent.trim();
+          subLink.className = h.tagName.toLowerCase() === 'h2' ? 'toc-sub toc-h2' : 'toc-sub toc-h3';
+          toc.appendChild(subLink);
+          spyElements.push(h);
+        });
       });
 
-      const tocLinks=document.querySelectorAll('.doc-toc a');
-      const sections=document.querySelectorAll('.section h2, .section h3');
-      if(!tocLinks.length||!sections.length)return;
-      const observer=new IntersectionObserver(entries=>{
-        let visible='';
-        for(const e of entries){
-          if(e.isIntersecting)visible=e.target.id;
-        }
-        if(!visible){
-          for(const e of entries){
-            if(e.boundingClientRect.top<200)visible=e.target.id;
+      const handleScroll = () => {
+        let activeEl = null;
+        for (const el of spyElements) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 120) {
+            activeEl = el;
           }
         }
-        tocLinks.forEach(a=>{
-          a.classList.toggle('active',a.getAttribute('href').slice(1)===visible);
+        
+        const tocLinks = document.querySelectorAll('.doc-toc a');
+        tocLinks.forEach(a => {
+          const href = a.getAttribute('href');
+          const isActive = activeEl && href === '#' + activeEl.id;
+          a.classList.toggle('active', isActive);
         });
-      },{rootMargin:'-80px 0px -60% 0px'});
-      sections.forEach(s=>observer.observe(s));
+      };
+
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
 
       const btn=document.getElementById('theme-btn');
       if(btn){
