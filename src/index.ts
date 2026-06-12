@@ -783,6 +783,29 @@ app.get('/', (c) => {
       </div>
     </section>
 
+    <!-- System Info -->
+    <section>
+      <div class="section-label">system</div>
+      <div class="sys-grid">
+        <div class="sys-item">
+          <span class="sys-k">Interface</span>
+          <span class="sys-v">Telegram Bot API</span>
+        </div>
+        <div class="sys-item">
+          <span class="sys-k">Webhook</span>
+          <span class="sys-v">/webhook</span>
+        </div>
+        <div class="sys-item">
+          <span class="sys-k">Cron</span>
+          <span class="sys-v">0 8 * * *</span>
+        </div>
+        <div class="sys-item">
+          <span class="sys-k">Health</span>
+          <span class="sys-v">/health</span>
+        </div>
+      </div>
+    </section>
+
     <!-- Commands -->
     <section>
       <div class="section-label">bot commands</div>
@@ -829,54 +852,31 @@ app.get('/', (c) => {
             <tr class="cmd-row">
               <td class="cmd-cat">Monitoring</td>
               <td class="cmd-name">/report</td>
-              <td class="cmd-desc">Full metrics summary across all managed VPS</td>
+              <td class="cmd-desc">View full metrics summary across all managed VPS</td>
             </tr>
             <tr class="cmd-row">
               <td class="cmd-cat"></td>
               <td class="cmd-name">/bandwidth</td>
-              <td class="cmd-desc">Network bandwidth usage breakdown per server</td>
+              <td class="cmd-desc">View network bandwidth usage breakdown per server</td>
             </tr>
             <tr class="cmd-row">
               <td class="cmd-cat"></td>
               <td class="cmd-name">/docker</td>
-              <td class="cmd-desc">Docker container status across all nodes</td>
+              <td class="cmd-desc">View Docker container status across all nodes</td>
             </tr>
             <tr class="cmd-row">
               <td class="cmd-cat"></td>
               <td class="cmd-name">/uptime</td>
-              <td class="cmd-desc">System uptime details for each VPS</td>
+              <td class="cmd-desc">View system uptime details for each VPS</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- System Info -->
-    <section>
-      <div class="section-label">system</div>
-      <div class="sys-grid">
-        <div class="sys-item">
-          <span class="sys-k">Interface</span>
-          <span class="sys-v">Telegram Bot API</span>
-        </div>
-        <div class="sys-item">
-          <span class="sys-k">Webhook</span>
-          <span class="sys-v">/webhook</span>
-        </div>
-        <div class="sys-item">
-          <span class="sys-k">Cron</span>
-          <span class="sys-v">0 8 * * *</span>
-        </div>
-        <div class="sys-item">
-          <span class="sys-k">Health</span>
-          <span class="sys-v">/health</span>
-        </div>
-      </div>
-    </section>
-
     <!-- Footer -->
     <footer class="foot">
-      <span class="foot-copy">&copy; ${year} <b>Mosabbir</b> · infra-bot</span>
+      <span class="foot-copy">&copy; ${year} <b>Mosabbir Maruf</b> · infra-bot · <a href="https://github.com/mosabbir-maruf/" target="_blank" rel="noopener">github</a></span>
     </footer>
 
   </div>
