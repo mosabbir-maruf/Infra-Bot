@@ -1499,7 +1499,7 @@ app.get('/docs', (c) => {
         <h3 id="mon-agent">Agent Setup</h3>
         <p>Create the agent script and configuration file:</p>
         <pre><code>sudo nano /usr/local/bin/infra-agent.sh</code></pre>
-        <p>Copy the contents of <code>monitoring/agent.sh</code> from the repo, paste, and save. Then create the config:</p>
+        <p>Copy the contents of <a href="https://github.com/mosabbir-maruf/Infra-Bot/blob/main/monitoring/agent.sh" target="_blank" rel="noopener"><code>monitoring/agent.sh</code></a> from the repo, paste, and save. Then create the config:</p>
         <pre><code>sudo nano /etc/infra-agent.conf</code></pre>
         <p>Paste the following (replace with your values):</p>
         <pre><code>SERVER_ALIAS="ai-gateway-prod"

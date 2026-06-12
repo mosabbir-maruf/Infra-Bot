@@ -34,7 +34,7 @@ sudo systemctl enable --now vnstat
    ```bash
    sudo nano /usr/local/bin/infra-agent.sh
    ```
-   Copy the contents of `monitoring/agent.sh` from the repo, paste, and save.
+   Copy the contents of [`monitoring/agent.sh`](https://github.com/mosabbir-maruf/Infra-Bot/blob/main/monitoring/agent.sh) from the repo, paste, and save.
 
 2. Create the configuration file:
    ```bash
