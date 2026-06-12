@@ -1,3 +1,5 @@
+import './polyfill';
+
 import { Hono } from 'hono';
 import { validateEnv, Env } from './config/Env';
 import { isAuthorized } from './telegram/middleware/AuthMiddleware';
