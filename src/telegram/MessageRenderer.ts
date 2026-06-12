@@ -168,41 +168,68 @@ export class MessageRenderer {
   static dockerCard(alias: string, running: number, total: number, unhealthy: number,
     containers: Array<{ name: string; status: string; state: string }>, ts: number
   ): string {
-    const healthyCount = running - unhealthy;
-    const issuesCount = (total - running) + unhealthy;
+    let dockerHealth = 'Healthy';
+    if (unhealthy > 0) {
+      dockerHealth = 'Warning';
+    } else if (running < total) {
+      dockerHealth = 'Critical';
+    }
 
-    let msg = `<b>Container Status</b>\n\n`;
-    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
-    msg += `<b>Summary</b>\n`;
-    msg += `Running: ${running}\n`;
-    msg += `Healthy: ${healthyCount >= 0 ? healthyCount : 0}\n`;
-    msg += `Issues: ${issuesCount}\n\n`;
+    const reasons: string[] = [];
+    if (running < total) {
+      const diff = total - running;
+      reasons.push(`${diff} stopped container${diff > 1 ? 's' : ''}`);
+    }
+    if (unhealthy > 0) {
+      reasons.push(`${unhealthy} unhealthy container${unhealthy > 1 ? 's' : ''}`);
+    }
+    const issuesText = reasons.length > 0 ? reasons.join(', ') : 'None';
+
+    const getCleanUptime = (status: string) => {
+      const normalized = status.toLowerCase();
+      if (!normalized.startsWith('up ')) return 'N/A';
+      let uptimeText = status.substring(3);
+      const idx = uptimeText.indexOf('(');
+      if (idx !== -1) uptimeText = uptimeText.substring(0, idx).trim();
+      uptimeText = uptimeText
+        .replace(/\bseconds?\b/g, 's')
+        .replace(/\bminutes?\b/g, 'm')
+        .replace(/\bhours?\b/g, 'h')
+        .replace(/\bdays?\b/g, 'd')
+        .replace(/\bweeks?\b/g, 'w')
+        .replace(/\s+/g, '');
+      return uptimeText;
+    };
+
+    let msg = `<pre style="margin:0;padding:0">`;
+    msg += `Container Status\n\n`;
+    msg += `Server\n${alias}\n\n`;
+    msg += `Summary\n`;
+    msg += `Running: ${running}/${total}\n`;
+    msg += `Health: ${dockerHealth}\n\n`;
+    msg += `Issues\n${issuesText}\n\n`;
 
     if (containers.length > 0) {
-      msg += `<b>Services</b>\n\n`;
+      msg += `Services\n\n`;
       for (const c of containers) {
         const isRunning = c.state.toLowerCase() === 'running';
         const isUnhealthy = c.status.toLowerCase().includes('unhealthy');
-
+        
         let stateText = isRunning ? 'Running' : 'Stopped';
         let healthText = 'Healthy';
-        let healthEmoji = '';
+        if (!isRunning) healthText = 'Critical';
+        else if (isUnhealthy) healthText = 'Unhealthy';
 
-        if (!isRunning) {
-          healthText = 'Critical';
-          healthEmoji = ' 🚨';
-        } else if (isUnhealthy) {
-          healthText = 'Warning';
-          healthEmoji = ' ⚠️';
-        }
-
-        msg += `<b>${escapeHtml(c.name)}</b>\n`;
-        msg += `${stateText}\n`;
-        msg += `Health: ${healthText}${healthEmoji}\n\n`;
+        msg += `${c.name}\n`;
+        msg += `Status: ${stateText}\n`;
+        msg += `Health: ${healthText}\n`;
+        msg += `Uptime: ${getCleanUptime(c.status)}\n\n`;
       }
     }
 
-    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
+    // Strip trailing newlines from services loop
+    msg = msg.trim() + `\n\nLast Report\n${this.ago(ts)}`;
+    msg += `</pre>`;
     return msg;
   }
 

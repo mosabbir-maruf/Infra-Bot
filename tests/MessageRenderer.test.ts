@@ -84,17 +84,15 @@ describe('MessageRenderer', () => {
         { name: 'nginx', status: 'Up 2 days', state: 'running' },
       ], Date.now() / 1000);
       expect(r).toContain('Container Status');
-      expect(r).toContain('Running: 3');
-      // Healthy: 3 - 0 = 3
-      expect(r).toContain('Healthy: 3');
-      // Issues: (5 - 3) + 0 = 2
-      expect(r).toContain('Issues: 2');
+      expect(r).toContain('Running: 3/5');
+      expect(r).toContain('Health: Critical');
+      expect(r).toContain('Issues\n2 stopped containers');
       expect(r).toContain('nginx');
+      expect(r).toContain('Uptime: 2d');
     });
     it('shows warning when unhealthy containers', () => {
       const r = MessageRenderer.dockerCard('node', 3, 5, 2, [], Date.now() / 1000);
-      // Healthy: 3 - 2 = 1, Issues: (5 - 3) + 2 = 4
-      expect(r).toContain('Issues: 4');
+      expect(r).toContain('Issues\n2 stopped containers, 2 unhealthy containers');
     });
   });
 
