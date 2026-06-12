@@ -32,17 +32,18 @@ sudo systemctl enable --now vnstat
 
 1. Copy the script and create the configuration file:
    ```bash
-   sudo cp monitoring/agent.sh /usr/local/bin/infra-agent.sh
-   sudo chmod +x /usr/local/bin/infra-agent.sh
    sudo nano /etc/infra-agent.conf
    ```
    Paste the following (replace with your values):
+   ```bash
+   SERVER_ALIAS="ai-gateway-prod"
+   MONITORING_SECRET="your_shared_hmac_secret"
+   CONTROL_PLANE_URL="https://your-worker.workers.dev"
    ```
-SERVER_ALIAS="ai-gateway-prod"
-MONITORING_SECRET="your_shared_hmac_secret"
-CONTROL_PLANE_URL="https://your-worker.workers.dev"
+   Change the permission:
+   ```bash
+   sudo chmod +x /usr/local/bin/infra-agent.sh
    ```
-
 ---
 
 ## Cron Orchestration
