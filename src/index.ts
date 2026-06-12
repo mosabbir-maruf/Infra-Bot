@@ -331,7 +331,7 @@ app.get('/', (c) => {
 
     /* ── Main layout ─────────────────────────── */
     .main {
-      max-width: 900px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 3rem 2rem 6rem;
       display: flex;
@@ -690,7 +690,7 @@ app.get('/', (c) => {
     .foot {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       gap: 1rem;
       flex-wrap: wrap;
       padding-top: 1.5rem;
@@ -947,8 +947,10 @@ app.get('/', (c) => {
 
       function tick() {
         const n = new Date();
-        document.getElementById('clock').textContent =
-          p(n.getUTCHours())+':'+p(n.getUTCMinutes())+':'+p(n.getUTCSeconds())+' UTC';
+        const t = p(n.getUTCHours())+':'+p(n.getUTCMinutes())+':'+p(n.getUTCSeconds())+' UTC';
+        document.getElementById('clock').textContent = t;
+        const dc = document.getElementById('clock-docs');
+        if (dc) dc.textContent = t;
 
         const s = Math.floor((Date.now()-start)/1000);
         const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
@@ -1054,7 +1056,12 @@ app.get('/docs', (c) => {
     .wordmark { font-family:var(--mono); font-size:0.8rem; font-weight:500; color:var(--fg); display:flex; align-items:center; gap:0.5rem; }
     .wordmark-sep { color:var(--fg3); font-weight:300; }
     .wordmark-sub { color:var(--fg2); font-weight:400; }
+    .topbar-left { display:flex; align-items:center; gap:1.25rem; }
     .topbar-right { display:flex; align-items:center; gap:1.25rem; }
+    .topbar-status { display:flex; align-items:center; gap:0.4rem; font-size:0.72rem; color:var(--green); font-family:var(--mono); }
+    .dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; animation:blink 3s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .clock { font-family:var(--mono); font-size:0.72rem; color:var(--fg2); letter-spacing:0.02em; }
     .nav-link { font-size:0.72rem; color:var(--fg2); text-decoration:none; transition:color .12s; display:inline-flex; align-items:center; gap:.25rem; }
     .nav-link svg { display:block; }
     .nav-link:hover { color:var(--fg); }
@@ -1205,12 +1212,19 @@ app.get('/docs', (c) => {
 </head>
 <body>
   <div class="topbar">
-    <a href="/" class="wordmark" style="text-decoration:none">
-      <span>infra-bot</span>
-      <span class="wordmark-sep">/</span>
-      <span class="wordmark-sub">docs</span>
-    </a>
+    <div class="topbar-left">
+      <a href="/" class="wordmark" style="text-decoration:none">
+        <span>infra-bot</span>
+        <span class="wordmark-sep">/</span>
+        <span class="wordmark-sub">docs</span>
+      </a>
+      <div class="topbar-status">
+        <span class="dot"></span>
+        operational
+      </div>
+    </div>
     <div class="topbar-right">
+      <span class="clock" id="clock-docs">--:--:-- UTC</span>
       <a href="/" class="nav-link">dashboard</a>
       <a href="/health" class="nav-link" target="_blank" rel="noopener">health ↗</a>
       <a href="https://workers.cloudflare.com" target="_blank" rel="noopener" class="nav-link">cf workers ↗</a>
@@ -1525,6 +1539,16 @@ npm run deploy</code></pre>
         };
         try{const s=localStorage.getItem(key);if(s==='light')setTheme(true)}catch(e){}
         btn.addEventListener('click',()=>setTheme(!document.documentElement.classList.contains('light')));
+      }
+
+      const dc=document.getElementById('clock-docs');
+      if(dc){
+        const p=n=>String(n).padStart(2,'0');
+        const tick=()=>{
+          const n=new Date();
+          dc.textContent=p(n.getUTCHours())+':'+p(n.getUTCMinutes())+':'+p(n.getUTCSeconds())+' UTC';
+        };
+        tick(); setInterval(tick,1000);
       }
     })();
   </script>
