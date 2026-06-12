@@ -52,7 +52,7 @@ describe('CommandRouter', () => {
     expect(mockSendMessage).toHaveBeenCalled();
     const [chatId, text, parseMode] = mockSendMessage.mock.calls[0];
     expect(chatId).toBe(999);
-    expect(text).toContain('Infrastructure Bot');
+    expect(text).toContain('Infra-Bot');
     expect(parseMode).toBe('HTML');
   });
 
@@ -72,7 +72,7 @@ describe('CommandRouter', () => {
 
     expect(mockSendMessage).toHaveBeenCalled();
     const [_, text, parseMode] = mockSendMessage.mock.calls[0];
-    expect(text).toContain('Infrastructure Bot');
+    expect(text).toContain('Infra-Bot');
     expect(parseMode).toBe('HTML');
   });
 

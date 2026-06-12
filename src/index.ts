@@ -1890,17 +1890,14 @@ async function handleDailyReport(env: unknown): Promise<void> {
     return;
   }
 
-  let report = MessageRenderer.header('Daily Infrastructure Report');
-  report += `\n${MessageRenderer.line('Date', new Date().toISOString().split('T')[0])}\n`;
+  let report = MessageRenderer.header('📊 Daily Report');
+  report += `${MessageRenderer.line('Date', new Date().toISOString().split('T')[0])}\n`;
   let activeCount = 0;
 
   for (const server of servers) {
     const data = await kv.get(`metrics:${server.alias.toLowerCase()}`);
     if (!data) {
-      report += MessageRenderer.serverMetrics(server.alias, {
-        'Status': 'No telemetry data',
-      });
-      report += '\n';
+      report += MessageRenderer.emptyCard(server.alias);
       continue;
     }
 
@@ -1916,47 +1913,20 @@ async function handleDailyReport(env: unknown): Promise<void> {
       }
 
       const metrics = JSON.parse(data) as MetricsJson;
-      const lastSeen = new Date(metrics.timestamp * 1000);
-      const ageMinutes = (Date.now() - lastSeen.getTime()) / (1000 * 60);
+      const ageMinutes = (Date.now() - metrics.timestamp * 1000) / (1000 * 60);
+      if (ageMinutes <= 15) activeCount++;
 
-      let status = 'Active';
-      if (ageMinutes > 15) {
-        status = 'Stale';
-      } else {
-        activeCount++;
-      }
-
-      const ramUsedGB = (metrics.ram.used / 1024).toFixed(2);
-      const ramTotalGB = (metrics.ram.total / 1024).toFixed(2);
-      const diskUsedGB = (metrics.disk.used / 1024).toFixed(2);
-      const diskTotalGB = (metrics.disk.total / 1024).toFixed(2);
-
-      const totalBandwidthBytes = (metrics.bandwidth?.rx || 0) + (metrics.bandwidth?.tx || 0);
-      const totalBandwidthGB = (totalBandwidthBytes / (1024 * 1024 * 1024)).toFixed(2);
-
-      const days = Math.floor(metrics.uptime / (24 * 3600));
-      const hours = Math.floor((metrics.uptime % (24 * 3600)) / 3600);
-      const uptimeStr = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
-
-      report += MessageRenderer.serverMetrics(server.alias, {
-        'Status': status,
-        'CPU': `${metrics.cpu}%`,
-        'Uptime': uptimeStr,
-        'RAM': `${ramUsedGB} GB / ${ramTotalGB} GB`,
-        'Disk': `${diskUsedGB} GB / ${diskTotalGB} GB`,
-        'Containers': `${metrics.docker.running}/${metrics.docker.total}`,
-        'Bandwidth': `${totalBandwidthGB} GB`,
-      });
-      report += '\n';
+      const cpuPct = parseFloat(metrics.cpu) || 0;
+      report += MessageRenderer.reportCard(
+        server.alias, metrics.timestamp, metrics.cpu, cpuPct,
+        metrics.ram.used, metrics.ram.total, metrics.disk.used, metrics.disk.total,
+        metrics.uptime, metrics.docker.running, metrics.docker.total,
+      );
     } catch {
-      report += MessageRenderer.serverMetrics(server.alias, {
-        'Status': 'Corrupted telemetry data',
-      });
-      report += '\n';
+      report += MessageRenderer.emptyCard(server.alias);
     }
   }
 
-  report += MessageRenderer.header('Summary');
   report += `\n${activeCount} / ${servers.length} servers active.\n`;
 
   const client = new TelegramClient(validatedEnv.TELEGRAM_BOT_TOKEN);

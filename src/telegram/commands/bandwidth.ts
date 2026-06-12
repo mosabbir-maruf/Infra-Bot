@@ -4,58 +4,28 @@ import { MessageRenderer } from '../MessageRenderer';
 
 export class BandwidthHandler implements CommandHandler {
   public readonly name = 'bandwidth';
-  public readonly description = 'Shows monthly bandwidth usage metrics from telemetry store';
+  public readonly description = 'Monthly bandwidth — RX, TX, total with progress bars';
 
   public async execute(ctx: TelegramContext): Promise<void> {
     const kv = ctx.monitoringKv;
-
-    if (!kv) {
-      await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML');
-      return;
-    }
+    if (!kv) { await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML'); return; }
 
     const aliases = ctx.serverRegistry.getAliases();
-    if (aliases.length === 0) {
-      await ctx.reply(MessageRenderer.noServers(), 'HTML');
-      return;
-    }
+    if (aliases.length === 0) { await ctx.reply(MessageRenderer.noServers(), 'HTML'); return; }
 
     let report = '';
-
     for (const alias of aliases) {
-      const data = await kv.get(`metrics:${alias.toLowerCase()}`);
-      if (!data) {
-        report += MessageRenderer.serverMetrics(alias, {
-          'Status': 'No telemetry data',
-        });
-        report += '\n';
-        continue;
-      }
+      const raw = await kv.get(`metrics:${alias.toLowerCase()}`);
+      if (!raw) { report += MessageRenderer.emptyCard(alias); continue; }
 
       try {
-        interface MetricsPayload {
-          bandwidth?: { rx: number; tx: number };
-        }
-        const metrics = JSON.parse(data) as MetricsPayload;
-        const rx = metrics.bandwidth?.rx || 0;
-        const tx = metrics.bandwidth?.tx || 0;
-        const totalB = rx + tx;
-
-        const rxGB = (rx / (1024 * 1024 * 1024)).toFixed(2);
-        const txGB = (tx / (1024 * 1024 * 1024)).toFixed(2);
-        const totalGB = (totalB / (1024 * 1024 * 1024)).toFixed(2);
-
-        report += MessageRenderer.serverMetrics(alias, {
-          'Total': `${totalGB} GB`,
-          'RX': `${rxGB} GB`,
-          'TX': `${txGB} GB`,
-        });
-        report += '\n';
+        interface M { timestamp: number; bandwidth?: { rx: number; tx: number }; }
+        const m = JSON.parse(raw) as M;
+        report += MessageRenderer.bandwidthCard(
+          alias, m.timestamp, m.bandwidth?.rx || 0, m.bandwidth?.tx || 0,
+        );
       } catch {
-        report += MessageRenderer.serverMetrics(alias, {
-          'Status': 'Corrupted telemetry data',
-        });
-        report += '\n';
+        report += MessageRenderer.emptyCard(alias);
       }
     }
 

@@ -4,72 +4,31 @@ import { MessageRenderer } from '../MessageRenderer';
 
 export class DockerHandler implements CommandHandler {
   public readonly name = 'docker';
-  public readonly description = 'Lists active Docker containers and their states on VPS';
+  public readonly description = 'Container inventory — running, unhealthy, state per server';
 
   public async execute(ctx: TelegramContext): Promise<void> {
     const kv = ctx.monitoringKv;
-
-    if (!kv) {
-      await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML');
-      return;
-    }
+    if (!kv) { await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML'); return; }
 
     const aliases = ctx.serverRegistry.getAliases();
     let report = '';
 
     for (const alias of aliases) {
-      const data = await kv.get(`metrics:${alias.toLowerCase()}`);
-      if (!data) {
-        report += MessageRenderer.serverMetrics(alias, {
-          'Status': 'No telemetry data',
-        });
-        report += '\n';
-        continue;
-      }
+      const raw = await kv.get(`metrics:${alias.toLowerCase()}`);
+      if (!raw) { report += MessageRenderer.emptyCard(alias); continue; }
 
       try {
-        interface ContainerInfo {
-          name: string;
-          status: string;
-          state: string;
-        }
-        interface MetricsPayload {
-          docker?: {
-            running: number;
-            total: number;
-            unhealthy: number;
-            containers?: ContainerInfo[];
-          };
-        }
-        const metrics = JSON.parse(data) as MetricsPayload;
-        const docker = metrics.docker;
+        interface M { docker?: { running: number; total: number; unhealthy: number;
+          containers?: Array<{ name: string; status: string; state: string }>; }; }
+        const m = JSON.parse(raw) as M;
+        const d = m.docker;
+        if (!d) { report += MessageRenderer.emptyCard(alias); continue; }
 
-        if (!docker) {
-          report += MessageRenderer.serverMetrics(alias, {
-            'Status': 'Docker metrics unavailable',
-          });
-          report += '\n';
-          continue;
-        }
-
-        const unhealthy = docker.unhealthy > 0 ? ` (${docker.unhealthy} unhealthy)` : '';
-        report += MessageRenderer.serverMetrics(alias, {
-          'Containers': `${docker.running}/${docker.total} running${unhealthy}`,
-        });
-
-        const containers = docker.containers || [];
-        if (containers.length > 0) {
-          for (const c of containers) {
-            report += MessageRenderer.line(`  ${c.name}`, c.status);
-          }
-        }
-
-        report += '\n';
+        report += MessageRenderer.dockerCard(
+          alias, d.running, d.total, d.unhealthy, d.containers || [],
+        );
       } catch {
-        report += MessageRenderer.serverMetrics(alias, {
-          'Status': 'Corrupted telemetry data',
-        });
-        report += '\n';
+        report += MessageRenderer.emptyCard(alias);
       }
     }
 

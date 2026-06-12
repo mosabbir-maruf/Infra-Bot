@@ -5,7 +5,7 @@ import { ProviderRegistry } from '../../providers/ProviderRegistry';
 
 export class HealthHandler implements CommandHandler {
   public readonly name = 'health';
-  public readonly description = 'Checks Control Plane telemetry and configured providers';
+  public readonly description = 'Control Plane diagnostics — bindings, providers, environment';
 
   public async execute(ctx: TelegramContext): Promise<void> {
     const registry = new ProviderRegistry(ctx.env);
@@ -14,22 +14,15 @@ export class HealthHandler implements CommandHandler {
     const kv = ctx.monitoringKv;
     const kvStatus = kv ? 'Bound' : 'Not Bound';
 
-    let report = MessageRenderer.header('Control Plane Health');
-    report += '\n';
-    report += MessageRenderer.line('Status', 'Active');
-    report += MessageRenderer.line('Environment', ctx.env.NODE_ENV);
-    report += MessageRenderer.line('Default Region', ctx.env.AWS_REGION);
-    report += MessageRenderer.line(
-      'Active Providers',
-      activeProviders.length > 0 ? activeProviders.join(', ') : 'None',
+    await ctx.reply(
+      MessageRenderer.healthDashboard(
+        kvStatus,
+        activeProviders.length > 0 ? activeProviders.join(', ') : 'None',
+        ctx.env.AWS_REGION,
+        ctx.env.NODE_ENV,
+        ctx.env.AUTHORIZED_USER_IDS.length,
+      ),
+      'HTML',
     );
-    report += MessageRenderer.line('Monitoring KV', kvStatus);
-    report += MessageRenderer.line(
-      'Authorized Users',
-      `${ctx.env.AUTHORIZED_USER_IDS.length} user(s)`,
-    );
-    report += MessageRenderer.line('Platform', 'Cloudflare Workers');
-
-    await ctx.reply(report, 'HTML');
   }
 }

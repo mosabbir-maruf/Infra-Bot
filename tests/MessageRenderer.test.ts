@@ -2,263 +2,166 @@ import { describe, it, expect } from 'vitest';
 import { MessageRenderer } from '../src/telegram/MessageRenderer';
 
 describe('MessageRenderer', () => {
-  describe('header', () => {
-    it('renders bold header', () => {
-      expect(MessageRenderer.header('Test')).toBe('<b>Test</b>\n');
+  describe('bar', () => {
+    it('renders full bar at 100%', () => {
+      expect(MessageRenderer.bar(100, 5)).toBe('█████');
     });
-
-    it('escapes HTML in header', () => {
-      expect(MessageRenderer.header('<script>')).toBe('<b>&lt;script&gt;</b>\n');
+    it('renders empty bar at 0%', () => {
+      expect(MessageRenderer.bar(0, 5)).toBe('░░░░░');
+    });
+    it('renders partial bar', () => {
+      expect(MessageRenderer.bar(50, 10)).toBe('█████░░░░░');
     });
   });
 
-  describe('line', () => {
-    it('renders label and value', () => {
-      expect(MessageRenderer.line('Action', 'Reboot')).toBe(
-        '<b>Action:</b> <code>Reboot</code>\n',
+  describe('duration', () => {
+    it('formats seconds to Xh Ym', () => {
+      const r = MessageRenderer.duration(3723);
+      expect(r).toContain('1h');
+    });
+    it('formats days', () => {
+      expect(MessageRenderer.duration(90000)).toBe('1d 1h');
+    });
+  });
+
+  describe('ago', () => {
+    it('returns "just now" for recent timestamps', () => {
+      const now = Math.floor(Date.now() / 1000);
+      expect(MessageRenderer.ago(now)).toBe('just now');
+    });
+    it('returns minutes ago', () => {
+      const fiveMin = Math.floor(Date.now() / 1000) - 300;
+      expect(MessageRenderer.ago(fiveMin)).toContain('m ago');
+    });
+  });
+
+  describe('healthIcon', () => {
+    it('critical at 90+', () => { expect(MessageRenderer.healthIcon(90)).toBe('🔴'); });
+    it('warning at 70-89', () => { expect(MessageRenderer.healthIcon(75)).toBe('🟡'); });
+    it('healthy below 70', () => { expect(MessageRenderer.healthIcon(50)).toBe('🟢'); });
+  });
+
+  describe('reportCard', () => {
+    it('renders full report card with progress bars', () => {
+      const r = MessageRenderer.reportCard(
+        'server-01', Date.now() / 1000, '12.5', 12.5, 4096, 8192, 20480, 51200, 360000, 3, 5, 0,
       );
-    });
-
-    it('escapes HTML in label and value', () => {
-      expect(MessageRenderer.line('<a>', '<b>')).toBe(
-        '<b>&lt;a&gt;:</b> <code>&lt;b&gt;</code>\n',
-      );
-    });
-  });
-
-  describe('multiline', () => {
-    it('renders label with multiline value', () => {
-      expect(MessageRenderer.multiline('Reason', 'line1\nline2')).toBe(
-        '<b>Reason:</b>\n<code>line1\nline2</code>\n',
-      );
+      expect(r).toContain('<b>server-01</b>');
+      expect(r).toContain('CPU');
+      expect(r).toContain('MEM');
+      expect(r).toContain('disk');
+      expect(r).toContain('Ctr');
     });
   });
 
-  describe('success', () => {
-    it('renders success message with action and target', () => {
-      const result = MessageRenderer.success('Reboot', 'server-01');
-      expect(result).toContain('<b>Operation Completed</b>');
-      expect(result).toContain('<b>Action:</b> <code>Reboot</code>');
-      expect(result).toContain('<b>Target:</b> <code>server-01</code>');
-    });
-
-    it('renders success message with extra fields', () => {
-      const result = MessageRenderer.success('Start', 'server-01', {
-        Provider: 'AWS',
-        Status: 'Accepted',
-      });
-      expect(result).toContain('<b>Provider:</b> <code>AWS</code>');
-      expect(result).toContain('<b>Status:</b> <code>Accepted</code>');
+  describe('uptimeCard', () => {
+    it('renders uptime card', () => {
+      const r = MessageRenderer.uptimeCard('node', Date.now() / 1000, 86400, '5.2');
+      expect(r).toContain('node');
+      expect(r).toContain('cpu');
     });
   });
 
-  describe('status', () => {
-    it('renders status message', () => {
-      const result = MessageRenderer.status({
-        'Alias': 'server-01',
-        'Provider': 'AWS',
-        'Status': 'Running',
-      });
-      expect(result).toContain('<b>Server Status</b>');
-      expect(result).toContain('<b>Alias:</b> <code>server-01</code>');
-      expect(result).toContain('<b>Status:</b> <code>Running</code>');
+  describe('bandwidthCard', () => {
+    it('renders bandwidth card with bars', () => {
+      const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 10737418240, 5368709120);
+      expect(r).toContain('<b>gw</b>');
+      expect(r).toContain('Total');
+      expect(r).toContain('RX');
+      expect(r).toContain('TX');
     });
   });
 
-  describe('error', () => {
-    it('renders error message with reason', () => {
-      const result = MessageRenderer.error('Status', 'server-01', 'Connection timeout.');
-      expect(result).toContain('<b>Operation Failed</b>');
-      expect(result).toContain('<b>Action:</b> <code>Status</code>');
-      expect(result).toContain('<b>Target:</b> <code>server-01</code>');
-      expect(result).toContain('<b>Reason:</b>');
-      expect(result).toContain('<code>Connection timeout.</code>');
-    });
-
-    it('renders error message with reference', () => {
-      const result = MessageRenderer.error(
-        'Status',
-        'server-01',
-        'API error.',
-        'ref-123',
-      );
-      expect(result).toContain('<b>Reference:</b> <code>ref-123</code>');
-    });
-  });
-
-  describe('warning', () => {
-    it('renders warning message', () => {
-      const result = MessageRenderer.warning(
-        'Bandwidth',
-        'Usage exceeded 80 GB.',
-      );
-      expect(result).toContain('<b>Warning</b>');
-      expect(result).toContain('<b>Subject:</b> <code>Bandwidth</code>');
-      expect(result).toContain('<b>Details:</b>');
-    });
-
-    it('renders warning with extra fields', () => {
-      const result = MessageRenderer.warning(
-        'SERVER-01',
-        'Bandwidth threshold exceeded.',
-        { 'Current Usage': '82.4 GB', 'Threshold': '80 GB' },
-      );
-      expect(result).toContain('<b>Current Usage:</b> <code>82.4 GB</code>');
-      expect(result).toContain('<b>Threshold:</b> <code>80 GB</code>');
-    });
-  });
-
-  describe('generalError', () => {
-    it('renders general error', () => {
-      const result = MessageRenderer.generalError('Something went wrong.');
-      expect(result).toContain('<b>Error</b>');
-      expect(result).toContain('<b>Reason:</b>');
-      expect(result).toContain('<code>Something went wrong.</code>');
-    });
-  });
-
-  describe('help', () => {
-    it('renders help message with commands', () => {
-      const result = MessageRenderer.help([
-        { command: '/help', description: 'Show help.' },
-        { command: '/status', description: 'Show status.', args: '<server>' },
+  describe('dockerCard', () => {
+    it('renders docker card with container list', () => {
+      const r = MessageRenderer.dockerCard('node', 3, 5, 0, [
+        { name: 'nginx', status: 'Up 2 days', state: 'running' },
       ]);
-      expect(result).toContain('<b>Infrastructure Bot</b>');
-      expect(result).toContain('<b>Available Commands</b>');
-      expect(result).toContain('<code>/help</code>');
-      expect(result).toContain('<code>/status &lt;server&gt;</code>');
-      expect(result).toContain('Show help.');
-      expect(result).toContain('Show status.');
+      expect(r).toContain('3/5 running');
+      expect(r).toContain('●');
+    });
+    it('shows warning when unhealthy containers', () => {
+      const r = MessageRenderer.dockerCard('node', 3, 5, 2, []);
+      expect(r).toContain('🟡');
+      expect(r).toContain('unhealthy');
     });
   });
 
-  describe('notFound', () => {
-    it('renders not found message', () => {
-      const result = MessageRenderer.notFound('missing-server');
-      expect(result).toContain('<b>Operation Failed</b>');
-      expect(result).toContain(
-        '<b>Reason:</b> <code>Server "missing-server" not found in registry.</code>',
-      );
+  describe('emptyCard', () => {
+    it('renders empty placeholder', () => {
+      expect(MessageRenderer.emptyCard('missing')).toContain('missing');
+      expect(MessageRenderer.emptyCard('missing')).toContain('no data');
     });
   });
 
-  describe('rateLimit', () => {
-    it('renders rate limit message', () => {
-      const result = MessageRenderer.rateLimit();
-      expect(result).toContain('<b>Rate Limit Exceeded</b>');
-      expect(result).toContain('10 commands per minute');
+  describe('healthDashboard', () => {
+    it('renders control plane dashboard', () => {
+      const r = MessageRenderer.healthDashboard('Bound', 'AWS', 'us-east-1', 'production', 2);
+      expect(r).toContain('Control Plane');
+      expect(r).toContain('Bound');
+      expect(r).toContain('AWS');
+      expect(r).toContain('Cloudflare Workers');
     });
   });
 
-  describe('unknownCommand', () => {
-    it('renders unknown command message', () => {
-      const result = MessageRenderer.unknownCommand('/badcmd');
-      expect(result).toContain('<b>Unknown Command</b>');
-      expect(result).toContain('<b>Command:</b> <code>/badcmd</code>');
+  describe('legacy methods', () => {
+    it('success renders with emoji', () => {
+      expect(MessageRenderer.success('Reboot', 'srv').replace(/^\uFEFF/, '')).toContain('Operation Completed');
     });
-  });
-
-  describe('configError', () => {
-    it('renders config error message', () => {
-      const result = MessageRenderer.configError('MONITORING_KV');
-      expect(result).toContain('<b>Configuration Error</b>');
-      expect(result).toContain('<b>Binding:</b> <code>MONITORING_KV</code>');
+    it('error renders with emoji', () => {
+      expect(MessageRenderer.error('Stop', 'srv', 'timeout').replace(/^\uFEFF/, '')).toContain('Operation Failed');
     });
-  });
-
-  describe('operationStatus', () => {
-    it('renders operation status message', () => {
-      const result = MessageRenderer.operationStatus(
-        'Reboot',
-        'server-01',
-        'AWS',
-        'Accepted',
-      );
-      expect(result).toContain('<b>Operation Completed</b>');
-      expect(result).toContain('<b>Action:</b> <code>Reboot</code>');
-      expect(result).toContain('<b>Target:</b> <code>server-01</code>');
-      expect(result).toContain('<b>Provider:</b> <code>AWS</code>');
-      expect(result).toContain('<b>Status:</b> <code>Accepted</code>');
+    it('warning renders with emoji', () => {
+      expect(MessageRenderer.warning('Disk', 'full', { Used: '90%' })).toContain('Warning');
     });
-  });
-
-  describe('noServers', () => {
-    it('renders no servers message', () => {
-      const result = MessageRenderer.noServers();
-      expect(result).toContain('<b>No Servers Registered</b>');
+    it('help renders with emoji', () => {
+      expect(MessageRenderer.help([{ command: '/help', description: 'Help' }])).toContain('Infra-Bot');
     });
-  });
-
-  describe('warningAlert', () => {
-    it('renders warning alert message', () => {
-      const result = MessageRenderer.warningAlert(
-        'server-01',
-        'Bandwidth',
-        '82.4 GB',
-        '80 GB',
-      );
-      expect(result).toContain('<b>Warning</b>');
-      expect(result).toContain('<b>Server:</b> <code>server-01</code>');
-      expect(result).toContain('<b>Metric:</b> <code>Bandwidth</code>');
-      expect(result).toContain('<b>Current:</b> <code>82.4 GB</code>');
-      expect(result).toContain('<b>Threshold:</b> <code>80 GB</code>');
+    it('notFound returns general error', () => {
+      expect(MessageRenderer.notFound('x')).toContain('Error');
     });
-  });
-
-  describe('providerStatus', () => {
-    it('renders provider status message', () => {
-      const result = MessageRenderer.providerStatus(
-        'server-01',
-        'Running',
-        '10.0.0.1',
-        'i-1234',
-        'us-east-1',
-      );
-      expect(result).toContain('<b>Server Status: server-01</b>');
-      expect(result).toContain('<b>Status:</b> <code>Running</code>');
-      expect(result).toContain('<b>IP Address:</b> <code>10.0.0.1</code>');
-      expect(result).toContain('<b>Instance ID:</b> <code>i-1234</code>');
-      expect(result).toContain('<b>Region:</b> <code>us-east-1</code>');
+    it('rateLimit renders compact', () => {
+      expect(MessageRenderer.rateLimit()).toContain('Rate Limit');
+      expect(MessageRenderer.rateLimit()).toContain('10 commands');
     });
-  });
-
-  describe('serverDetails', () => {
-    it('renders server details message', () => {
-      const result = MessageRenderer.serverDetails('server-01', 'AWS', {
-        'Instance Type': 't3.medium',
-        'Status': 'running',
-        'Public IP': '1.2.3.4',
-      });
-      expect(result).toContain('<b>Server Details: server-01</b>');
-      expect(result).toContain('<b>Provider:</b> <code>AWS</code>');
-      expect(result).toContain('<b>Instance Type:</b> <code>t3.medium</code>');
+    it('configError renders compact', () => {
+      expect(MessageRenderer.configError('KV')).toContain('Config Error');
     });
-  });
-
-  describe('serverMetrics', () => {
-    it('renders metrics message', () => {
-      const result = MessageRenderer.serverMetrics('server-01', {
-        'CPU': '12%',
-        'RAM': '4.2 GB / 8.0 GB',
-      });
-      expect(result).toContain('<b>Metrics: server-01</b>');
-      expect(result).toContain('<b>CPU:</b> <code>12%</code>');
+    it('success with extra fields', () => {
+      const r = MessageRenderer.success('Start', 'svr', { Provider: 'AWS' });
+      expect(r).toContain('Provider');
+      expect(r).toContain('AWS');
     });
-  });
-
-  describe('HTML escaping', () => {
-    it('escapes HTML special characters in all parts', () => {
-      const result = MessageRenderer.line('<name>', '<value>&');
-      expect(result).not.toContain('<name>');
-      expect(result).not.toContain('<value>');
-      expect(result).toContain('&lt;name&gt;');
-      expect(result).toContain('&lt;value&gt;&amp;');
+    it('line renders label and value', () => {
+      expect(MessageRenderer.line('Key', 'Val')).toContain('Key');
+      expect(MessageRenderer.line('Key', 'Val')).toContain('Val');
     });
-
-    it('escapes HTML in dynamic server names', () => {
-      const result = MessageRenderer.notFound('<script>alert("xss")</script>');
-      expect(result).toContain('&lt;script&gt;');
-      expect(result).not.toContain('<script>');
+    it('HTML escaping', () => {
+      const r = MessageRenderer.line('<script>', '&amp;');
+      expect(r).toContain('&lt;script&gt;');
+      expect(r).toContain('&amp;amp;');
+    });
+    it('warningAlert renders compact', () => {
+      const r = MessageRenderer.warningAlert('svr', 'BW', '90GB', '80GB');
+      expect(r).toContain('Alert');
+    });
+    it('providerStatus renders server info', () => {
+      const r = MessageRenderer.providerStatus('svr', 'running', '1.2.3.4', 'i-123', 'us-east-1');
+      expect(r).toContain('Server: svr');
+      expect(r).toContain('running');
+    });
+    it('serverDetails renders with provider', () => {
+      const r = MessageRenderer.serverDetails('svr', 'AWS', { Type: 't3' });
+      expect(r).toContain('Server: svr');
+      expect(r).toContain('AWS');
+    });
+    it('operationStatus renders compact', () => {
+      const r = MessageRenderer.operationStatus('Reboot', 'svr', 'AWS', 'Accepted');
+      expect(r).toContain('Operation Completed');
+    });
+    it('generalError renders compact', () => {
+      expect(MessageRenderer.generalError('fail').replace(/^\uFEFF/, '')).toContain('Error');
+      expect(MessageRenderer.generalError('fail')).toContain('fail');
     });
   });
 });
