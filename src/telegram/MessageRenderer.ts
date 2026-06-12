@@ -82,48 +82,64 @@ export class MessageRenderer {
     if (dockerTotal !== undefined && dockerTotal > 0) healthList.push(dockerHealth);
 
     let overallHealth = 'Healthy';
-    let healthEmoji = '';
     if (healthList.includes('Critical')) {
       overallHealth = 'Critical';
-      healthEmoji = ' 🚨';
     } else if (healthList.includes('Warning')) {
       overallHealth = 'Warning';
-      healthEmoji = ' ⚠️';
     }
 
-    let msg = `<b>Infrastructure Report</b>\n\n`;
-    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
-    msg += `<b>Status</b>\n${ageMin <= 15 ? 'Running' : 'Offline'}\n\n`;
-    msg += `<b>Health</b>\n${overallHealth}${healthEmoji}\n\n`;
-    msg += `<b>Resources</b>\n`;
-    msg += `CPU: ${cpuPct.toFixed(0)}%\n`;
-    msg += `Memory: ${ramPct.toFixed(0)}%\n`;
-    msg += `Disk: ${diskPct.toFixed(0)}%\n\n`;
+    const reasons: string[] = [];
+    if (cpuHealth !== 'Healthy') reasons.push(`CPU usage ${cpuHealth.toLowerCase()}`);
+    if (ramHealth !== 'Healthy') reasons.push(`Memory usage ${ramHealth.toLowerCase()}`);
+    if (diskHealth !== 'Healthy') reasons.push(`Disk usage ${diskHealth.toLowerCase()}`);
+    if (freshnessHealth !== 'Healthy') {
+      reasons.push(freshnessHealth === 'Critical' ? 'monitoring agent inactive' : 'monitoring agent delayed');
+    }
+    if (dockerTotal !== undefined && dockerTotal > 0) {
+      if (dockerRunning !== undefined && dockerRunning < dockerTotal) {
+        const diff = dockerTotal - dockerRunning;
+        reasons.push(`${diff} stopped container${diff > 1 ? 's' : ''}`);
+      }
+      if (dockerUnhealthy && dockerUnhealthy > 0) {
+        reasons.push(`${dockerUnhealthy} unhealthy container${dockerUnhealthy > 1 ? 's' : ''}`);
+      }
+    }
+    const reasonText = reasons.length > 0 ? reasons.join(', ') : 'None';
+
+    let msg = `<pre style="margin:0;padding:0">`;
+    msg += `Infrastructure Report\n\n`;
+    msg += `Server\n${alias}\n\n`;
+    msg += `Health\n${overallHealth}\n\n`;
+
+    if (overallHealth !== 'Healthy') {
+      msg += `Reason\n${reasonText}\n\n`;
+    }
+
+    msg += `Resources\n`;
+    msg += `CPU`.padEnd(11) + `${cpuPct.toFixed(0)}%\n`;
+    msg += `Memory`.padEnd(11) + `${ramPct.toFixed(0)}%\n`;
+    msg += `Disk`.padEnd(11) + `${diskPct.toFixed(0)}%\n\n`;
 
     if (dockerTotal !== undefined) {
-      const healthyCount = (dockerRunning ?? 0) - (dockerUnhealthy ?? 0);
-      const issuesCount = (dockerTotal - (dockerRunning ?? 0)) + (dockerUnhealthy ?? 0);
-      msg += `<b>Containers</b>\n`;
-      msg += `Running: ${dockerRunning ?? 0}/${dockerTotal}\n`;
-      msg += `Healthy: ${healthyCount >= 0 ? healthyCount : 0}\n`;
-      msg += `Issues: ${issuesCount}\n\n`;
+      msg += `Containers\n`;
+      msg += `Running`.padEnd(11) + `${dockerRunning ?? 0}/${dockerTotal}\n\n`;
     }
 
-    msg += `<b>Uptime</b>\n${this.duration(uptime)}\n\n`;
-    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
+    msg += `Uptime\n${this.duration(uptime)}\n\n`;
+    msg += `Last Report\n${this.ago(ts)}`;
+    msg += `</pre>`;
     return msg;
   }
 
   /** Compact uptime card */
-  static uptimeCard(alias: string, ts: number, uptime: number, cpu: string): string {
-    const ageMin = Math.floor((Date.now() - ts * 1000) / 60000);
-    const statusText = ageMin <= 15 ? 'Running' : 'Offline';
-
-    let msg = `<b>System Uptime</b>\n\n`;
-    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
-    msg += `<b>Current Uptime</b>\n${this.duration(uptime)}\n\n`;
-    msg += `<b>Status</b>\n${statusText}\n\n`;
-    msg += `<b>Last Monitoring Report</b>\n${this.ago(ts)}`;
+  static uptimeCard(alias: string, ts: number, uptime: number, health: string): string {
+    let msg = `<pre style="margin:0;padding:0">`;
+    msg += `System Uptime\n\n`;
+    msg += `Server\n${alias}\n\n`;
+    msg += `Current Uptime\n${this.duration(uptime)}\n\n`;
+    msg += `Health\n${health}\n\n`;
+    msg += `Last Report\n${this.ago(ts)}`;
+    msg += `</pre>`;
     return msg;
   }
 
@@ -225,14 +241,16 @@ export class MessageRenderer {
     env: string, users: number, lastReportText: string
   ): string {
     const isOperational = kvStatus === 'Bound';
-    const statusText = isOperational ? 'Operational' : 'Degraded ⚠️';
-    let msg = `<b>Control Plane</b>\n\n`;
-    msg += `<b>Status</b>\n${statusText}\n\n`;
-    msg += `<b>Cloud Providers</b>\n${escapeHtml(providers)}\n\n`;
-    msg += `<b>Monitoring</b>\n${isOperational ? 'Connected' : 'Disconnected ⚠️'}\n\n`;
-    msg += `<b>Runtime</b>\nCloudflare Workers\n\n`;
-    msg += `<b>Authorized Operators</b>\n${users}\n\n`;
-    msg += `<b>Last Monitoring Report</b>\n${escapeHtml(lastReportText)}`;
+    const statusText = isOperational ? 'Operational' : 'Degraded';
+    let msg = `<pre style="margin:0;padding:0">`;
+    msg += `Control Plane\n\n`;
+    msg += `Status\n${statusText}\n\n`;
+    msg += `Providers\n${providers}\n\n`;
+    msg += `Monitoring\n${isOperational ? 'Connected' : 'Disconnected'}\n\n`;
+    msg += `Runtime\nCloudflare Workers\n\n`;
+    msg += `Operators\n${users}\n\n`;
+    msg += `Last Telemetry\n${lastReportText}`;
+    msg += `</pre>`;
     return msg;
   }
 

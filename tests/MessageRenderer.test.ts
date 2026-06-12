@@ -48,22 +48,21 @@ describe('MessageRenderer', () => {
       );
       expect(r).toContain('Infrastructure Report');
       expect(r).toContain('server-01');
-      expect(r).toContain('\n');
-      expect(r).toContain('CPU: 13%');
-      expect(r).toContain('Memory: 50%');
-      expect(r).toContain('Disk: 40%');
-      expect(r).toContain('Running: 3/5');
-      expect(r).toContain('Healthy: 3');
-      expect(r).toContain('Issues: 2');
+      expect(r).toContain('<pre');
+      expect(r).toContain('CPU        13%');
+      expect(r).toContain('Memory     50%');
+      expect(r).toContain('Disk       40%');
+      expect(r).toContain('Running    3/5');
     });
   });
 
   describe('uptimeCard', () => {
     it('renders uptime card', () => {
-      const r = MessageRenderer.uptimeCard('node', Date.now() / 1000, 86400, '5.2');
+      const r = MessageRenderer.uptimeCard('node', Date.now() / 1000, 86400, 'Healthy');
       expect(r).toContain('System Uptime');
       expect(r).toContain('node');
       expect(r).toContain('Current Uptime');
+      expect(r).toContain('Health');
     });
   });
 
@@ -113,7 +112,7 @@ describe('MessageRenderer', () => {
       expect(r).toContain('Operational');
       expect(r).toContain('AWS');
       expect(r).toContain('Cloudflare Workers');
-      expect(r).toContain('Last Monitoring Report');
+      expect(r).toContain('Last Telemetry');
     });
   });
 
