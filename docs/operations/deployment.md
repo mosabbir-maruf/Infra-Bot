@@ -56,6 +56,13 @@ To set your actual configurations:
 | `AWS_SECRET_ACCESS_KEY` | Secret | No (Opt.) | AWS IAM User Secret Key for EC2 integration. |
 | `DIGITALOCEAN_TOKEN` | Secret | No (Opt.) | Personal Access Token for DigitalOcean integration. |
 
+### How to Find Your Telegram Chat ID (User ID)
+The `AUTHORIZED_USER_IDS` configuration requires your numeric Telegram User ID (which also serves as your private chat ID for telemetry reports and warnings). To find your ID:
+* **Option A (Quickest)**: Search for `@userinfobot` or `@raw_data_bot` on Telegram and send it a message. The bot will immediately reply with your numeric ID (e.g., `987654321`).
+* **Option B (Via API)**: Send a message to your newly created bot, then visit the following URL in your web browser:
+  `https://api.telegram.org/bot<YOUR_TELEGRAM_BOT_TOKEN>/getUpdates`
+  Look for the `message.from.id` or `message.chat.id` numeric value in the JSON response.
+
 ### Step 5: Register the Telegram Webhook
 To route messages from Telegram to your worker:
 1. Copy the production Worker URL displayed in your dashboard (e.g. `https://mosabbir-infra-bot.username.workers.dev`).

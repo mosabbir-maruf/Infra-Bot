@@ -119,12 +119,14 @@ app.get('/', (c) => {
             <div class="server-details">
               <div class="detail-row">
                 <span class="detail-label">Instance ID:</span>
-                <span class="detail-value font-mono">${srv.id}</span>
+                <span class="detail-value font-mono">${srv.region
+                  ? `<a href="https://${srv.region}.console.aws.amazon.com/ec2/home?region=${srv.region}#Instances:instanceId=${srv.id}" target="_blank" rel="noopener noreferrer" class="detail-link">${srv.id}</a>`
+                  : srv.id}</span>
               </div>
               ${srv.region ? `
               <div class="detail-row">
                 <span class="detail-label">Region:</span>
-                <span class="detail-value font-mono">${srv.region}</span>
+                <span class="detail-value font-mono"><a href="https://${srv.region}.console.aws.amazon.com/ec2/home?region=${srv.region}#Instances:" target="_blank" rel="noopener noreferrer" class="detail-link">${srv.region}</a></span>
               </div>` : ''}
             </div>
           </div>
@@ -322,6 +324,17 @@ app.get('/', (c) => {
 
     .font-mono {
       font-family: 'JetBrains Mono', monospace;
+    }
+
+    .detail-link {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--accent);
+      transition: opacity 0.15s;
+    }
+
+    .detail-link:hover {
+      opacity: 0.75;
     }
 
     .no-servers {
