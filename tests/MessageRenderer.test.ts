@@ -126,9 +126,9 @@ describe('MessageRenderer', () => {
     it('renders control plane with inline code tag format', () => {
       const r = MessageRenderer.healthDashboard('Bound', 'AWS', 'us-east-1', 'production', 2, '2m ago');
       expect(r).toContain('Control Plane');
-      expect(r).toContain('<b>Status</b>  <code>Operational</code>');
+      expect(r).toContain('<b>Status</b>  <code>Operational 🟢</code>');
       expect(r).toContain('<b>Cloud Providers</b>  <code>AWS</code>');
-      expect(r).toContain('<code>Receiving Telemetry</code>');
+      expect(r).toContain('<code>Receiving Telemetry 🟢</code>');
       expect(r).toContain('<code>Cloudflare Workers</code>');
       expect(r).toContain('<b>Authorized Operators</b>  <code>2</code>');
       expect(r).toContain('<b>Last Telemetry</b>  <code>2m ago</code>');
