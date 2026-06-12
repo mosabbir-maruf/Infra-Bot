@@ -42,99 +42,96 @@ describe('MessageRenderer', () => {
   });
 
   describe('reportCard', () => {
-    it('renders full report card with production operations console style', () => {
+    it('renders full report card with inline key-value and code tags', () => {
       const r = MessageRenderer.reportCard(
         'server-01', Date.now() / 1000, '12.5', 12.5, 4096, 8192, 20480, 51200, 360000, 3, 5, 0,
       );
       expect(r).toContain('Infrastructure Report');
-      expect(r).toContain('server-01');
-      expect(r).not.toContain('<pre');
-      expect(r).toContain('<b>CPU</b>\n13%');
-      expect(r).toContain('<b>Memory</b>\n50%');
-      expect(r).toContain('<b>Disk</b>\n40%');
-      expect(r).toContain('3 Running');
+      expect(r).toContain('<b>Server</b>  <code>server-01</code>');
+      expect(r).toContain('CPU · <code>13%</code>');
+      expect(r).toContain('Memory · <code>50%</code>');
+      expect(r).toContain('Disk · <code>40%</code>');
+      expect(r).toContain('<code>3</code> Running');
     });
     it('shows reason when unhealthy containers present', () => {
       const r = MessageRenderer.reportCard(
         'server-01', Date.now() / 1000, '5', 5, 4096, 8192, 20480, 51200, 360000, 3, 5, 1,
       );
-      expect(r).toContain('<b>Reason</b>');
+      expect(r).toContain('<b>Reason</b>  <code>');
       expect(r).toContain('1 unhealthy container');
-      expect(r).toContain('1 Unhealthy');
+      expect(r).toContain('<code>1</code> Unhealthy');
     });
   });
 
   describe('uptimeCard', () => {
-    it('renders uptime card with System Health', () => {
+    it('renders uptime card with inline format', () => {
       const r = MessageRenderer.uptimeCard('node', Date.now() / 1000, 86400, 'Healthy');
       expect(r).toContain('System Uptime');
-      expect(r).toContain('node');
-      expect(r).toContain('Current Uptime');
-      expect(r).toContain('System Health');
-      expect(r).not.toContain('<pre');
+      expect(r).toContain('<b>Server</b>  <code>node</code>');
+      expect(r).toContain('<b>Current Uptime</b>  <code>');
+      expect(r).toContain('<b>System Health</b>  <code>Healthy</code>');
     });
   });
 
   describe('bandwidthCard', () => {
-    it('renders bandwidth card with Current Month and always shows Usage', () => {
+    it('renders bandwidth card with dot separators and code tags', () => {
       const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 10737418240, 5368709120, 100);
       expect(r).toContain('Bandwidth Usage');
       expect(r).toContain('Current Month');
-      expect(r).toContain('Download');
-      expect(r).toContain('Upload');
-      expect(r).toContain('Total');
-      expect(r).toContain('Usage');
+      expect(r).toContain('Download · <code>');
+      expect(r).toContain('Upload · <code>');
+      expect(r).toContain('Total · <code>');
+      expect(r).toContain('Usage · <code>');
     });
     it('shows 0% usage when no bandwidth limit', () => {
       const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 0, 0);
-      expect(r).toContain('<b>Usage</b>\n0%');
+      expect(r).toContain('Usage · <code>0%</code>');
     });
   });
 
   describe('dockerCard', () => {
-    it('renders docker card with Running/Healthy/Issues summary', () => {
+    it('renders docker card with summary dot separators', () => {
       const r = MessageRenderer.dockerCard('node', 3, 5, 0, [
         { name: 'nginx', status: 'Up 2 days', state: 'running' },
         { name: 'api', status: 'Exited', state: 'exited' },
       ], Date.now() / 1000);
       expect(r).toContain('Container Status');
-      expect(r).toContain('<b>Running</b>\n3');
-      expect(r).toContain('<b>Healthy</b>\n3');
-      expect(r).toContain('<b>Issues</b>\n2');
+      expect(r).toContain('Running · <code>3</code>');
+      expect(r).toContain('Healthy · <code>3</code>');
+      expect(r).toContain('Issues · <code>2</code>');
       expect(r).toContain('Affected Service');
-      expect(r).toContain('api');
+      expect(r).toContain('<code>api</code>');
       // nginx is healthy and running, should NOT be in affected
-      expect(r).not.toContain('Affected Service</b>\n\nnginx');
+      expect(r).not.toContain('<code>nginx</code>');
     });
     it('shows unhealthy containers as affected services', () => {
       const r = MessageRenderer.dockerCard('node', 3, 3, 1, [
         { name: 'web', status: 'Up 1 hour (unhealthy)', state: 'running' },
       ], Date.now() / 1000);
       expect(r).toContain('Affected Service');
-      expect(r).toContain('web');
-      expect(r).toContain('Unhealthy');
+      expect(r).toContain('<code>web</code>');
+      expect(r).toContain('Health · <code>Unhealthy</code>');
     });
   });
 
   describe('emptyCard', () => {
-    it('renders empty placeholder without emoji', () => {
-      expect(MessageRenderer.emptyCard('missing')).toContain('missing');
-      expect(MessageRenderer.emptyCard('missing')).toContain('Critical');
-      expect(MessageRenderer.emptyCard('missing')).not.toContain('🚨');
+    it('renders empty placeholder with code tags', () => {
+      const r = MessageRenderer.emptyCard('missing');
+      expect(r).toContain('<b>Server</b>  <code>missing</code>');
+      expect(r).toContain('<b>Health</b>  <code>Critical</code>');
     });
   });
 
   describe('healthDashboard', () => {
-    it('renders control plane with Cloud Providers and Receiving Telemetry', () => {
+    it('renders control plane with inline code tag format', () => {
       const r = MessageRenderer.healthDashboard('Bound', 'AWS', 'us-east-1', 'production', 2, '2m ago');
       expect(r).toContain('Control Plane');
-      expect(r).toContain('Operational');
-      expect(r).toContain('Cloud Providers');
-      expect(r).toContain('Receiving Telemetry');
-      expect(r).toContain('Cloudflare Workers');
-      expect(r).toContain('Authorized Operators');
-      expect(r).toContain('Last Telemetry');
-      expect(r).not.toContain('<pre');
+      expect(r).toContain('<b>Status</b>  <code>Operational</code>');
+      expect(r).toContain('<b>Cloud Providers</b>  <code>AWS</code>');
+      expect(r).toContain('<code>Receiving Telemetry</code>');
+      expect(r).toContain('<code>Cloudflare Workers</code>');
+      expect(r).toContain('<b>Authorized Operators</b>  <code>2</code>');
+      expect(r).toContain('<b>Last Telemetry</b>  <code>2m ago</code>');
     });
   });
 

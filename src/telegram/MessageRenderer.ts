@@ -107,39 +107,39 @@ export class MessageRenderer {
     const reasonText = reasons.length > 0 ? reasons.join(', ') : 'None';
 
     let msg = `<b>Infrastructure Report</b>\n\n`;
-    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
-    msg += `<b>Health</b>\n${overallHealth}\n\n`;
+    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<b>Health</b>  <code>${overallHealth}</code>\n`;
 
     if (overallHealth !== 'Healthy') {
-      msg += `<b>Reason</b>\n${escapeHtml(reasonText)}\n\n`;
+      msg += `<b>Reason</b>  <code>${escapeHtml(reasonText)}</code>\n`;
     }
 
-    msg += `<b>Resources</b>\n\n`;
-    msg += `<b>CPU</b>\n${cpuPct.toFixed(0)}%\n\n`;
-    msg += `<b>Memory</b>\n${ramPct.toFixed(0)}%\n\n`;
-    msg += `<b>Disk</b>\n${diskPct.toFixed(0)}%\n\n`;
+    msg += `\n<b>Resources</b>\n`;
+    msg += `CPU · <code>${cpuPct.toFixed(0)}%</code>\n`;
+    msg += `Memory · <code>${ramPct.toFixed(0)}%</code>\n`;
+    msg += `Disk · <code>${diskPct.toFixed(0)}%</code>\n`;
 
     if (dockerTotal !== undefined) {
-      msg += `<b>Containers</b>\n`;
-      msg += `${dockerRunning ?? 0} Running\n`;
+      msg += `\n<b>Containers</b>\n`;
+      msg += `<code>${dockerRunning ?? 0}</code> Running`;
       if (dockerUnhealthy && dockerUnhealthy > 0) {
-        msg += `${dockerUnhealthy} Unhealthy\n`;
+        msg += ` · <code>${dockerUnhealthy}</code> Unhealthy`;
       }
       msg += `\n`;
     }
 
-    msg += `<b>Uptime</b>\n${this.duration(uptime)}\n\n`;
-    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
+    msg += `\n<b>Uptime</b>  <code>${this.duration(uptime)}</code>\n`;
+    msg += `<b>Last Report</b>  <code>${this.ago(ts)}</code>`;
     return msg;
   }
 
   /** Compact uptime card */
   static uptimeCard(alias: string, ts: number, uptime: number, health: string): string {
     let msg = `<b>System Uptime</b>\n\n`;
-    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
-    msg += `<b>Current Uptime</b>\n${this.duration(uptime)}\n\n`;
-    msg += `<b>System Health</b>\n${health}\n\n`;
-    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
+    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<b>Current Uptime</b>  <code>${this.duration(uptime)}</code>\n`;
+    msg += `<b>System Health</b>  <code>${health}</code>\n`;
+    msg += `<b>Last Report</b>  <code>${this.ago(ts)}</code>`;
     return msg;
   }
 
@@ -150,19 +150,19 @@ export class MessageRenderer {
     const txGB = (tx / (1024 ** 3)).toFixed(2);
 
     let msg = `<b>Bandwidth Usage</b>\n\n`;
-    msg += `<b>Current Month</b>\n\n`;
-    msg += `<b>Download</b>\n${rxGB} GB\n\n`;
-    msg += `<b>Upload</b>\n${txGB} GB\n\n`;
-    msg += `<b>Total</b>\n${totalGB.toFixed(2)} GB\n\n`;
+    msg += `<b>Current Month</b>\n`;
+    msg += `Download · <code>${rxGB} GB</code>\n`;
+    msg += `Upload · <code>${txGB} GB</code>\n`;
+    msg += `Total · <code>${totalGB.toFixed(2)} GB</code>\n`;
 
     if (limitGB && limitGB > 0) {
       const usagePct = Math.round((totalGB / limitGB) * 100);
-      msg += `<b>Usage</b>\n${usagePct}%\n\n`;
+      msg += `Usage · <code>${usagePct}%</code>\n`;
     } else {
-      msg += `<b>Usage</b>\n0%\n\n`;
+      msg += `Usage · <code>0%</code>\n`;
     }
 
-    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
+    msg += `\n<b>Last Report</b>  <code>${this.ago(ts)}</code>`;
     return msg;
   }
 
@@ -190,11 +190,11 @@ export class MessageRenderer {
     };
 
     let msg = `<b>Container Status</b>\n\n`;
-    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
-    msg += `<b>Summary</b>\n\n`;
-    msg += `<b>Running</b>\n${running}\n\n`;
-    msg += `<b>Healthy</b>\n${healthy}\n\n`;
-    msg += `<b>Issues</b>\n${issues}\n\n`;
+    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
+    msg += `\n<b>Summary</b>\n`;
+    msg += `Running · <code>${running}</code>\n`;
+    msg += `Healthy · <code>${healthy}</code>\n`;
+    msg += `Issues · <code>${issues}</code>\n`;
 
     // Show only affected (problematic) services
     const affectedContainers = containers.filter(c => {
@@ -213,15 +213,15 @@ export class MessageRenderer {
         if (!isRunning) healthText = 'Critical';
         else if (isUnhealthy) healthText = 'Unhealthy';
 
-        msg += `<b>Affected Service</b>\n\n`;
-        msg += `${escapeHtml(c.name)}\n\n`;
-        msg += `<b>State</b>\n${stateText}\n\n`;
-        msg += `<b>Health</b>\n${healthText}\n\n`;
-        msg += `<b>Uptime</b>\n${getCleanUptime(c.status)}\n\n`;
+        msg += `\n<b>Affected Service</b>\n`;
+        msg += `<code>${escapeHtml(c.name)}</code>\n`;
+        msg += `State · <code>${stateText}</code>\n`;
+        msg += `Health · <code>${healthText}</code>\n`;
+        msg += `Uptime · <code>${getCleanUptime(c.status)}</code>\n`;
       }
     }
 
-    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
+    msg += `\n<b>Last Report</b>  <code>${this.ago(ts)}</code>`;
     return msg;
   }
 
@@ -232,26 +232,26 @@ export class MessageRenderer {
     let healthText = 'Healthy';
     if (!isRunning) healthText = 'Critical';
     else if (isUnhealthy) healthText = 'Unhealthy';
-    return `<b>${escapeHtml(name)}</b>\n${isRunning ? 'Running' : 'Stopped'}\nHealth: ${healthText}`;
+    return `<b>${escapeHtml(name)}</b>\n${isRunning ? 'Running' : 'Stopped'} · Health: ${healthText}`;
   }
 
   /** Compact empty/no-data placeholder */
   static emptyCard(alias: string): string {
     let msg = `<b>Infrastructure Report</b>\n\n`;
-    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
-    msg += `<b>Status</b>\nOffline\n\n`;
-    msg += `<b>Health</b>\nCritical\n\n`;
-    msg += `<b>Last Report</b>\nNever`;
+    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<b>Status</b>  <code>Offline</code>\n`;
+    msg += `<b>Health</b>  <code>Critical</code>\n`;
+    msg += `<b>Last Report</b>  <code>Never</code>`;
     return msg;
   }
 
   /** No data summary card */
   static noDataCard(alias: string): string {
     let msg = `<b>Infrastructure Report</b>\n\n`;
-    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
-    msg += `<b>Status</b>\nOffline\n\n`;
-    msg += `<b>Health</b>\nCritical\n\n`;
-    msg += `<b>Last Report</b>\nNever`;
+    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
+    msg += `<b>Status</b>  <code>Offline</code>\n`;
+    msg += `<b>Health</b>  <code>Critical</code>\n`;
+    msg += `<b>Last Report</b>  <code>Never</code>`;
     return msg;
   }
 
@@ -263,12 +263,12 @@ export class MessageRenderer {
     const statusText = isOperational ? 'Operational' : 'Degraded';
 
     let msg = `<b>Control Plane</b>\n\n`;
-    msg += `<b>Status</b>\n${statusText}\n\n`;
-    msg += `<b>Cloud Providers</b>\n${providers}\n\n`;
-    msg += `<b>Monitoring</b>\n${isOperational ? 'Receiving Telemetry' : 'Disconnected'}\n\n`;
-    msg += `<b>Runtime</b>\nCloudflare Workers\n\n`;
-    msg += `<b>Authorized Operators</b>\n${users}\n\n`;
-    msg += `<b>Last Telemetry</b>\n${lastReportText}`;
+    msg += `<b>Status</b>  <code>${statusText}</code>\n`;
+    msg += `<b>Cloud Providers</b>  <code>${providers}</code>\n`;
+    msg += `<b>Monitoring</b>  <code>${isOperational ? 'Receiving Telemetry' : 'Disconnected'}</code>\n`;
+    msg += `<b>Runtime</b>  <code>Cloudflare Workers</code>\n`;
+    msg += `<b>Authorized Operators</b>  <code>${users}</code>\n`;
+    msg += `<b>Last Telemetry</b>  <code>${lastReportText}</code>`;
     return msg;
   }
 
