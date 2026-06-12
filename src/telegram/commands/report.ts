@@ -26,8 +26,6 @@ export class ReportHandler implements CommandHandler {
         const m = JSON.parse(raw) as M;
 
         const cpuPct = parseFloat(m.cpu) || 0;
-        const ageMin = (Date.now() - m.timestamp * 1000) / 60000;
-        if (ageMin <= 15) active++;
 
         cards.push(MessageRenderer.reportCard(
           alias, m.timestamp, m.cpu, cpuPct,

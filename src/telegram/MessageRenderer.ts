@@ -50,7 +50,7 @@ export class MessageRenderer {
   // ── Monitoring Commands ──────────────────────────────────
 
   /** Full server telemetry card */
-  static reportCard(alias: string, ts: number, cpu: string, cpuPct: number,
+  static reportCard(alias: string, ts: number, _cpu: string, cpuPct: number,
     ramUsed: number, ramTotal: number, diskUsed: number, diskTotal: number,
     uptime: number, dockerRunning?: number, dockerTotal?: number, dockerUnhealthy?: number,
   ): string {
@@ -144,7 +144,7 @@ export class MessageRenderer {
   }
 
   /** Bandwidth card */
-  static bandwidthCard(alias: string, ts: number, rx: number, tx: number, limitGB?: number): string {
+  static bandwidthCard(_alias: string, ts: number, rx: number, tx: number, limitGB?: number): string {
     const totalGB = (rx + tx) / (1024 ** 3);
     const rxGB = (rx / (1024 ** 3)).toFixed(2);
     const txGB = (tx / (1024 ** 3)).toFixed(2);
@@ -256,8 +256,8 @@ export class MessageRenderer {
   }
 
   /** /health dashboard */
-  static healthDashboard(kvStatus: string, providers: string, region: string,
-    env: string, users: number, lastReportText: string
+  static healthDashboard(kvStatus: string, providers: string, _region: string,
+    _env: string, users: number, lastReportText: string
   ): string {
     const isOperational = kvStatus === 'Bound';
     const statusText = isOperational ? 'Operational' : 'Degraded';

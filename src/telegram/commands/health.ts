@@ -11,6 +11,9 @@ export class HealthHandler implements CommandHandler {
     const registry = new ProviderRegistry(ctx.env);
     const activeProviders = registry.getActiveProviders().map((p) => p.name);
 
+    const kv = ctx.monitoringKv;
+    const kvStatus = kv ? 'Bound' : 'Unbound';
+
     let latestTs = 0;
     if (kv) {
       const aliases = ctx.serverRegistry.getAliases();
