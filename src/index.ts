@@ -1497,11 +1497,17 @@ app.get('/docs', (c) => {
         <p>Push-based. Every 5 minutes, <code>agent.sh</code> collects metrics and posts to <code>POST /monitoring/report</code> with HMAC signing. Stored in <code>MONITORING_KV</code> under <code>metrics:&lt;alias&gt;</code>.</p>
 
         <h3 id="mon-agent">Agent Setup</h3>
-        <p>Copy <code>monitoring/agent.sh</code> → <code>/usr/local/bin/infra-agent.sh</code>, <code>chmod +x</code>. Create <code>/etc/infra-agent.conf</code>:</p>
-        <pre><code>SERVER_ALIAS="ai-gateway-prod"
-MONITORING_SECRET="your_hmac_secret"
-CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
-        <p>Cron (every 5 min): <code>*/5 * * * * . /etc/infra-agent.conf; export ...; /usr/local/bin/infra-agent.sh &gt;/dev/null 2&gt;&amp;1</code></p>
+        <p>Copy <code>monitoring/agent.sh</code> to <code>/usr/local/bin/infra-agent.sh</code> and make it executable:</p>
+        <pre><code>sudo cp monitoring/agent.sh /usr/local/bin/infra-agent.sh
+sudo chmod +x /usr/local/bin/infra-agent.sh</code></pre>
+        <p>Create the configuration file <code>/etc/infra-agent.conf</code>:</p>
+        <pre><code>sudo tee /etc/infra-agent.conf &lt;&lt;'EOF'
+SERVER_ALIAS="ai-gateway-prod"
+MONITORING_SECRET="your_shared_hmac_secret"
+CONTROL_PLANE_URL="https://your-worker.workers.dev"
+EOF</code></pre>
+        <p>Add the cron job (runs every 5 minutes):</p>
+        <pre><code>*/5 * * * * . /etc/infra-agent.conf; /usr/local/bin/infra-agent.sh &gt;/dev/null 2&gt;&amp;1</code></pre>
         <p>Requires: <code>bash</code>, <code>curl</code>, <code>openssl</code>, <code>vnstat</code>, <code>docker</code> (optional).</p>
 
         <h3 id="mon-alerts">Bandwidth Alerts</h3>
