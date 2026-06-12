@@ -42,75 +42,99 @@ describe('MessageRenderer', () => {
   });
 
   describe('reportCard', () => {
-    it('renders full report card with clean operations console style', () => {
+    it('renders full report card with production operations console style', () => {
       const r = MessageRenderer.reportCard(
         'server-01', Date.now() / 1000, '12.5', 12.5, 4096, 8192, 20480, 51200, 360000, 3, 5, 0,
       );
       expect(r).toContain('Infrastructure Report');
       expect(r).toContain('server-01');
-      expect(r).toContain('<pre');
-      expect(r).toContain('CPU        13%');
-      expect(r).toContain('Memory     50%');
-      expect(r).toContain('Disk       40%');
-      expect(r).toContain('Running    3/5');
+      expect(r).not.toContain('<pre');
+      expect(r).toContain('<b>CPU</b>\n13%');
+      expect(r).toContain('<b>Memory</b>\n50%');
+      expect(r).toContain('<b>Disk</b>\n40%');
+      expect(r).toContain('3 Running');
+    });
+    it('shows reason when unhealthy containers present', () => {
+      const r = MessageRenderer.reportCard(
+        'server-01', Date.now() / 1000, '5', 5, 4096, 8192, 20480, 51200, 360000, 3, 5, 1,
+      );
+      expect(r).toContain('<b>Reason</b>');
+      expect(r).toContain('1 unhealthy container');
+      expect(r).toContain('1 Unhealthy');
     });
   });
 
   describe('uptimeCard', () => {
-    it('renders uptime card', () => {
+    it('renders uptime card with System Health', () => {
       const r = MessageRenderer.uptimeCard('node', Date.now() / 1000, 86400, 'Healthy');
       expect(r).toContain('System Uptime');
       expect(r).toContain('node');
       expect(r).toContain('Current Uptime');
-      expect(r).toContain('Health');
+      expect(r).toContain('System Health');
+      expect(r).not.toContain('<pre');
     });
   });
 
   describe('bandwidthCard', () => {
-    it('renders bandwidth card', () => {
+    it('renders bandwidth card with Current Month and always shows Usage', () => {
       const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 10737418240, 5368709120, 100);
       expect(r).toContain('Bandwidth Usage');
-      expect(r).toContain('gw');
+      expect(r).toContain('Current Month');
       expect(r).toContain('Download');
       expect(r).toContain('Upload');
       expect(r).toContain('Total');
       expect(r).toContain('Usage');
     });
+    it('shows 0% usage when no bandwidth limit', () => {
+      const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 0, 0);
+      expect(r).toContain('<b>Usage</b>\n0%');
+    });
   });
 
   describe('dockerCard', () => {
-    it('renders docker card with container list', () => {
+    it('renders docker card with Running/Healthy/Issues summary', () => {
       const r = MessageRenderer.dockerCard('node', 3, 5, 0, [
         { name: 'nginx', status: 'Up 2 days', state: 'running' },
+        { name: 'api', status: 'Exited', state: 'exited' },
       ], Date.now() / 1000);
       expect(r).toContain('Container Status');
-      expect(r).toContain('Running: 3/5');
-      expect(r).toContain('Health: Critical');
-      expect(r).toContain('Issues\n2 stopped containers');
-      expect(r).toContain('nginx');
-      expect(r).toContain('Uptime: 2d');
+      expect(r).toContain('<b>Running</b>\n3');
+      expect(r).toContain('<b>Healthy</b>\n3');
+      expect(r).toContain('<b>Issues</b>\n2');
+      expect(r).toContain('Affected Service');
+      expect(r).toContain('api');
+      // nginx is healthy and running, should NOT be in affected
+      expect(r).not.toContain('Affected Service</b>\n\nnginx');
     });
-    it('shows warning when unhealthy containers', () => {
-      const r = MessageRenderer.dockerCard('node', 3, 5, 2, [], Date.now() / 1000);
-      expect(r).toContain('Issues\n2 stopped containers, 2 unhealthy containers');
+    it('shows unhealthy containers as affected services', () => {
+      const r = MessageRenderer.dockerCard('node', 3, 3, 1, [
+        { name: 'web', status: 'Up 1 hour (unhealthy)', state: 'running' },
+      ], Date.now() / 1000);
+      expect(r).toContain('Affected Service');
+      expect(r).toContain('web');
+      expect(r).toContain('Unhealthy');
     });
   });
 
   describe('emptyCard', () => {
-    it('renders empty placeholder', () => {
+    it('renders empty placeholder without emoji', () => {
       expect(MessageRenderer.emptyCard('missing')).toContain('missing');
-      expect(MessageRenderer.emptyCard('missing')).toContain('Critical 🚨');
+      expect(MessageRenderer.emptyCard('missing')).toContain('Critical');
+      expect(MessageRenderer.emptyCard('missing')).not.toContain('🚨');
     });
   });
 
   describe('healthDashboard', () => {
-    it('renders control plane dashboard', () => {
+    it('renders control plane with Cloud Providers and Receiving Telemetry', () => {
       const r = MessageRenderer.healthDashboard('Bound', 'AWS', 'us-east-1', 'production', 2, '2m ago');
       expect(r).toContain('Control Plane');
       expect(r).toContain('Operational');
-      expect(r).toContain('AWS');
+      expect(r).toContain('Cloud Providers');
+      expect(r).toContain('Receiving Telemetry');
       expect(r).toContain('Cloudflare Workers');
+      expect(r).toContain('Authorized Operators');
       expect(r).toContain('Last Telemetry');
+      expect(r).not.toContain('<pre');
     });
   });
 

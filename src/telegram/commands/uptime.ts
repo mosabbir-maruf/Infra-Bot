@@ -44,8 +44,8 @@ export class UptimeHandler implements CommandHandler {
         const diskHealth = getHealthState(diskPct, { warn: 80, crit: 95 });
 
         let freshnessHealth: 'Healthy' | 'Warning' | 'Critical' = 'Healthy';
-        if (ageMin > 15) freshnessHealth = 'Critical';
-        else if (ageMin > 5) freshnessHealth = 'Warning';
+        if (ageMin > 30) freshnessHealth = 'Critical';
+        else if (ageMin > 10) freshnessHealth = 'Warning';
 
         let dockerHealth: 'Healthy' | 'Warning' | 'Critical' = 'Healthy';
         if (m.docker && m.docker.total > 0) {

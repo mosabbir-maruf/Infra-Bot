@@ -69,8 +69,8 @@ export class MessageRenderer {
     const diskHealth = getHealthState(diskPct, { warn: 80, crit: 95 });
 
     let freshnessHealth: 'Healthy' | 'Warning' | 'Critical' = 'Healthy';
-    if (ageMin > 15) freshnessHealth = 'Critical';
-    else if (ageMin > 5) freshnessHealth = 'Warning';
+    if (ageMin > 30) freshnessHealth = 'Critical';
+    else if (ageMin > 10) freshnessHealth = 'Warning';
 
     let dockerHealth: 'Healthy' | 'Warning' | 'Critical' = 'Healthy';
     if (dockerTotal !== undefined && dockerTotal > 0) {
@@ -106,58 +106,60 @@ export class MessageRenderer {
     }
     const reasonText = reasons.length > 0 ? reasons.join(', ') : 'None';
 
-    let msg = `<pre style="margin:0;padding:0">`;
-    msg += `Infrastructure Report\n\n`;
-    msg += `Server\n${alias}\n\n`;
-    msg += `Health\n${overallHealth}\n\n`;
+    let msg = `<b>Infrastructure Report</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Health</b>\n${overallHealth}\n\n`;
 
     if (overallHealth !== 'Healthy') {
-      msg += `Reason\n${reasonText}\n\n`;
+      msg += `<b>Reason</b>\n${escapeHtml(reasonText)}\n\n`;
     }
 
-    msg += `Resources\n`;
-    msg += `CPU`.padEnd(11) + `${cpuPct.toFixed(0)}%\n`;
-    msg += `Memory`.padEnd(11) + `${ramPct.toFixed(0)}%\n`;
-    msg += `Disk`.padEnd(11) + `${diskPct.toFixed(0)}%\n\n`;
+    msg += `<b>Resources</b>\n\n`;
+    msg += `<b>CPU</b>\n${cpuPct.toFixed(0)}%\n\n`;
+    msg += `<b>Memory</b>\n${ramPct.toFixed(0)}%\n\n`;
+    msg += `<b>Disk</b>\n${diskPct.toFixed(0)}%\n\n`;
 
     if (dockerTotal !== undefined) {
-      msg += `Containers\n`;
-      msg += `Running`.padEnd(11) + `${dockerRunning ?? 0}/${dockerTotal}\n\n`;
+      msg += `<b>Containers</b>\n`;
+      msg += `${dockerRunning ?? 0} Running\n`;
+      if (dockerUnhealthy && dockerUnhealthy > 0) {
+        msg += `${dockerUnhealthy} Unhealthy\n`;
+      }
+      msg += `\n`;
     }
 
-    msg += `Uptime\n${this.duration(uptime)}\n\n`;
-    msg += `Last Report\n${this.ago(ts)}`;
-    msg += `</pre>`;
+    msg += `<b>Uptime</b>\n${this.duration(uptime)}\n\n`;
+    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
     return msg;
   }
 
   /** Compact uptime card */
   static uptimeCard(alias: string, ts: number, uptime: number, health: string): string {
-    let msg = `<pre style="margin:0;padding:0">`;
-    msg += `System Uptime\n\n`;
-    msg += `Server\n${alias}\n\n`;
-    msg += `Current Uptime\n${this.duration(uptime)}\n\n`;
-    msg += `Health\n${health}\n\n`;
-    msg += `Last Report\n${this.ago(ts)}`;
-    msg += `</pre>`;
+    let msg = `<b>System Uptime</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Current Uptime</b>\n${this.duration(uptime)}\n\n`;
+    msg += `<b>System Health</b>\n${health}\n\n`;
+    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
     return msg;
   }
 
   /** Bandwidth card */
   static bandwidthCard(alias: string, ts: number, rx: number, tx: number, limitGB?: number): string {
     const totalGB = (rx + tx) / (1024 ** 3);
-    const rxGB = (rx / (1024 ** 3)).toFixed(1);
-    const txGB = (tx / (1024 ** 3)).toFixed(1);
+    const rxGB = (rx / (1024 ** 3)).toFixed(2);
+    const txGB = (tx / (1024 ** 3)).toFixed(2);
 
     let msg = `<b>Bandwidth Usage</b>\n\n`;
-    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Current Month</b>\n\n`;
     msg += `<b>Download</b>\n${rxGB} GB\n\n`;
     msg += `<b>Upload</b>\n${txGB} GB\n\n`;
-    msg += `<b>Total</b>\n${totalGB.toFixed(1)} GB\n\n`;
+    msg += `<b>Total</b>\n${totalGB.toFixed(2)} GB\n\n`;
 
     if (limitGB && limitGB > 0) {
       const usagePct = Math.round((totalGB / limitGB) * 100);
       msg += `<b>Usage</b>\n${usagePct}%\n\n`;
+    } else {
+      msg += `<b>Usage</b>\n0%\n\n`;
     }
 
     msg += `<b>Last Report</b>\n${this.ago(ts)}`;
@@ -168,22 +170,8 @@ export class MessageRenderer {
   static dockerCard(alias: string, running: number, total: number, unhealthy: number,
     containers: Array<{ name: string; status: string; state: string }>, ts: number
   ): string {
-    let dockerHealth = 'Healthy';
-    if (unhealthy > 0) {
-      dockerHealth = 'Warning';
-    } else if (running < total) {
-      dockerHealth = 'Critical';
-    }
-
-    const reasons: string[] = [];
-    if (running < total) {
-      const diff = total - running;
-      reasons.push(`${diff} stopped container${diff > 1 ? 's' : ''}`);
-    }
-    if (unhealthy > 0) {
-      reasons.push(`${unhealthy} unhealthy container${unhealthy > 1 ? 's' : ''}`);
-    }
-    const issuesText = reasons.length > 0 ? reasons.join(', ') : 'None';
+    const healthy = running - unhealthy;
+    const issues = total - running + unhealthy;
 
     const getCleanUptime = (status: string) => {
       const normalized = status.toLowerCase();
@@ -201,35 +189,39 @@ export class MessageRenderer {
       return uptimeText;
     };
 
-    let msg = `<pre style="margin:0;padding:0">`;
-    msg += `Container Status\n\n`;
-    msg += `Server\n${alias}\n\n`;
-    msg += `Summary\n`;
-    msg += `Running: ${running}/${total}\n`;
-    msg += `Health: ${dockerHealth}\n\n`;
-    msg += `Issues\n${issuesText}\n\n`;
+    let msg = `<b>Container Status</b>\n\n`;
+    msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
+    msg += `<b>Summary</b>\n\n`;
+    msg += `<b>Running</b>\n${running}\n\n`;
+    msg += `<b>Healthy</b>\n${healthy}\n\n`;
+    msg += `<b>Issues</b>\n${issues}\n\n`;
 
-    if (containers.length > 0) {
-      msg += `Services\n\n`;
-      for (const c of containers) {
+    // Show only affected (problematic) services
+    const affectedContainers = containers.filter(c => {
+      const isRunning = c.state.toLowerCase() === 'running';
+      const isUnhealthy = c.status.toLowerCase().includes('unhealthy');
+      return !isRunning || isUnhealthy;
+    });
+
+    if (affectedContainers.length > 0) {
+      for (const c of affectedContainers) {
         const isRunning = c.state.toLowerCase() === 'running';
         const isUnhealthy = c.status.toLowerCase().includes('unhealthy');
-        
-        let stateText = isRunning ? 'Running' : 'Stopped';
+
+        const stateText = isRunning ? 'Running' : 'Stopped';
         let healthText = 'Healthy';
         if (!isRunning) healthText = 'Critical';
         else if (isUnhealthy) healthText = 'Unhealthy';
 
-        msg += `${c.name}\n`;
-        msg += `Status: ${stateText}\n`;
-        msg += `Health: ${healthText}\n`;
-        msg += `Uptime: ${getCleanUptime(c.status)}\n\n`;
+        msg += `<b>Affected Service</b>\n\n`;
+        msg += `${escapeHtml(c.name)}\n\n`;
+        msg += `<b>State</b>\n${stateText}\n\n`;
+        msg += `<b>Health</b>\n${healthText}\n\n`;
+        msg += `<b>Uptime</b>\n${getCleanUptime(c.status)}\n\n`;
       }
     }
 
-    // Strip trailing newlines from services loop
-    msg = msg.trim() + `\n\nLast Report\n${this.ago(ts)}`;
-    msg += `</pre>`;
+    msg += `<b>Last Report</b>\n${this.ago(ts)}`;
     return msg;
   }
 
@@ -238,8 +230,8 @@ export class MessageRenderer {
     const isRunning = state.toLowerCase() === 'running';
     const isUnhealthy = status.toLowerCase().includes('unhealthy');
     let healthText = 'Healthy';
-    if (!isRunning) healthText = 'Critical 🚨';
-    else if (isUnhealthy) healthText = 'Warning ⚠️';
+    if (!isRunning) healthText = 'Critical';
+    else if (isUnhealthy) healthText = 'Unhealthy';
     return `<b>${escapeHtml(name)}</b>\n${isRunning ? 'Running' : 'Stopped'}\nHealth: ${healthText}`;
   }
 
@@ -248,7 +240,7 @@ export class MessageRenderer {
     let msg = `<b>Infrastructure Report</b>\n\n`;
     msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
     msg += `<b>Status</b>\nOffline\n\n`;
-    msg += `<b>Health</b>\nCritical 🚨\n\n`;
+    msg += `<b>Health</b>\nCritical\n\n`;
     msg += `<b>Last Report</b>\nNever`;
     return msg;
   }
@@ -258,7 +250,7 @@ export class MessageRenderer {
     let msg = `<b>Infrastructure Report</b>\n\n`;
     msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
     msg += `<b>Status</b>\nOffline\n\n`;
-    msg += `<b>Health</b>\nCritical 🚨\n\n`;
+    msg += `<b>Health</b>\nCritical\n\n`;
     msg += `<b>Last Report</b>\nNever`;
     return msg;
   }
@@ -269,15 +261,14 @@ export class MessageRenderer {
   ): string {
     const isOperational = kvStatus === 'Bound';
     const statusText = isOperational ? 'Operational' : 'Degraded';
-    let msg = `<pre style="margin:0;padding:0">`;
-    msg += `Control Plane\n\n`;
-    msg += `Status\n${statusText}\n\n`;
-    msg += `Providers\n${providers}\n\n`;
-    msg += `Monitoring\n${isOperational ? 'Connected' : 'Disconnected'}\n\n`;
-    msg += `Runtime\nCloudflare Workers\n\n`;
-    msg += `Operators\n${users}\n\n`;
-    msg += `Last Telemetry\n${lastReportText}`;
-    msg += `</pre>`;
+
+    let msg = `<b>Control Plane</b>\n\n`;
+    msg += `<b>Status</b>\n${statusText}\n\n`;
+    msg += `<b>Cloud Providers</b>\n${providers}\n\n`;
+    msg += `<b>Monitoring</b>\n${isOperational ? 'Receiving Telemetry' : 'Disconnected'}\n\n`;
+    msg += `<b>Runtime</b>\nCloudflare Workers\n\n`;
+    msg += `<b>Authorized Operators</b>\n${users}\n\n`;
+    msg += `<b>Last Telemetry</b>\n${lastReportText}`;
     return msg;
   }
 
@@ -411,19 +402,16 @@ export class MessageRenderer {
     const isError = status.toLowerCase() === 'error';
 
     let overallHealth = 'Healthy';
-    let healthEmoji = '';
     if (isError) {
       overallHealth = 'Critical';
-      healthEmoji = ' 🚨';
     } else if (!isRunning) {
       overallHealth = 'Warning';
-      healthEmoji = ' ⚠️';
     }
 
     let msg = `<b>Infrastructure Status Report</b>\n\n`;
     msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
     msg += `<b>Status</b>\n${escapeHtml(status)}\n\n`;
-    msg += `<b>Health</b>\n${overallHealth}${healthEmoji}\n\n`;
+    msg += `<b>Health</b>\n${overallHealth}\n\n`;
 
     msg += `<b>Detailed Information</b>\n`;
     msg += `IP Address: ${escapeHtml(ip)}\n`;
@@ -445,19 +433,16 @@ export class MessageRenderer {
     const isRunning = statusVal.toLowerCase() === 'running';
 
     let overallHealth = 'Healthy';
-    let healthEmoji = '';
     if (statusVal.toLowerCase() === 'error' || statusVal.toLowerCase() === 'stopped') {
       overallHealth = 'Critical';
-      healthEmoji = ' 🚨';
     } else if (!isRunning) {
       overallHealth = 'Warning';
-      healthEmoji = ' ⚠️';
     }
 
     let msg = `<b>Server Details</b>\n\n`;
     msg += `<b>Server</b>\n${escapeHtml(alias)}\n\n`;
     msg += `<b>Status</b>\n${escapeHtml(statusVal)}\n\n`;
-    msg += `<b>Health</b>\n${overallHealth}${healthEmoji}\n\n`;
+    msg += `<b>Health</b>\n${overallHealth}\n\n`;
 
     msg += `<b>Detailed Information</b>\n`;
     msg += `Provider: ${escapeHtml(provider)}\n`;
