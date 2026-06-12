@@ -178,7 +178,7 @@ app.get('/', (c) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Mosabbir Infra Bot — server orchestration and telemetry control plane.">
-  <title>infra-bot · control plane</title>
+  <title>Infra-Bot · Control Plane</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="shortcut icon" href="/favicon.ico">
@@ -1036,7 +1036,7 @@ app.get('/docs', (c) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Infra-Bot Documentation — server registry configurations, deployment operations, and monitoring integration guides.">
-  <title>infra-bot · documentation</title>
+  <title>Infra-Bot · Documentation</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="shortcut icon" href="/favicon.ico">

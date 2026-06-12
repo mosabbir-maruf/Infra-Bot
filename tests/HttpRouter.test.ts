@@ -17,7 +17,7 @@ describe('HTTP Router Endpoints', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toContain('text/html');
     const text = await res.text();
-    expect(text).toContain('infra-bot · control plane');
+    expect(text).toContain('Infra-Bot · Control Plane');
     expect(text).toContain('ai-gateway-prod');
     expect(text).toContain('i-0123');
   });
