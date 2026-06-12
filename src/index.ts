@@ -153,7 +153,7 @@ app.get('/', (c) => {
             </td>
             <td class="td-region mono">${regionCell}</td>
             <td class="td-provider">${providerTag}</td>
-            <td class="td-status"><span class="dot"></span></td>
+            <td class="td-status"><span class="state-tag">registered</span></td>
           </tr>`;
       });
     }
@@ -536,6 +536,13 @@ app.get('/', (c) => {
     .copy-btn:hover { color: var(--fg2); border-color: var(--fg3); }
     .copy-btn.ok    { color: var(--green); border-color: rgba(61,186,110,0.3); }
 
+    .state-tag {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--fg3);
+      letter-spacing: 0.04em;
+    }
+
     /* empty / error */
     .empty-cell, .error-cell {
       padding: 2.5rem 1.25rem;
@@ -585,6 +592,64 @@ app.get('/', (c) => {
       font-family: var(--mono);
       font-size: 0.78rem;
       color: var(--fg2);
+    }
+
+    /* ── Commands table ────────────────────────── */
+    .cmd-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .cmd-row {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cmd-row:last-child { border-bottom: none; }
+    .cmd-row:hover { background: rgba(255,255,255,0.02); }
+
+    .cmd-cat {
+      width: 9rem;
+      padding: 0.6rem 1rem 0.6rem 1.25rem;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--fg3);
+      font-weight: 500;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .cmd-cat-first {
+      padding-top: 0.85rem;
+    }
+
+    .cmd-name {
+      width: 13rem;
+      padding: 0.6rem 1rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--amber);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .cmd-desc {
+      padding: 0.6rem 1.25rem 0.6rem 0;
+      font-size: 0.78rem;
+      color: var(--fg2);
+      vertical-align: middle;
+      line-height: 1.4;
+    }
+
+    .cmd-arg {
+      color: var(--fg3);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+    }
+
+    @media (max-width: 640px) {
+      .cmd-cat { display: none; }
+      .cmd-name { width: auto; }
     }
 
     /* ── Footer ──────────────────────────────── */
@@ -708,11 +773,79 @@ app.get('/', (c) => {
               <th>Instance ID</th>
               <th>Region</th>
               <th>Provider</th>
-              <th>Status</th>
+              <th>State</th>
             </tr>
           </thead>
           <tbody>
             ${serversHtml}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Commands -->
+    <section>
+      <div class="section-label">bot commands</div>
+      <div class="tbl-wrap">
+        <table class="cmd-table">
+          <thead>
+            <tr>
+              <th style="padding-left:1.25rem">Category</th>
+              <th>Command</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="cmd-row">
+              <td class="cmd-cat">Info &amp; Health</td>
+              <td class="cmd-name">/status</td>
+              <td class="cmd-desc">View live status of all registered servers</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat"></td>
+              <td class="cmd-name">/health</td>
+              <td class="cmd-desc">Check Control Plane and provider binding health</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat"></td>
+              <td class="cmd-name">/help</td>
+              <td class="cmd-desc">Show available commands and usage guidelines</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat">Operations</td>
+              <td class="cmd-name">/start <span class="cmd-arg">&lt;provider&gt; &lt;id&gt;</span></td>
+              <td class="cmd-desc">Start a stopped server instance</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat"></td>
+              <td class="cmd-name">/stop <span class="cmd-arg">&lt;provider&gt; &lt;id&gt;</span></td>
+              <td class="cmd-desc">Stop a running server instance</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat"></td>
+              <td class="cmd-name">/reboot <span class="cmd-arg">&lt;provider&gt; &lt;id&gt;</span></td>
+              <td class="cmd-desc">Reboot a server instance</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat">Monitoring</td>
+              <td class="cmd-name">/report</td>
+              <td class="cmd-desc">Full metrics summary across all managed VPS</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat"></td>
+              <td class="cmd-name">/bandwidth</td>
+              <td class="cmd-desc">Network bandwidth usage breakdown per server</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat"></td>
+              <td class="cmd-name">/docker</td>
+              <td class="cmd-desc">Docker container status across all nodes</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat"></td>
+              <td class="cmd-name">/uptime</td>
+              <td class="cmd-desc">System uptime details for each VPS</td>
+            </tr>
           </tbody>
         </table>
       </div>
