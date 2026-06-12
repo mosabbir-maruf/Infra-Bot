@@ -47,6 +47,10 @@ export class MessageRenderer {
     return escapeHtml(text);
   }
 
+  static pad(k: string, n = 9): string {
+    return k.padEnd(n, ' ');
+  }
+
   // ── Monitoring Commands ──────────────────────────────────
 
   /** Full server telemetry card */
@@ -82,87 +86,88 @@ export class MessageRenderer {
     if (dockerTotal !== undefined && dockerTotal > 0) healthList.push(dockerHealth);
 
     let overallHealth = 'Healthy';
+    let healthEmoji = '🟢';
     if (healthList.includes('Critical')) {
       overallHealth = 'Critical';
+      healthEmoji = '🔴';
     } else if (healthList.includes('Warning')) {
       overallHealth = 'Warning';
+      healthEmoji = '🟡';
     }
 
     const reasons: string[] = [];
-    if (cpuHealth !== 'Healthy') reasons.push(`CPU usage ${cpuHealth.toLowerCase()}`);
-    if (ramHealth !== 'Healthy') reasons.push(`Memory usage ${ramHealth.toLowerCase()}`);
-    if (diskHealth !== 'Healthy') reasons.push(`Disk usage ${diskHealth.toLowerCase()}`);
+    if (cpuHealth !== 'Healthy') reasons.push(`CPU ${cpuHealth.toLowerCase()}`);
+    if (ramHealth !== 'Healthy') reasons.push(`RAM ${ramHealth.toLowerCase()}`);
+    if (diskHealth !== 'Healthy') reasons.push(`Disk ${diskHealth.toLowerCase()}`);
     if (freshnessHealth !== 'Healthy') {
-      reasons.push(freshnessHealth === 'Critical' ? 'monitoring agent inactive' : 'monitoring agent delayed');
+      reasons.push(freshnessHealth === 'Critical' ? 'agent offline' : 'agent delayed');
     }
     if (dockerTotal !== undefined && dockerTotal > 0) {
       if (dockerRunning !== undefined && dockerRunning < dockerTotal) {
-        const diff = dockerTotal - dockerRunning;
-        reasons.push(`${diff} stopped container${diff > 1 ? 's' : ''}`);
+        reasons.push(`${dockerTotal - dockerRunning} stopped svc`);
       }
       if (dockerUnhealthy && dockerUnhealthy > 0) {
-        reasons.push(`${dockerUnhealthy} unhealthy container${dockerUnhealthy > 1 ? 's' : ''}`);
+        reasons.push(`${dockerUnhealthy} unhealthy svc`);
       }
     }
     const reasonText = reasons.length > 0 ? reasons.join(', ') : 'None';
 
-    let msg = `<b>Infrastructure Report</b>\n\n`;
-    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<b>Health</b>  <code>${overallHealth}</code>\n`;
+    let msg = `<b>Infrastructure Report</b>\n`;
+    msg += `<code>┌ Server   ${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Health   ${overallHealth} ${healthEmoji}</code>\n`;
+    msg += `<code>└ Reason   ${escapeHtml(reasonText)}</code>\n\n`;
 
-    if (overallHealth !== 'Healthy') {
-      msg += `<b>Reason</b>  <code>${escapeHtml(reasonText)}</code>\n`;
-    }
-
-    msg += `\n<b>Resources</b>\n`;
-    msg += `CPU · <code>${cpuPct.toFixed(0)}%</code>\n`;
-    msg += `Memory · <code>${ramPct.toFixed(0)}%</code>\n`;
-    msg += `Disk · <code>${diskPct.toFixed(0)}%</code>\n`;
+    msg += `<b>Resources</b>\n`;
+    msg += `<code>├ CPU      [${this.bar(cpuPct)}] ${cpuPct.toFixed(0)}%</code>\n`;
+    msg += `<code>├ Memory   [${this.bar(ramPct)}] ${ramPct.toFixed(0)}%</code>\n`;
+    msg += `<code>└ Disk     [${this.bar(diskPct)}] ${diskPct.toFixed(0)}%</code>\n`;
 
     if (dockerTotal !== undefined) {
+      const runningCount = dockerRunning ?? 0;
+      const unhealthyCount = dockerUnhealthy ?? 0;
       msg += `\n<b>Containers</b>\n`;
-      msg += `<code>${dockerRunning ?? 0}</code> Running`;
-      if (dockerUnhealthy && dockerUnhealthy > 0) {
-        msg += ` · <code>${dockerUnhealthy}</code> Unhealthy`;
-      }
-      msg += `\n`;
+      msg += `<code>├ Running  ${runningCount}/${dockerTotal}</code>\n`;
+      msg += `<code>└ Status   ${unhealthyCount > 0 ? `${unhealthyCount} Unhealthy 🔴` : 'Healthy 🟢'}</code>\n`;
     }
 
-    msg += `\n<b>Uptime</b>  <code>${this.duration(uptime)}</code>\n`;
-    msg += `<b>Last Report</b>  <code>${this.ago(ts)}</code>`;
+    msg += `\n<code>┌ Uptime   ${this.duration(uptime)}</code>\n`;
+    msg += `<code>└ Updated  ${this.ago(ts)}</code>`;
     return msg;
   }
 
   /** Compact uptime card */
   static uptimeCard(alias: string, ts: number, uptime: number, health: string): string {
-    let msg = `<b>System Uptime</b>\n\n`;
-    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<b>Current Uptime</b>  <code>${this.duration(uptime)}</code>\n`;
-    msg += `<b>System Health</b>  <code>${health}</code>\n`;
-    msg += `<b>Last Report</b>  <code>${this.ago(ts)}</code>`;
+    let healthEmoji = '🟢';
+    if (health === 'Critical') healthEmoji = '🔴';
+    else if (health === 'Warning') healthEmoji = '🟡';
+
+    let msg = `<b>System Uptime</b>\n`;
+    msg += `<code>┌ Server   ${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Uptime   ${this.duration(uptime)}</code>\n`;
+    msg += `<code>├ Health   ${health} ${healthEmoji}</code>\n`;
+    msg += `<code>└ Updated  ${this.ago(ts)}</code>`;
     return msg;
   }
 
   /** Bandwidth card */
-  static bandwidthCard(_alias: string, ts: number, rx: number, tx: number, limitGB?: number): string {
+  static bandwidthCard(alias: string, ts: number, rx: number, tx: number, limitGB?: number): string {
     const totalGB = (rx + tx) / (1024 ** 3);
     const rxGB = (rx / (1024 ** 3)).toFixed(2);
     const txGB = (tx / (1024 ** 3)).toFixed(2);
 
-    let msg = `<b>Bandwidth Usage</b>\n\n`;
-    msg += `<b>Current Month</b>\n`;
-    msg += `Download · <code>${rxGB} GB</code>\n`;
-    msg += `Upload · <code>${txGB} GB</code>\n`;
-    msg += `Total · <code>${totalGB.toFixed(2)} GB</code>\n`;
+    let msg = `<b>Bandwidth Usage</b>\n`;
+    msg += `<code>┌ Server   ${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Download ${rxGB} GB</code>\n`;
+    msg += `<code>├ Upload   ${txGB} GB</code>\n`;
+    msg += `<code>└ Total    ${totalGB.toFixed(2)} GB</code>\n`;
 
     if (limitGB && limitGB > 0) {
       const usagePct = Math.round((totalGB / limitGB) * 100);
-      msg += `Usage · <code>${usagePct}%</code>\n`;
-    } else {
-      msg += `Usage · <code>0%</code>\n`;
+      msg += `\n<b>Quota Limit</b>\n`;
+      msg += `<code>└ Usage    [${this.bar(usagePct)}] ${usagePct}% / ${limitGB} GB</code>\n`;
     }
 
-    msg += `\n<b>Last Report</b>  <code>${this.ago(ts)}</code>`;
+    msg += `\n<code>└ Updated  ${this.ago(ts)}</code>`;
     return msg;
   }
 
@@ -173,30 +178,12 @@ export class MessageRenderer {
     const healthy = running - unhealthy;
     const issues = total - running + unhealthy;
 
-    const getCleanUptime = (status: string) => {
-      const normalized = status.toLowerCase();
-      if (!normalized.startsWith('up ')) return 'N/A';
-      let uptimeText = status.substring(3);
-      const idx = uptimeText.indexOf('(');
-      if (idx !== -1) uptimeText = uptimeText.substring(0, idx).trim();
-      uptimeText = uptimeText
-        .replace(/\bseconds?\b/g, 's')
-        .replace(/\bminutes?\b/g, 'm')
-        .replace(/\bhours?\b/g, 'h')
-        .replace(/\bdays?\b/g, 'd')
-        .replace(/\bweeks?\b/g, 'w')
-        .replace(/\s+/g, '');
-      return uptimeText;
-    };
+    let msg = `<b>Container Status</b>\n`;
+    msg += `<code>┌ Server   ${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Running  ${running}/${total}</code>\n`;
+    msg += `<code>├ Healthy  ${healthy}</code>\n`;
+    msg += `<code>└ Issues   ${issues} ${issues > 0 ? '🔴' : '🟢'}</code>\n`;
 
-    let msg = `<b>Container Status</b>\n\n`;
-    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
-    msg += `\n<b>Summary</b>\n`;
-    msg += `Running · <code>${running}</code>\n`;
-    msg += `Healthy · <code>${healthy}</code>\n`;
-    msg += `Issues · <code>${issues}</code>\n`;
-
-    // Show only affected (problematic) services
     const affectedContainers = containers.filter(c => {
       const isRunning = c.state.toLowerCase() === 'running';
       const isUnhealthy = c.status.toLowerCase().includes('unhealthy');
@@ -204,24 +191,31 @@ export class MessageRenderer {
     });
 
     if (affectedContainers.length > 0) {
-      for (const c of affectedContainers) {
+      msg += `\n<b>Affected Services</b>\n`;
+      for (let i = 0; i < affectedContainers.length; i++) {
+        const c = affectedContainers[i];
         const isRunning = c.state.toLowerCase() === 'running';
         const isUnhealthy = c.status.toLowerCase().includes('unhealthy');
 
         const stateText = isRunning ? 'Running' : 'Stopped';
         let healthText = 'Healthy';
-        if (!isRunning) healthText = 'Critical';
-        else if (isUnhealthy) healthText = 'Unhealthy';
+        let healthEmoji = '🟢';
+        if (!isRunning) {
+          healthText = 'Critical';
+          healthEmoji = '🔴';
+        } else if (isUnhealthy) {
+          healthText = 'Unhealthy';
+          healthEmoji = '🔴';
+        }
 
-        msg += `\n<b>Affected Service</b>\n`;
-        msg += `<code>${escapeHtml(c.name)}</code>\n`;
-        msg += `State · <code>${stateText}</code>\n`;
-        msg += `Health · <code>${healthText}</code>\n`;
-        msg += `Uptime · <code>${getCleanUptime(c.status)}</code>\n`;
+        const isLast = i === affectedContainers.length - 1;
+        const prefixSymbol = isLast ? '└' : '├';
+
+        msg += `<code>${prefixSymbol} ${escapeHtml(c.name)} (${stateText} · ${healthText} ${healthEmoji})</code>\n`;
       }
     }
 
-    msg += `\n<b>Last Report</b>  <code>${this.ago(ts)}</code>`;
+    msg += `\n<code>└ Updated  ${this.ago(ts)}</code>`;
     return msg;
   }
 
@@ -237,11 +231,11 @@ export class MessageRenderer {
 
   /** Compact empty/no-data placeholder */
   static emptyCard(alias: string): string {
-    let msg = `<b>Infrastructure Report</b>\n\n`;
-    msg += `<b>Server</b>  <code>${escapeHtml(alias)}</code>\n`;
-    msg += `<b>Status</b>  <code>Offline</code>\n`;
-    msg += `<b>Health</b>  <code>Critical</code>\n`;
-    msg += `<b>Last Report</b>  <code>Never</code>`;
+    let msg = `<b>Infrastructure Report</b>\n`;
+    msg += `<code>┌ Server   ${escapeHtml(alias)}</code>\n`;
+    msg += `<code>├ Status   Offline 🔴</code>\n`;
+    msg += `<code>├ Health   Critical 🔴</code>\n`;
+    msg += `<code>└ Updated  Never</code>`;
     return msg;
   }
 

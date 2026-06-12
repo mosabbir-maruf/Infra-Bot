@@ -47,19 +47,19 @@ describe('MessageRenderer', () => {
         'server-01', Date.now() / 1000, '12.5', 12.5, 4096, 8192, 20480, 51200, 360000, 3, 5, 0,
       );
       expect(r).toContain('Infrastructure Report');
-      expect(r).toContain('<b>Server</b>  <code>server-01</code>');
-      expect(r).toContain('CPU · <code>13%</code>');
-      expect(r).toContain('Memory · <code>50%</code>');
-      expect(r).toContain('Disk · <code>40%</code>');
-      expect(r).toContain('<code>3</code> Running');
+      expect(r).toContain('┌ Server   server-01');
+      expect(r).toContain('CPU      [');
+      expect(r).toContain('13%');
+      expect(r).toContain('50%');
+      expect(r).toContain('40%');
+      expect(r).toContain('Running  3/5');
     });
     it('shows reason when unhealthy containers present', () => {
       const r = MessageRenderer.reportCard(
         'server-01', Date.now() / 1000, '5', 5, 4096, 8192, 20480, 51200, 360000, 3, 5, 1,
       );
-      expect(r).toContain('<b>Reason</b>  <code>');
-      expect(r).toContain('1 unhealthy container');
-      expect(r).toContain('<code>1</code> Unhealthy');
+      expect(r).toContain('└ Reason   2 stopped svc, 1 unhealthy svc');
+      expect(r).toContain('1 Unhealthy 🔴');
     });
   });
 
@@ -67,9 +67,9 @@ describe('MessageRenderer', () => {
     it('renders uptime card with inline format', () => {
       const r = MessageRenderer.uptimeCard('node', Date.now() / 1000, 86400, 'Healthy');
       expect(r).toContain('System Uptime');
-      expect(r).toContain('<b>Server</b>  <code>node</code>');
-      expect(r).toContain('<b>Current Uptime</b>  <code>');
-      expect(r).toContain('<b>System Health</b>  <code>Healthy</code>');
+      expect(r).toContain('┌ Server   node');
+      expect(r).toContain('├ Uptime   1d 0h');
+      expect(r).toContain('├ Health   Healthy 🟢');
     });
   });
 
@@ -77,15 +77,15 @@ describe('MessageRenderer', () => {
     it('renders bandwidth card with dot separators and code tags', () => {
       const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 10737418240, 5368709120, 100);
       expect(r).toContain('Bandwidth Usage');
-      expect(r).toContain('Current Month');
-      expect(r).toContain('Download · <code>');
-      expect(r).toContain('Upload · <code>');
-      expect(r).toContain('Total · <code>');
-      expect(r).toContain('Usage · <code>');
+      expect(r).toContain('┌ Server   gw');
+      expect(r).toContain('├ Download 10.00 GB');
+      expect(r).toContain('├ Upload   5.00 GB');
+      expect(r).toContain('└ Total    15.00 GB');
+      expect(r).toContain('Quota Limit');
     });
     it('shows 0% usage when no bandwidth limit', () => {
       const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 0, 0);
-      expect(r).toContain('Usage · <code>0%</code>');
+      expect(r).toContain('Total    0.00 GB');
     });
   });
 
@@ -96,29 +96,29 @@ describe('MessageRenderer', () => {
         { name: 'api', status: 'Exited', state: 'exited' },
       ], Date.now() / 1000);
       expect(r).toContain('Container Status');
-      expect(r).toContain('Running · <code>3</code>');
-      expect(r).toContain('Healthy · <code>3</code>');
-      expect(r).toContain('Issues · <code>2</code>');
-      expect(r).toContain('Affected Service');
-      expect(r).toContain('<code>api</code>');
+      expect(r).toContain('├ Running  3/5');
+      expect(r).toContain('├ Healthy  3');
+      expect(r).toContain('└ Issues   2 🔴');
+      expect(r).toContain('Affected Services');
+      expect(r).toContain('api');
       // nginx is healthy and running, should NOT be in affected
-      expect(r).not.toContain('<code>nginx</code>');
+      expect(r).not.toContain('nginx (');
     });
     it('shows unhealthy containers as affected services', () => {
       const r = MessageRenderer.dockerCard('node', 3, 3, 1, [
         { name: 'web', status: 'Up 1 hour (unhealthy)', state: 'running' },
       ], Date.now() / 1000);
-      expect(r).toContain('Affected Service');
-      expect(r).toContain('<code>web</code>');
-      expect(r).toContain('Health · <code>Unhealthy</code>');
+      expect(r).toContain('Affected Services');
+      expect(r).toContain('web (');
+      expect(r).toContain('Unhealthy 🔴');
     });
   });
 
   describe('emptyCard', () => {
     it('renders empty placeholder with code tags', () => {
       const r = MessageRenderer.emptyCard('missing');
-      expect(r).toContain('<b>Server</b>  <code>missing</code>');
-      expect(r).toContain('<b>Health</b>  <code>Critical</code>');
+      expect(r).toContain('┌ Server   missing');
+      expect(r).toContain('├ Health   Critical 🔴');
     });
   });
 
