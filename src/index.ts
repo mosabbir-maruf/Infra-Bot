@@ -1522,6 +1522,7 @@ app.get('/docs', (c) => {
               <tr><td><code>instanceId</code></td><td><span class="tag tag-req">req</span></td><td>AWS EC2 instance ID</td></tr>
               <tr><td><code>region</code></td><td><span class="tag tag-opt">opt</span></td><td>Defaults to <code>AWS_REGION</code></td></tr>
               <tr><td><code>dropletId</code></td><td><span class="tag tag-req">req</span></td><td>DO droplet ID (string/number)</td></tr>
+              <tr><td><code>bandwidthLimitGB</code></td><td><span class="tag tag-opt">opt</span></td><td>Shows progress bar in <code>/bandwidth</code>. Alerts fire regardless.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1656,7 +1657,7 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
           <li><code>vnstat</code> installed on the server (<code>sudo apt install vnstat</code> or <code>sudo yum install vnstat</code>)</li>
         </ol>
         <p>Alert thresholds (hardcoded, evaluated monthly): <strong>50 GB</strong> ⚠️, <strong>80 GB</strong> 🟠, <strong>95 GB</strong> 🚨. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
-        <p>Custom per-server quota: add <code>"bandwidthLimitGB": 200</code> to a server entry in <code>SERVERS_CONFIG</code> — the <code>/bandwidth</code> command will render a progress bar against that limit.</p>
+        <p>Optional — <code>"bandwidthLimitGB"</code> in <code>SERVERS_CONFIG</code> adds a progress bar to the <code>/bandwidth</code> command. Without it, you just see raw GB numbers. The 50/80/95 GB alerts fire either way.</p>
 
         <h2 id="mon-cron">Cron Report</h2>
         <p>Daily at <strong>08:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>

@@ -87,6 +87,8 @@ The dashboard and Telegram commands only recognize droplets that are explicitly 
 
 The `region` field is optional. If omitted, the dashboard shows `—` in the region column. Include it if you want the region displayed.
 
+Optional `"bandwidthLimitGB": 500` adds a progress bar to the `/bandwidth` Telegram command. Without it, you see raw GB numbers. The automatic 50/80/95 GB alerts fire regardless.
+
 **Finding droplet details:** Open the droplet in the DigitalOcean Control Panel — the ID and region are shown on the detail page. The ID also appears in the browser URL (`cloud.digitalocean.com/droplets/123456789`). You can also run `doctl compute droplet list` or `curl -H "Authorization: Bearer $TOKEN" https://api.digitalocean.com/v2/droplets`.
 
 Set it as a Cloudflare secret:

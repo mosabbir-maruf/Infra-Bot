@@ -79,6 +79,8 @@ The `SERVERS_CONFIG` JSON tells the bot which servers to manage. Each entry maps
 
 The `region` field is optional. If omitted, the dashboard shows `—` instead.
 
+Optional `"bandwidthLimitGB": 500` adds a progress bar to `/bandwidth`. The 50/80/95 GB alerts fire automatically regardless.
+
 **AWS EC2 example:**
 ```json
 {

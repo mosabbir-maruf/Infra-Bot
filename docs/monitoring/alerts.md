@@ -16,7 +16,7 @@ Alerts are automatic once the agent is running. No additional configuration is n
    sudo yum install vnstat   # CentOS/RHEL
    ```
 
-**Custom per-server quota:** Add `"bandwidthLimitGB": 200` to a server entry in `SERVERS_CONFIG`. The `/bandwidth` Telegram command will render a progress bar against that limit. This is optional — alerts still fire at the hardcoded thresholds regardless.
+**Optional — `bandwidthLimitGB`:** Adding `"bandwidthLimitGB": 200` to a server entry in `SERVERS_CONFIG` only affects the `/bandwidth` Telegram command (adds a progress bar). Without it, you see raw GB numbers. The 50/80/95 GB alerts fire either way — no config needed.
 
 ## Threshold Levels
 
