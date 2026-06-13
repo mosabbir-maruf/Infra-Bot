@@ -4,7 +4,7 @@ The Control Plane proactively tracks monthly cumulative network transit and aler
 
 ## Setup
 
-Alerts are automatic once the agent is running. No additional configuration is needed.
+Alerts are automatic once the agent is running.
 
 **Prerequisites:**
 1. `MONITORING_KV` KV namespace bound to the worker
@@ -16,14 +16,17 @@ Alerts are automatic once the agent is running. No additional configuration is n
    sudo yum install vnstat   # CentOS/RHEL
    ```
 
-**Optional — `bandwidthLimitGB`:** Adding `"bandwidthLimitGB": 200` to a server entry in `SERVERS_CONFIG` only affects the `/bandwidth` Telegram command (adds a progress bar). Without it, you see raw GB numbers. The 50/80/95 GB alerts fire either way — no config needed.
+## Configuring Thresholds
 
-## Threshold Levels
+Set the `BANDWIDTH_ALERT_THRESHOLDS` environment variable as a comma-separated list of GB values:
 
-Warnings are dispatched to authorized Telegram chats at the following stages:
-* ⚠️ **Warning Stage 1**: `50 GB` of traffic
-* 🟠 **Warning Stage 2**: `80 GB` of traffic
-* 🚨 **Critical Stage 3**: `95 GB` of traffic
+```
+npx wrangler secret put BANDWIDTH_ALERT_THRESHOLDS
+```
+
+Enter a value like `100,200,500`. If not set, the worker defaults to `50,80,95`.
+
+**Optional — `bandwidthLimitGB`:** Adding `"bandwidthLimitGB": 500` to a server entry in `SERVERS_CONFIG` only adds a progress bar to the `/bandwidth` Telegram command. Without it, you see raw GB numbers. The threshold alerts fire regardless.
 
 ## Deduplication Logic
 

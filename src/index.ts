@@ -1539,6 +1539,7 @@ app.get('/docs', (c) => {
               <tr><td><code>AUTHORIZED_USER_IDS</code></td><td><span class="tag tag-req">req</span></td><td>Comma-separated Telegram user IDs</td></tr>
               <tr><td><code>SERVERS_CONFIG</code></td><td><span class="tag tag-req">req</span></td><td>Server registry JSON</td></tr>
               <tr><td><code>MONITORING_SECRET</code></td><td><span class="tag tag-req">req</span></td><td>HMAC-SHA256 secret for telemetry</td></tr>
+              <tr><td><code>BANDWIDTH_ALERT_THRESHOLDS</code></td><td><span class="tag tag-opt">opt</span></td><td>Comma-separated GB thresholds. Default: <code>50,80,95</code></td></tr>
               <tr><td><code>AWS_ACCESS_KEY_ID</code></td><td><span class="tag tag-opt">opt</span></td><td>AWS IAM access key</td></tr>
               <tr><td><code>AWS_SECRET_ACCESS_KEY</code></td><td><span class="tag tag-opt">opt</span></td><td>AWS IAM secret key</td></tr>
               <tr><td><code>AWS_REGION</code></td><td><span class="tag tag-opt">opt</span></td><td>Plain-text variable. Default: <code>us-east-1</code></td></tr>
@@ -1648,7 +1649,7 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
         <p>Requires: <code>bash</code>, <code>curl</code>, <code>openssl</code>, <code>vnstat</code>, <code>docker</code> (optional).</p>
 
         <h2 id="mon-alerts">Bandwidth Alerts</h2>
-        <p>Alerts are automatic once the agent is running and reporting metrics. No additional configuration is needed — the worker evaluates every incoming report against three hardcoded thresholds.</p>
+        <p>Alerts are automatic once the agent is running and reporting metrics. The worker evaluates every incoming report against configurable thresholds.</p>
         <p>Prerequisites:</p>
         <ol>
           <li><code>MONITORING_KV</code> KV namespace bound to the worker</li>
@@ -1656,8 +1657,7 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
           <li>Agent cron running every 5 minutes (see Agent Setup above)</li>
           <li><code>vnstat</code> installed on the server (<code>sudo apt install vnstat</code> or <code>sudo yum install vnstat</code>)</li>
         </ol>
-        <p>Alert thresholds (hardcoded, evaluated monthly): <strong>50 GB</strong> ⚠️, <strong>80 GB</strong> 🟠, <strong>95 GB</strong> 🚨. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
-        <p>Optional — <code>"bandwidthLimitGB"</code> in <code>SERVERS_CONFIG</code> adds a progress bar to the <code>/bandwidth</code> command. Without it, you just see raw GB numbers. The 50/80/95 GB alerts fire either way.</p>
+        <p>Set <code>BANDWIDTH_ALERT_THRESHOLDS</code> as a comma-separated list of GB values (e.g. <code>50,80,95</code>). Defaults to <code>50,80,95</code> if not set. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
 
         <h2 id="mon-cron">Cron Report</h2>
         <p>Daily at <strong>08:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>
@@ -2125,7 +2125,7 @@ app.post('/monitoring/report', async (c) => {
   const totalGB = totalB / (1024 * 1024 * 1024);
 
   const currentMonth = new Date().toISOString().substring(0, 7); // "YYYY-MM"
-  const alertThresholds = [50, 80, 95];
+  const alertThresholds = env.BANDWIDTH_ALERT_THRESHOLDS || [50, 80, 95];
 
   for (const threshold of alertThresholds) {
     if (totalGB >= threshold) {

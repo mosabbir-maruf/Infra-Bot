@@ -9,6 +9,7 @@ export interface Env {
   SERVERS_CONFIG: string;
   MONITORING_SECRET: string;
   TELEGRAM_WEBHOOK_SECRET?: string;
+  BANDWIDTH_ALERT_THRESHOLDS?: number[];
 }
 
 /**
@@ -58,6 +59,25 @@ export function validateEnv(rawEnv: unknown): Env {
     throw new Error('Configuration Error: MONITORING_SECRET is not defined or is empty');
   }
 
+  const rawThresholds = envObj.BANDWIDTH_ALERT_THRESHOLDS;
+  let bandwidthAlertThresholds: number[] | undefined;
+  if (rawThresholds && rawThresholds.trim() !== '') {
+    bandwidthAlertThresholds = rawThresholds
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0)
+      .map((t) => {
+        const parsed = parseFloat(t);
+        if (isNaN(parsed) || parsed <= 0) {
+          throw new Error(`Configuration Error: Invalid value in BANDWIDTH_ALERT_THRESHOLDS: "${t}"`);
+        }
+        return parsed;
+      });
+    if (bandwidthAlertThresholds.length === 0) {
+      throw new Error('Configuration Error: BANDWIDTH_ALERT_THRESHOLDS must contain at least one positive number');
+    }
+  }
+
   return {
     TELEGRAM_BOT_TOKEN: telegramBotToken,
     AUTHORIZED_USER_IDS: userIds,
@@ -69,5 +89,6 @@ export function validateEnv(rawEnv: unknown): Env {
     SERVERS_CONFIG: serversConfig,
     MONITORING_SECRET: monitoringSecret,
     TELEGRAM_WEBHOOK_SECRET: envObj.TELEGRAM_WEBHOOK_SECRET,
+    BANDWIDTH_ALERT_THRESHOLDS: bandwidthAlertThresholds,
   };
 }

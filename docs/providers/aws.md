@@ -73,7 +73,7 @@ The dashboard and Telegram commands only recognize instances that are explicitly
 }
 ```
 
-Optional `"bandwidthLimitGB": 500` adds a progress bar to `/bandwidth`. The 50/80/95 GB alerts fire automatically regardless.
+Optional `"bandwidthLimitGB": 500` adds a progress bar to `/bandwidth`. The bandwidth alerts fire regardless — configure thresholds via `BANDWIDTH_ALERT_THRESHOLDS` (defaults to `50,80,95`).
 
 Set it as a Cloudflare secret:
 

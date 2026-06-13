@@ -57,6 +57,7 @@ To set your configuration:
 | `AWS_SECRET_ACCESS_KEY` | Secret | No (Opt.) | AWS IAM User Secret Key for EC2 integration. |
 | `DIGITALOCEAN_TOKEN` | Secret | No (Opt.) | Personal Access Token for DigitalOcean integration. |
 | `AWS_REGION` | Plain text | No (Opt.) | AWS region for EC2 API calls. Default: `us-east-1`. |
+| `BANDWIDTH_ALERT_THRESHOLDS` | Secret | No (Opt.) | Comma-separated GB thresholds. Default: `50,80,95`. |
 
 ### Server Registration
 
@@ -79,7 +80,7 @@ The `SERVERS_CONFIG` JSON tells the bot which servers to manage. Each entry maps
 
 The `region` field is optional. If omitted, the dashboard shows `—` instead.
 
-Optional `"bandwidthLimitGB": 500` adds a progress bar to `/bandwidth`. The 50/80/95 GB alerts fire automatically regardless.
+Optional `"bandwidthLimitGB": 500` adds a progress bar to `/bandwidth`. Bandwidth alerts fire regardless — configure thresholds via `BANDWIDTH_ALERT_THRESHOLDS` (defaults to `50,80,95`).
 
 **AWS EC2 example:**
 ```json
