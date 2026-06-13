@@ -1,4 +1,3 @@
-import { Logger } from '../utils/Logger';
 import { escapeMarkdownV2 } from './Escaper';
 
 export class TelegramClient {
@@ -27,20 +26,15 @@ export class TelegramClient {
       reply_markup: replyMarkup,
     };
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: TelegramClient.POST_HEADERS,
-        body: JSON.stringify(body),
-      });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: TelegramClient.POST_HEADERS,
+      body: JSON.stringify(body),
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Telegram API error (${response.status}): ${errorText}`);
-      }
-    } catch (err) {
-      Logger.error(`TelegramClient: Failed to send message to chat ${chatId}`, err);
-      throw err;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Telegram API error (${response.status}): ${errorText}`);
     }
   }
 
@@ -64,20 +58,15 @@ export class TelegramClient {
       reply_markup: replyMarkup,
     };
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: TelegramClient.POST_HEADERS,
-        body: JSON.stringify(body),
-      });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: TelegramClient.POST_HEADERS,
+      body: JSON.stringify(body),
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Telegram API error (${response.status}): ${errorText}`);
-      }
-    } catch (err) {
-      Logger.error(`TelegramClient: Failed to edit message ${messageId} in chat ${chatId}`, err);
-      throw err;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Telegram API error (${response.status}): ${errorText}`);
     }
   }
 
@@ -91,20 +80,15 @@ export class TelegramClient {
       message_id: messageId,
     };
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: TelegramClient.POST_HEADERS,
-        body: JSON.stringify(body),
-      });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: TelegramClient.POST_HEADERS,
+      body: JSON.stringify(body),
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Telegram API error (${response.status}): ${errorText}`);
-      }
-    } catch (err) {
-      Logger.error(`TelegramClient: Failed to delete message ${messageId} in chat ${chatId}`, err);
-      throw err;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Telegram API error (${response.status}): ${errorText}`);
     }
   }
 
@@ -123,20 +107,15 @@ export class TelegramClient {
       show_alert: showAlert,
     };
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: TelegramClient.POST_HEADERS,
-        body: JSON.stringify(body),
-      });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: TelegramClient.POST_HEADERS,
+      body: JSON.stringify(body),
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Telegram API error (${response.status}): ${errorText}`);
-      }
-    } catch (err) {
-      Logger.error(`TelegramClient: Failed to answer callback query ${callbackQueryId}`, err);
-      throw err;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Telegram API error (${response.status}): ${errorText}`);
     }
   }
 }

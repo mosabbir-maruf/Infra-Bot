@@ -27,7 +27,6 @@ interface Bindings {
   SERVERS_CONFIG: string;
   MONITORING_SECRET: string;
   MONITORING_KV?: KVNamespace;
-  RATE_LIMIT_KV?: KVNamespace;
   TELEGRAM_WEBHOOK_SECRET?: string;
 }
 
@@ -63,7 +62,7 @@ function getContext(rawEnv: unknown): {
   }
 
   const env = validateEnv(rawEnv);
-  const rateLimitKv = envObj.RATE_LIMIT_KV;
+  const rateLimitKv = envObj.MONITORING_KV;
 
   if (isTest) {
     return {
@@ -1584,8 +1583,7 @@ app.get('/docs', (c) => {
           <table>
             <thead><tr><th>Binding</th><th>Req</th><th>Purpose</th></tr></thead>
             <tbody>
-              <tr><td><code>MONITORING_KV</code></td><td><span class="tag tag-rec">rec</span></td><td>Telemetry storage &amp; alert dedup</td></tr>
-              <tr><td><code>RATE_LIMIT_KV</code></td><td><span class="tag tag-opt">opt</span></td><td>Distributed rate limiting</td></tr>
+              <tr><td><code>MONITORING_KV</code></td><td><span class="tag tag-rec">rec</span></td><td>Telemetry storage, alert dedup &amp; rate limiting</td></tr>
             </tbody>
           </table>
         </div>
@@ -1653,7 +1651,7 @@ app.get('/docs', (c) => {
 
       <div class="section" id="rate-limit">
         <div class="section-label">rate limiting</div>
-        <p><strong>10 commands / 60s</strong> per user. Uses <code>RATE_LIMIT_KV</code>; falls back to in-memory. Exceeded users receive a warning and are blocked for the window. Key: <code>rl:&lt;userId&gt;</code>, 60s TTL.</p>
+        <p><strong>10 commands / 60s</strong> per user. Uses <code>MONITORING_KV</code>; falls back to in-memory. Exceeded users receive a warning and are blocked for the window. Key: <code>rl:&lt;userId&gt;</code>, 60s TTL.</p>
       </div>
 
       <div class="section" id="monitoring">
@@ -2000,7 +1998,9 @@ app.post('/webhook', async (c) => {
   try {
     update = await c.req.json<TelegramUpdate>();
   } catch (jsonErr) {
-    Logger.error('Failed to parse webhook JSON payload', jsonErr);
+    Logger.warn('Failed to parse webhook JSON payload', {
+      error: jsonErr instanceof Error ? { message: jsonErr.message, stack: jsonErr.stack } : { message: String(jsonErr) },
+    });
     return c.text('Bad Request', 400);
   }
 
@@ -2158,7 +2158,6 @@ app.post('/monitoring/report', async (c) => {
   // Store metrics in KV
   const key = `metrics:${alias.toLowerCase()}`;
   await kv.put(key, bodyText);
-  Logger.info(`Monitoring report: Stored metrics telemetry for "${alias}"`);
 
   // Bandwidth alert threshold warnings checking
   const totalB = (payload.bandwidth?.rx || 0) + (payload.bandwidth?.tx || 0);

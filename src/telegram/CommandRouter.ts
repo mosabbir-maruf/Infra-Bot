@@ -112,14 +112,9 @@ export class CommandRouter {
       return;
     }
 
-    Logger.info(`CommandRouter: Processing command "/${command}" from user ID ${userId}`, {
-      userId,
-      command: `/${command}`,
-    });
-
     try {
       await handler.execute(ctx);
-      Logger.info(`CommandRouter: Completed command "/${command}" for user ID ${userId}`, {
+      Logger.info(`CommandRouter: Executed "/${command}" for user ID ${userId}`, {
         userId,
         command: `/${command}`,
         result: 'success',
@@ -218,6 +213,11 @@ export class CommandRouter {
 
     try {
       await handler.execute(ctx);
+      Logger.info(`CommandRouter: Executed "/${commandName}" (callback) for user ID ${userId}`, {
+        userId,
+        command: `/${commandName}`,
+        result: 'success',
+      });
     } catch (err) {
       await handleError(err, ctx);
     }

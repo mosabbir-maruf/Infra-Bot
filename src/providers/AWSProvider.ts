@@ -77,7 +77,6 @@ export class AWSProvider implements CloudProvider {
 
   public async getServerStatus(serverId: string, region?: string): Promise<CloudServerInstance> {
     const { client, region: targetRegion } = this.getClient(region);
-    Logger.info(`AWSProvider: Describing instance ${serverId} in region ${targetRegion}`);
     const res = await client.send(
       new DescribeInstancesCommand({
         InstanceIds: [serverId],
@@ -96,7 +95,6 @@ export class AWSProvider implements CloudProvider {
 
   public async listServers(region?: string): Promise<CloudServerInstance[]> {
     const { client, region: targetRegion } = this.getClient(region);
-    Logger.info(`AWSProvider: Listing all EC2 instances in region ${targetRegion}`);
     const res = await client.send(new DescribeInstancesCommand({}));
     const instances: CloudServerInstance[] = [];
 
@@ -115,7 +113,6 @@ export class AWSProvider implements CloudProvider {
 
   public async getInstanceMetadata(serverId: string, region?: string): Promise<CloudServerMetadata> {
     const { client, region: targetRegion } = this.getClient(region);
-    Logger.info(`AWSProvider: Retrieving metadata for instance ${serverId} in region ${targetRegion}`);
     const res = await client.send(
       new DescribeInstancesCommand({
         InstanceIds: [serverId],

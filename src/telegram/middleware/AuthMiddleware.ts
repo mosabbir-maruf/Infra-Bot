@@ -26,10 +26,5 @@ export function isAuthorized(update: TelegramUpdate, env: Env): boolean {
     return false;
   }
 
-  Logger.info(`AuthMiddleware: Access granted to user ID ${userId}`, {
-    userId,
-    command: update.message?.text || update.callback_query?.data,
-  });
-
   return true;
 }

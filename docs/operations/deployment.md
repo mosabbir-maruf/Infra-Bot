@@ -19,7 +19,7 @@ This is the recommended deployment model. It automatically builds and deploys yo
 4. Click **Deploy**. (The first build might complete, but the runtime will fail until you configure bindings and secrets in the next steps).
 
 ### Step 3: Create and Bind the KV Namespace
-The worker uses a KV namespace named `MONITORING_KV` to store target server telemetry metrics.
+The worker uses a KV namespace named `MONITORING_KV` to store target server telemetry metrics and manage distributed rate limiting.
 1. In the Cloudflare Dashboard sidebar, go to **Workers & Pages** > **KV**.
 2. Click **Create Namespace**, name it `mosabbir-infra-bot-MONITORING_KV` (or any custom name), and click **Add**.
 3. Navigate back to **Workers & Pages** > select your worker service (`mosabbir-infra-bot`) > **Settings** > **Variables**.

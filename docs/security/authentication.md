@@ -71,4 +71,4 @@ npx wrangler secret put MONITORING_SECRET
 
 To mitigate Denial of Service (DoS) attacks from whitelisted/compromised accounts or bot flooding, a distributed rate limiter middleware is enabled on the `/webhook` endpoint.
 * **Limit**: 10 command executions per minute per user ID.
-* **Storage**: Integrates with Cloudflare KV (`RATE_LIMIT_KV` binding) for distributed, multi-region tracking. Falls back to memory map in isolated dev environments.
+* **Storage**: Integrates with Cloudflare KV (`MONITORING_KV` binding) for distributed, multi-region tracking. Falls back to memory map in isolated dev environments.

@@ -41,7 +41,7 @@ export class CloudflareKVRateLimiter implements RateLimiter {
 
   public async isRateLimited(key: string, limit: number, windowSeconds: number): Promise<boolean> {
     if (!this.hasKv) {
-      Logger.warn('RateLimiter: KV Namespace not bound. Falling back to InMemory rate limiting.');
+      Logger.warn('RateLimiter: No KV namespace bound. Falling back to InMemory rate limiting.');
       return this.fallback.isRateLimited(key, limit, windowSeconds);
     }
 

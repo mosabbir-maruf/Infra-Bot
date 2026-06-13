@@ -82,19 +82,16 @@ export class DigitalOceanProvider implements CloudProvider {
   }
 
   public async getServerStatus(serverId: string, _region?: string): Promise<CloudServerInstance> {
-    Logger.info(`DigitalOceanProvider: Fetching droplet ${serverId}`);
     const data = await this.request<{ droplet: DigitalOceanDroplet }>(`/droplets/${serverId}`);
     return this.mapDroplet(data.droplet);
   }
 
   public async listServers(_region?: string): Promise<CloudServerInstance[]> {
-    Logger.info('DigitalOceanProvider: Listing all droplets');
     const data = await this.request<{ droplets: DigitalOceanDroplet[] }>('/droplets');
     return data.droplets.map((droplet) => this.mapDroplet(droplet));
   }
 
   public async getInstanceMetadata(serverId: string, _region?: string): Promise<CloudServerMetadata> {
-    Logger.info(`DigitalOceanProvider: Retrieving metadata for droplet ${serverId}`);
     const data = await this.request<{ droplet: DigitalOceanDroplet }>(`/droplets/${serverId}`);
     const droplet = data.droplet;
 
