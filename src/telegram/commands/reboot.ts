@@ -4,7 +4,7 @@ import { MessageRenderer } from '../MessageRenderer';
 
 export class RebootHandler implements CommandHandler {
   public readonly name = 'reboot';
-  public readonly description = 'Reboots/power-cycles a cloud server instance';
+  public readonly description = 'Reboots a cloud server instance';
 
   public async execute(ctx: TelegramContext): Promise<void> {
     if (ctx.args.length < 1) {

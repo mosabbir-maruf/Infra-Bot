@@ -72,10 +72,10 @@ export class DigitalOceanProvider implements CloudProvider {
   }
 
   public async rebootServer(serverId: string, _region?: string): Promise<void> {
-    Logger.info(`DigitalOceanProvider: Power cycling droplet ${serverId}`);
+    Logger.info(`DigitalOceanProvider: Rebooting droplet ${serverId}`);
     await this.request(`/droplets/${serverId}/actions`, {
       method: 'POST',
-      body: JSON.stringify({ type: 'power_cycle' }),
+      body: JSON.stringify({ type: 'reboot' }),
     });
   }
 
