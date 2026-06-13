@@ -4,21 +4,67 @@ The DigitalOcean provider adapter manages Droplets (virtual private servers) usi
 
 ## API Credentials
 
+### Create a Personal Access Token
+
 1. Log into your **DigitalOcean Control Panel**.
-2. Navigate to **API** in the left sidebar menu.
-3. Select **Tokens/Keys** tab and click **Generate New Token**.
-4. Set the token name (e.g. `mosabbir-infra-bot-token`).
-5. Under **Scopes**, choose **Custom Scopes** and select only the scopes required for your use case (see tables below).
-6. Copy the generated Personal Access Token (PAT).
+2. Navigate to **API** → **Tokens/Keys** tab → click **Generate New Token**.
+3. Set the token name (e.g. `mosabbir-infra-bot-token`), leave expiration as desired.
+4. Under **Scopes**, choose **Custom Scopes**.
+
+### Select the Right Scopes
+
+In the **Custom Scopes** section, scroll to the `droplet` resource group and enable exactly these two checkboxes:
+
+| Resource | Checkbox | Label |
+|---|---|---|
+| `droplet` | ☑ **read** | View Droplets |
+| `droplet` | ☑ **update** | Modify Droplets |
+
+**Do not** enable any other checkboxes. In particular leave unchecked:
+- `droplet` → `create`
+- `droplet` → `delete`
+- `droplet` → `admin`
+- Any scope outside the `droplet` resource group
+
+### What Happens Automatically
+
+When you check `droplet:update`, the DigitalOcean UI automatically selects these prerequisite scopes (you will see them appear in the selected scopes summary):
+
+| Prerequisite Scope | Why It Is Needed |
+|---|---|
+| `actions:read` | Required by DO when you select `droplet:update` |
+| `regions:read` | Required by DO when you select `droplet:update` |
+| `sizes:read` | Required by DO when you select `droplet:update` |
+| `image:read` | Required by DO when you select `droplet:update` |
+
+No action needed — these are added for you. Your final selected scopes summary will show:
+
+| Section | Count |
+|---|---|
+| **Read Access** | droplet (1), actions (1) |
+| **Update Access** | droplet (1) |
+
+5. Click **Generate Token** and **copy the token immediately** — you will not see it again.
+
+> ⚠ **Security:** A Full Access token is dangerous for bot use. If the token is leaked, an attacker gains full control of your DigitalOcean account. Custom scopes limit the blast radius. See the Security Warning section below.
 
 ## Configuration
 
 Bind the following secret in Cloudflare Secrets:
-* `DIGITALOCEAN_TOKEN`: The copied personal access token.
+
+```
+npx wrangler secret put DIGITALOCEAN_TOKEN
+```
+
+Or for local development, add it to `.dev.vars`:
+
+```
+DIGITALOCEAN_TOKEN="dop_v1_abcdef1234567890abcdef1234567890"
+```
 
 ---
 
-## Required DigitalOcean Token Scopes
+## Required Scopes Reference
 
 ### Per-Endpoint Scope Requirements
 
@@ -36,7 +82,7 @@ Bind the following secret in Cloudflare Secrets:
 
 ### How Droplet Actions Work
 
-All lifecycle operations (start, stop, reboot, power cycle) use the same endpoint:
+All lifecycle operations use the same API endpoint with a different `type` value:
 
 ```
 POST /v2/droplets/{droplet_id}/actions
@@ -48,79 +94,45 @@ Authorization: Bearer $DIGITALOCEAN_TOKEN
 }
 ```
 
-The `type` field determines the operation:
-
 | Action Type | Behavior | Used By |
 |---|---|---|
 | `power_on` | Powers on a Droplet. | `/start` |
 | `power_off` | Hard powers off a Droplet (like cutting power). | `/stop` |
-| `reboot` | Graceful OS reboot (like `reboot` from console). Sends SIGTERM. | `/reboot` |
-| `shutdown` | Graceful shutdown (like `shutdown` from console). | (alternative to `power_off`) |
-| `power_cycle` | Hard reset (like pressing the reset button). Power off then on. | (available for future use) |
+| `reboot` | Graceful OS reboot (sends SIGTERM, like `reboot` from console). | `/reboot` |
+| `shutdown` | Graceful shutdown (like `shutdown` from console). | Alternative to `power_off` |
+| `power_cycle` | Hard reset (power off then on, like pressing the reset button). | Available for future use |
 
-All droplet action types require **`droplet:update`** scope. The scopes `actions:read` and `actions:create` are **not** required for droplet lifecycle actions — they apply to the global Actions API, which this integration does not use.
-
-### Scope Dependency Chain
-
-When creating a custom-scoped token, DigitalOcean requires prerequisite scopes for non-read scopes. Selecting `droplet:update` in the UI will automatically require these additional scopes:
-
-| Prerequisite Scope | Description | Required For |
-|---|---|---|
-| `droplet:read` | View Droplets | All droplet read endpoints |
-| `regions:read` | View data center regions | Droplet action validation |
-| `sizes:read` | View Droplet plan sizes | Droplet action validation |
-| `actions:read` | View events / action records | Droplet action tracking |
-| `image:read` | View images | Droplet action validation |
-
-These are transparently added by the DigitalOcean token creation UI when you select `droplet:update`.
+All droplet action types require **`droplet:update`** — not `actions:create`. The `actions:create` scope applies to the standalone Actions API (`POST /v2/actions`), which this integration does not call.
 
 ---
 
 ## Recommended Production Token
 
-### Step-by-Step: Custom Scopes in the DO UI
+The two scopes selected above (`droplet:read` + `droplet:update`) are the minimum needed for all bot operations:
 
-In the **Custom Scopes** section of the token creation page, enable only these checkboxes:
-
-| Resource | Checkbox | Label |
-|---|---|---|
-| `droplet` | ☑ **read** | View Droplets |
-| `droplet` | ☑ **update** | Modify Droplets |
-
-The DigitalOcean UI will automatically select the prerequisite scopes (`actions:read`, `regions:read`, `sizes:read`, `image:read`) when you check `droplet:update`. Your final selected count will show:
-
-| Section | Count |
-|---|---|
-| **Read Access** | droplet (1), actions (1) |
-| **Update Access** | droplet (1) |
-
-Leave everything else unchecked. Do **not** check `droplet:create`, `droplet:delete`, `droplet:admin`, or any scope outside the `droplet` resource group.
-
-### What This Token Can Do
-
-| Scope | Reason |
+| Scope | Required For |
 |---|---|
 | `droplet:read` | List droplets, get status, get metadata |
 | `droplet:update` | Power on, power off, reboot |
 
+With this token you can: start, stop, reboot, query status, list droplets, and read metadata.
+Without adding `droplet:create`/`droplet:delete`, you **cannot** create or destroy droplets.
 
 ---
 
 ## Optional Scopes
 
-These scopes are **not required** for the bot's core operations but can be added if you extend functionality.
+Add these only if you extend the bot's functionality:
 
 | Scope | Required For | Enable When |
 |---|---|---|
-| `droplet:create` | Creating new Droplets (`POST /v2/droplets`). Requires additional scopes: `ssh_key:read`, `vpc:read`, `block_storage:read`, `image:read`, `tag:create`. | You implement a `/create` or `/provision` command that spins up new Droplets. |
-| `droplet:delete` | Deleting Droplets (`DELETE /v2/droplets/{id}`). | You implement a `/destroy` command. |
-| `image:create` | Creating snapshots of Droplets. Combined with `droplet:update` for the snapshot action type. | You implement a `/snapshot` command. |
-| `block_storage:read` | Listing and viewing Block Storage Volumes. | You implement volume management commands. |
-| `block_storage:create` | Creating Block Storage Volumes. | You implement volume creation commands. |
-| `firewall:read` | Listing and viewing Cloud Firewalls. | You implement firewall management commands. |
-| `firewall:create` / `firewall:update` / `firewall:delete` | Managing Cloud Firewall rules. | You implement firewall CRUD commands. |
-| `dns:read` | Reading DNS zones and records. | You implement DNS lookup commands. |
-| `dns:create` / `dns:update` / `dns:delete` | Managing DNS records. | You implement DNS management commands. |
+| `droplet:create` | Creating new Droplets (`POST /v2/droplets`). Also adds `ssh_key:read`, `vpc:read`, `block_storage:read`, `image:read`, `tag:create`. | You add a `/create` or `/provision` command. |
+| `droplet:delete` | Deleting Droplets (`DELETE /v2/droplets/{id}`). | You add a `/destroy` command. |
+| `image:create` | Creating snapshots. Combined with `droplet:update` for the snapshot action type. | You add a `/snapshot` command. |
+| `block_storage:read` | Viewing Block Storage Volumes. | You add volume management commands. |
+| `block_storage:create` | Creating Block Storage Volumes. | You add volume creation commands. |
+| `firewall:*` | Managing Cloud Firewall rules. | You add firewall CRUD commands. |
+| `dns:*` | Managing DNS records. | You add DNS management commands. |
 
 ---
 
@@ -128,19 +140,19 @@ These scopes are **not required** for the bot's core operations but can be added
 
 > **Do not use Full Access tokens in production Telegram bots or public infrastructure automation systems.**
 
-A Full Access token (equivalent to the `api:write` alias scope) grants unrestricted access to **every** resource and action in your DigitalOcean team. If the token is leaked:
+A Full Access token (equivalent to `api:write`) grants unrestricted access to **every** resource in your DigitalOcean team. If leaked:
 
-- An attacker can **create, modify, or delete** every Droplet, database, volume, firewall, DNS record, load balancer, and Kubernetes cluster in the account.
-- An attacker can **access** all team resources, read all images, SSH keys, and account details.
-- An attacker can **escalate** by creating new API tokens or modifying team member permissions.
-- **There is no way to limit scope after a leak** — the only recourse is to revoke the token and rotate every credential in the account.
+- An attacker can **create, modify, or delete** every Droplet, database, volume, firewall, DNS record, load balancer, and Kubernetes cluster.
+- An attacker can **read** all account resources, SSH keys, and images.
+- An attacker can **escalate** by creating new API tokens or modifying team permissions.
+- **The only recourse after a leak** is to revoke the token and rotate every credential.
 
 **Best practices:**
 
-- Always use **Custom Scopes** with the minimum permissions required.
-- Create a dedicated token per bot or service, never share tokens across systems.
-- Restrict the bot token to only the operations the bot actually performs (`droplet:read` + `droplet:update`).
+- Always use **Custom Scopes** with the minimum permissions (`droplet:read` + `droplet:update`).
+- Create a dedicated token per service; never share tokens across systems.
 - Regularly audit and rotate tokens in the DigitalOcean Control Panel.
+- Treat the token as a secret — never hardcode it, never commit it to version control.
 
 ---
 
@@ -158,18 +170,18 @@ A Full Access token (equivalent to the `api:write` alias scope) grants unrestric
   ```json
   { "type": "reboot" }
   ```
-* **Get Server Status**: `GET /v2/droplets/{id}`. Maps DigitalOcean droplet status (`active`, `new`, `off`, `archive`) to standard status states (`running`, `stopped`, `rebooting`, `unknown`).
+* **Get Server Status**: `GET /v2/droplets/{id}`. Maps droplet status (`active`, `new`, `off`, `archive`) to standard states (`running`, `stopped`, `rebooting`, `unknown`).
 * **List Servers**: `GET /v2/droplets`
-* **Instance Metadata**: `GET /v2/droplets/{id}` — extracts public IP, private IP, region, size, and creation date.
+* **Instance Metadata**: `GET /v2/droplets/{id}` — extracts public IP, private IP, region, size slug, and creation date.
 
 ---
 
 ## Status Mapping
 
-| Droplet Status | Mapped Status | Description |
+| Droplet API Status | Mapped Status | Meaning |
 |---|---|---|
 | `new` | `starting` | Droplet is provisioning |
-| `active` | `running` | Droplet is powered on and running |
+| `active` | `running` | Droplet is powered on |
 | `off` | `stopped` | Droplet is powered off |
 | `archive` | `terminated` | Droplet has been destroyed and archived |
 | *other* | `unknown` | Unrecognized or transitional state |
