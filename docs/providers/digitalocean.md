@@ -78,7 +78,25 @@ These are transparently added by the DigitalOcean token creation UI when you sel
 
 ## Recommended Production Token
 
-The minimum set of scopes required for the full set of supported operations:
+### Step-by-Step: Custom Scopes in the DO UI
+
+In the **Custom Scopes** section of the token creation page, enable only these checkboxes:
+
+| Resource | Checkbox | Label |
+|---|---|---|
+| `droplet` | ☑ **read** | View Droplets |
+| `droplet` | ☑ **update** | Modify Droplets |
+
+The DigitalOcean UI will automatically select the prerequisite scopes (`actions:read`, `regions:read`, `sizes:read`, `image:read`) when you check `droplet:update`. Your final selected count will show:
+
+| Section | Count |
+|---|---|
+| **Read Access** | droplet (1), actions (1) |
+| **Update Access** | droplet (1) |
+
+Leave everything else unchecked. Do **not** check `droplet:create`, `droplet:delete`, `droplet:admin`, or any scope outside the `droplet` resource group.
+
+### What This Token Can Do
 
 | Scope | Reason |
 |---|---|
