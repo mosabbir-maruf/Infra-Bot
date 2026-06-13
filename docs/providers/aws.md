@@ -52,10 +52,34 @@ Stopping an EC2 instance is a **high-risk action** in production environments:
 
 ## Configuration
 
+### Credentials
+
 Configure the following variables in Cloudflare Secrets:
 * `AWS_ACCESS_KEY_ID`: IAM user access key.
 * `AWS_SECRET_ACCESS_KEY`: IAM user secret access key.
 * `AWS_REGION`: The fallback default region containing EC2 instances (e.g. `us-east-1`).
+
+### Server Registration
+
+The dashboard and Telegram commands only recognize instances that are explicitly registered in the `SERVERS_CONFIG` environment variable. Add each EC2 instance as an entry with `provider` set to `"aws"` and the instance ID as `instanceId`:
+
+```json
+{
+  "ai-gateway-prod": {
+    "provider": "aws",
+    "region": "ap-south-1",
+    "instanceId": "i-0123456789abcdef0"
+  }
+}
+```
+
+Set it as a Cloudflare secret:
+
+```
+npx wrangler secret put SERVERS_CONFIG
+```
+
+The IAM credentials (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) are used at runtime when Telegram commands like `/start`, `/stop`, or `/status` are issued — they do not auto-discover instances for the dashboard. Only instances listed in `SERVERS_CONFIG` will appear on the dashboard and be addressable by commands.
 
 ---
 

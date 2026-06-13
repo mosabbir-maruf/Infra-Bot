@@ -53,6 +53,8 @@ All 5 required scopes are transparently handled by the UI and require no additio
 
 ## Configuration
 
+### Token Secret
+
 Bind the following secret in Cloudflare Secrets:
 
 ```
@@ -64,6 +66,31 @@ Or for local development, add it to `.dev.vars`:
 ```
 DIGITALOCEAN_TOKEN="dop_v1_abcdef1234567890abcdef1234567890"
 ```
+
+### Server Registration
+
+The dashboard and Telegram commands only recognize droplets that are explicitly registered in the `SERVERS_CONFIG` environment variable. Add each droplet as an entry with `provider` set to `"digitalocean"` and the droplet ID as `dropletId`:
+
+```json
+{
+  "my-droplet": {
+    "provider": "digitalocean",
+    "dropletId": "123456789"
+  },
+  "api-prod-01": {
+    "provider": "digitalocean",
+    "dropletId": "987654321"
+  }
+}
+```
+
+Set it as a Cloudflare secret:
+
+```
+npx wrangler secret put SERVERS_CONFIG
+```
+
+The token (`DIGITALOCEAN_TOKEN`) is used at runtime when Telegram commands like `/start`, `/stop`, or `/status` are issued — it does not auto-discover droplets for the dashboard. Only droplets listed in `SERVERS_CONFIG` will appear on the dashboard and be addressable by commands.
 
 ---
 
