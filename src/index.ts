@@ -1587,11 +1587,13 @@ app.get('/docs', (c) => {
 
         <h2 id="providers-do">DigitalOcean</h2>
         <p>REST at <code>https://api.digitalocean.com/v2</code>, <code>Authorization: Bearer &lt;token&gt;</code>.</p>
+        <p>Use <strong>Custom Scopes</strong> &mdash; select only <code>droplet:read</code> + <code>droplet:update</code>. DO auto-adds <code>regions:read</code>, <code>sizes:read</code>, <code>actions:read</code>, <code>image:read</code>, <code>snapshot:read</code>. Do <strong>not</strong> use Full Access tokens in production bots (<a href="#security">see security warning</a>).</p>
         <ol>
-          <li>API → Tokens/Keys → Generate New Token (Read &amp; Write)</li>
+          <li>API → Tokens/Keys → Generate New Token → Custom Scopes</li>
+          <li>Select <code>droplet</code> → <strong>read</strong> + <strong>update</strong> only</li>
           <li>Set as <code>DIGITALOCEAN_TOKEN</code> secret</li>
         </ol>
-        <p>Actions: <code>power_on</code>, <code>power_off</code>, <code>power_cycle</code>. Status: <code>new</code>→starting, <code>active</code>→running, <code>off</code>→stopped.</p>
+        <p>Actions: <code>power_on</code> <code>power_off</code> <code>reboot</code>. Status: <code>new</code>→starting, <code>active</code>→running, <code>off</code>→stopped, <code>archive</code>→terminated.</p>
       </div>
 
       <div class="section" id="security">
