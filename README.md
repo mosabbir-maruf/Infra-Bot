@@ -62,8 +62,10 @@ infra-bot/
 │   └── agent.sh             # Portable VPS telemetry bash script
 ├── src/                     # Cloudflare Worker source code
 │   ├── index.ts             # Entry point, HTML router, and cron handler
+│   ├── polyfill.ts          # Core environment polyfills
 │   ├── config/              # Server configuration and environment validators
 │   ├── core/                # Unified provider interfaces
+│   ├── errors/              # Custom control plane error definitions
 │   ├── middleware/          # Rate limiting middleware
 │   ├── providers/           # AWS and DigitalOcean adapter implementations
 │   ├── telegram/            # Telegram client, webhook router, and command handlers
