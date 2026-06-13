@@ -120,7 +120,6 @@ npx wrangler secret put <SECRET_NAME>
 | `DIGITALOCEAN_TOKEN` | Secret | Personal access token with read/write scopes | `dop_v1_abcdef...` |
 | `SERVERS_CONFIG` | Binding| JSON mapping server aliases to cloud provider IDs | *See below* |
 | `MONITORING_SECRET` | Secret | Shared HMAC key for verifying telemetry payloads | `secure_secret_here` |
-| `BANDWIDTH_ALERT_THRESHOLDS` | Secret/Var | Optional comma-separated alert thresholds in GB | `50,80,95` |
 | `NODE_ENV` | Variable | Runtime environment mode | `production` |
 
 ### Server Registry Configuration (`SERVERS_CONFIG`)

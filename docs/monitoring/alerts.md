@@ -18,17 +18,14 @@ Alerts are automatic once the agent is running.
 
 ## Configuring Thresholds
 
-Set the `BANDWIDTH_ALERT_THRESHOLDS` environment variable as a comma-separated list of GB values:
+Bandwidth alerts are disabled by default. To receive alerts, you must configure a threshold for each server using Telegram:
 
-```
-npx wrangler secret put BANDWIDTH_ALERT_THRESHOLDS
-```
+1. Send `/setbandwidth` to the bot.
+2. Select the target server.
+3. Click a predefined threshold value (**50 GB**, **80 GB**, **100 GB**) or choose **Remove Threshold** to disable alerts.
+4. Alternatively, use the direct command: `/setbandwidth <alias> <GB>` or `/setbandwidth <alias> remove`.
 
-Enter a value like `100,200,500`. If not set, the worker defaults to `50,80,95`.
-
-**Optional — `bandwidthLimitGB`:** Adding `"bandwidthLimitGB": 500` to a server entry in `SERVERS_CONFIG` only adds a progress bar to the `/bandwidth` Telegram command. Without it, you see raw GB numbers. The threshold alerts fire regardless.
-
-**Runtime override:** Use `/setbandwidth <alias> <GB>` via Telegram to set a per-server threshold that takes precedence over `bandwidthLimitGB` in `SERVERS_CONFIG`. Use `/setbandwidth <alias> remove` to clear the override and fall back to the env config. The threshold is stored in `MONITORING_KV` at key `bandwidth_limit:<alias>`.
+Once a threshold is set via Telegram (stored in `MONITORING_KV` at key `bandwidth_limit:<alias>`), the Control Plane will check telemetry posts and alert operators if the monthly bandwidth usage exceeds that threshold. If no threshold is set, no bandwidth alerts are sent.
 
 ## Deduplication Logic
 

@@ -106,7 +106,7 @@ app.get('/', async (c) => {
   let serverCount = 0;
   let awsCount = 0;
   let doCount = 0;
-  const kv = c.env.MONITORING_KV as KVNamespace | undefined;
+  const kv = c.env.MONITORING_KV;
 
   try {
     const ctxCache = getContext(c.env);
@@ -130,7 +130,9 @@ app.get('/', async (c) => {
               const totalGB = totalBytes / (1024 * 1024 * 1024);
               bandwidthData.set(srv.alias.toLowerCase(), totalGB.toFixed(1));
             }
-          } catch {}
+          } catch {
+            // Ignore missing or malformed telemetry cache
+          }
         }));
       }
 
@@ -1694,8 +1696,8 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
           <li>Agent cron running every 5 minutes (see Agent Setup above)</li>
           <li><code>vnstat</code> installed on the server (<code>sudo apt install vnstat</code> or <code>sudo yum install vnstat</code>)</li>
         </ol>
-        <p>Set <code>BANDWIDTH_ALERT_THRESHOLDS</code> as a comma-separated list of GB values (e.g. <code>50,80,95</code>). Defaults to <code>50,80,95</code> if not set. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
-        <p>Override per-server alert thresholds at runtime with <code>/setbandwidth &lt;alias&gt; &lt;GB|remove&gt;</code> via Telegram. The KV override takes precedence over <code>bandwidthLimitGB</code> in <code>SERVERS_CONFIG</code>. Use <code>remove</code> to fall back to the env config.</p>
+        <p>Bandwidth alerts are disabled by default. To receive alerts, you must configure a threshold for each server using the Telegram command <code>/setbandwidth</code>. The alerts are deduplicated via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with a 30-day TTL.</p>
+        <p>Configure or override thresholds at runtime with <code>/setbandwidth &lt;alias&gt; &lt;GB|remove&gt;</code> via Telegram (either through the direct command or by using the interactive selection menus). Use <code>remove</code> to disable alerts for a server.</p>
 
         <h2 id="mon-cron">Cron Report</h2>
         <p>Daily at <strong>14:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>
@@ -2162,27 +2164,35 @@ app.post('/monitoring/report', async (c) => {
   const totalB = (payload.bandwidth?.rx || 0) + (payload.bandwidth?.tx || 0);
   const totalGB = totalB / (1024 * 1024 * 1024);
 
-  const currentMonth = new Date().toISOString().substring(0, 7); // "YYYY-MM"
-  const alertThresholds = env.BANDWIDTH_ALERT_THRESHOLDS || [50, 80, 95];
+  const rawLimit = await kv.get(`bandwidth_limit:${alias.toLowerCase()}`);
+  let effectiveLimit: number | undefined;
+  if (rawLimit && rawLimit.trim().length > 0) {
+    const parsed = parseFloat(rawLimit);
+    if (!isNaN(parsed) && parsed > 0) {
+      effectiveLimit = parsed;
+    }
+  }
 
-  for (const threshold of alertThresholds) {
-    if (totalGB >= threshold) {
-      const alertKey = `alert:${alias.toLowerCase()}:${threshold}:${currentMonth}`;
+  const currentMonth = new Date().toISOString().substring(0, 7); // "YYYY-MM"
+
+  if (effectiveLimit !== undefined) {
+    if (totalGB >= effectiveLimit) {
+      const alertKey = `alert:${alias.toLowerCase()}:${effectiveLimit}:${currentMonth}`;
       const isSent = await kv.get(alertKey);
 
       if (!isSent) {
         // Mark alert as sent
         await kv.put(alertKey, 'true', { expirationTtl: 30 * 24 * 3600 });
-        Logger.warn(`Monitoring report: Bandwidth threshold ${threshold} GB crossed for ${alias}`);
+        Logger.warn(`Monitoring report: Bandwidth threshold limit ${effectiveLimit} GB crossed for ${alias}`);
 
         // Dispatch alert messages to operators
         const client = new TelegramClient(env.TELEGRAM_BOT_TOKEN);
         const warningMessage = MessageRenderer.warning(
           alias.toUpperCase(),
-          `Bandwidth usage has exceeded ${threshold} GB.`,
+          `Bandwidth usage has exceeded the configured threshold of ${effectiveLimit} GB.`,
           {
             'Current Usage': `${totalGB.toFixed(2)} GB`,
-            'Threshold': `${threshold} GB`,
+            'Alert Threshold': `${effectiveLimit} GB`,
           },
         );
 

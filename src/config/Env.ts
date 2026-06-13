@@ -9,7 +9,6 @@ export interface Env {
   SERVERS_CONFIG: string;
   MONITORING_SECRET: string;
   TELEGRAM_WEBHOOK_SECRET?: string;
-  BANDWIDTH_ALERT_THRESHOLDS?: number[];
 }
 
 /**
@@ -18,19 +17,19 @@ export interface Env {
  */
 export function validateEnv(rawEnv: unknown): Env {
   if (typeof rawEnv !== 'object' || rawEnv === null) {
-    throw new Error('Invalid environment bindings: Config is not an object');
+    throw new Error('Configuration Error: Environment bindings must be an object');
   }
 
   const envObj = rawEnv as Record<string, string | undefined>;
 
   const telegramBotToken = envObj.TELEGRAM_BOT_TOKEN;
-  if (!telegramBotToken) {
-    throw new Error('Configuration Error: TELEGRAM_BOT_TOKEN is not defined');
+  if (!telegramBotToken || telegramBotToken.trim() === '') {
+    throw new Error('Configuration Error: TELEGRAM_BOT_TOKEN is not defined or is empty');
   }
 
   const rawUserIds = envObj.AUTHORIZED_USER_IDS;
-  if (!rawUserIds) {
-    throw new Error('Configuration Error: AUTHORIZED_USER_IDS is not defined');
+  if (!rawUserIds || rawUserIds.trim() === '') {
+    throw new Error('Configuration Error: AUTHORIZED_USER_IDS is not defined or is empty');
   }
 
   const userIds = rawUserIds
@@ -40,13 +39,13 @@ export function validateEnv(rawEnv: unknown): Env {
     .map((id) => {
       const parsed = parseInt(id, 10);
       if (isNaN(parsed)) {
-        throw new Error(`Configuration Error: Invalid Telegram user ID in AUTHORIZED_USER_IDS: "${id}"`);
+        throw new Error(`Configuration Error: Invalid user ID format: "${id}"`);
       }
       return parsed;
     });
 
   if (userIds.length === 0) {
-    throw new Error('Configuration Error: AUTHORIZED_USER_IDS must contain at least one user ID');
+    throw new Error('Configuration Error: AUTHORIZED_USER_IDS must contain at least one valid ID');
   }
 
   const serversConfig = envObj.SERVERS_CONFIG;
@@ -57,25 +56,6 @@ export function validateEnv(rawEnv: unknown): Env {
   const monitoringSecret = envObj.MONITORING_SECRET;
   if (!monitoringSecret || monitoringSecret.trim() === '') {
     throw new Error('Configuration Error: MONITORING_SECRET is not defined or is empty');
-  }
-
-  const rawThresholds = envObj.BANDWIDTH_ALERT_THRESHOLDS;
-  let bandwidthAlertThresholds: number[] | undefined;
-  if (rawThresholds && rawThresholds.trim() !== '') {
-    bandwidthAlertThresholds = rawThresholds
-      .split(',')
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0)
-      .map((t) => {
-        const parsed = parseFloat(t);
-        if (isNaN(parsed) || parsed <= 0) {
-          throw new Error(`Configuration Error: Invalid value in BANDWIDTH_ALERT_THRESHOLDS: "${t}"`);
-        }
-        return parsed;
-      });
-    if (bandwidthAlertThresholds.length === 0) {
-      throw new Error('Configuration Error: BANDWIDTH_ALERT_THRESHOLDS must contain at least one positive number');
-    }
   }
 
   return {
@@ -89,6 +69,5 @@ export function validateEnv(rawEnv: unknown): Env {
     SERVERS_CONFIG: serversConfig,
     MONITORING_SECRET: monitoringSecret,
     TELEGRAM_WEBHOOK_SECRET: envObj.TELEGRAM_WEBHOOK_SECRET,
-    BANDWIDTH_ALERT_THRESHOLDS: bandwidthAlertThresholds,
   };
 }

@@ -12,7 +12,16 @@ export class SetBandwidthHandler implements CommandHandler {
     const kv = ctx.monitoringKv;
     if (!kv) { await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML'); return; }
 
-    const alias = ctx.args[0];
+    let alias = ctx.args[0];
+    let valueRaw = ctx.args[1];
+
+    // Check if argument came from callback query formatted as "alias:value"
+    if (alias && alias.includes(':')) {
+      const parts = alias.split(':');
+      alias = parts[0];
+      valueRaw = parts[1];
+    }
+
     if (!alias) {
       await ctx.reply(
         MessageRenderer.error(this.name, 'missing alias', 'Usage: /setbandwidth &lt;alias&gt; &lt;GB&gt; or /setbandwidth &lt;alias&gt; remove'),
@@ -24,19 +33,29 @@ export class SetBandwidthHandler implements CommandHandler {
     const server = ctx.serverRegistry.getServer(alias);
     if (!server) { await ctx.reply(MessageRenderer.notFound(alias), 'HTML'); return; }
 
-    if (ctx.args.length < 2) {
+    if (!valueRaw) {
+      // Prompt for threshold selection using inline keyboard
+      const inlineKeyboard = [
+        [
+          { text: '50 GB', callback_data: `setbandwidth:${alias}:50` },
+          { text: '80 GB', callback_data: `setbandwidth:${alias}:80` },
+          { text: '100 GB', callback_data: `setbandwidth:${alias}:100` },
+        ],
+        [
+          { text: 'Remove Threshold', callback_data: `setbandwidth:${alias}:remove` }
+        ]
+      ];
+
       await ctx.reply(
         `<b>Set Bandwidth Alert Threshold: ${MessageRenderer.raw(alias)}</b>\n\n` +
-        `To set a threshold, copy and edit the command below:\n` +
-        `<code>/setbandwidth ${MessageRenderer.raw(alias)} 500</code>\n\n` +
-        `To remove the threshold:\n` +
-        `<code>/setbandwidth ${MessageRenderer.raw(alias)} remove</code>`,
+        'Select a threshold value or choose \'Remove\' to clear:',
         'HTML',
+        { inline_keyboard: inlineKeyboard }
       );
       return;
     }
 
-    const valueRaw = ctx.args[1].toLowerCase();
+    valueRaw = valueRaw.toLowerCase();
     const key = `${KV_PREFIX}${alias.toLowerCase()}`;
 
     if (valueRaw === 'remove') {

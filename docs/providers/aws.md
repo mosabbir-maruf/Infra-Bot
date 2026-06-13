@@ -73,7 +73,7 @@ The dashboard and Telegram commands only recognize instances that are explicitly
 }
 ```
 
-Optional `"bandwidthLimitGB": 500` adds a progress bar to `/bandwidth`. The bandwidth alerts fire regardless — configure thresholds via `BANDWIDTH_ALERT_THRESHOLDS` (defaults to `50,80,95`). Override the alert threshold at runtime with `/setbandwidth <alias> <GB|remove>` via Telegram (KV takes precedence over env config).
+Optional `"bandwidthLimitGB": 500` adds a progress bar to `/bandwidth`. Bandwidth alerts are disabled by default and only fire when a threshold is configured via Telegram using `/setbandwidth` (e.g. `/setbandwidth <alias> <GB|remove>`). The Telegram threshold takes precedence over `bandwidthLimitGB` in `SERVERS_CONFIG`.
 
 Set it as a Cloudflare secret:
 
