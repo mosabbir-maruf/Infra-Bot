@@ -28,5 +28,8 @@
     "vitest": "^4.1.8",
     "wrangler": "^4.100.0"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "esbuild": "0.28.1"
+  }
 }
