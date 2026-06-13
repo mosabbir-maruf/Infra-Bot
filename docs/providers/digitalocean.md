@@ -84,6 +84,8 @@ The dashboard and Telegram commands only recognize droplets that are explicitly 
 }
 ```
 
+**Finding your droplet ID:** Open the droplet in the DigitalOcean Control Panel — the ID is shown below the name on the detail page, or appears in the browser URL (`cloud.digitalocean.com/droplets/123456789`). You can also run `doctl compute droplet list` or `curl -H "Authorization: Bearer $TOKEN" https://api.digitalocean.com/v2/droplets`.
+
 Set it as a Cloudflare secret:
 
 ```

@@ -1504,6 +1504,7 @@ app.get('/docs', (c) => {
   }
 }</code></pre>
         <h2 id="config-do">DigitalOcean</h2>
+        <p>Find your droplet ID in the Control Panel URL (<code>cloud.digitalocean.com/droplets/&lt;id&gt;</code>), or via <code>doctl compute droplet list</code>.</p>
         <pre><code>{
   "docs-server": {
     "provider": "digitalocean",
