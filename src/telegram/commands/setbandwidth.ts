@@ -12,21 +12,25 @@ export class SetBandwidthHandler implements CommandHandler {
     const kv = ctx.monitoringKv;
     if (!kv) { await ctx.reply(MessageRenderer.configError('MONITORING_KV'), 'HTML'); return; }
 
-    if (ctx.args.length < 2) {
+    const alias = ctx.args[0];
+    if (!alias) {
       await ctx.reply(
-        MessageRenderer.error(
-          this.name,
-          'missing args',
-          'Usage: /setbandwidth &lt;alias&gt; &lt;GB&gt; or /setbandwidth &lt;alias&gt; remove',
-        ),
+        MessageRenderer.error(this.name, 'missing alias', 'Usage: /setbandwidth &lt;alias&gt; &lt;GB&gt; or /setbandwidth &lt;alias&gt; remove'),
         'HTML',
       );
       return;
     }
 
-    const alias = ctx.args[0];
     const server = ctx.serverRegistry.getServer(alias);
     if (!server) { await ctx.reply(MessageRenderer.notFound(alias), 'HTML'); return; }
+
+    if (ctx.args.length < 2) {
+      await ctx.reply(
+        MessageRenderer.error(this.name, alias, 'Missing GB value or "remove". Usage: /setbandwidth &lt;alias&gt; &lt;GB&gt; or /setbandwidth &lt;alias&gt; remove'),
+        'HTML',
+      );
+      return;
+    }
 
     const valueRaw = ctx.args[1].toLowerCase();
     const key = `${KV_PREFIX}${alias.toLowerCase()}`;

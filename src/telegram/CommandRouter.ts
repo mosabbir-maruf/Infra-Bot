@@ -74,7 +74,7 @@ export class CommandRouter {
     const userId = message.from?.id || 0;
 
     // Check if it's one of the commands that should prompt for server selection
-    const selectionCommands = ['status', 'start', 'stop', 'reboot', 'uptime', 'bandwidth', 'docker'];
+    const selectionCommands = ['status', 'start', 'stop', 'reboot', 'uptime', 'bandwidth', 'setbandwidth', 'docker'];
     if (selectionCommands.includes(command) && args.length === 0) {
       const aliases = serverRegistry.getAliases();
       if (aliases.length === 0) {
