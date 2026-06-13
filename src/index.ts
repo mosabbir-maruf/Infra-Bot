@@ -1639,8 +1639,11 @@ MONITORING_SECRET="your_shared_hmac_secret"
 CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
         <p>Make the script executable:</p>
         <pre><code>sudo chmod +x /usr/local/bin/infra-agent.sh</code></pre>
-        <p>Add the cron job (runs every 5 minutes):</p>
+        <p>Open the crontab editor and add a job that runs every 5 minutes:</p>
+        <pre><code>sudo crontab -e</code></pre>
+        <p>Paste the following line, save, and close:</p>
         <pre><code>*/5 * * * * . /etc/infra-agent.conf; export SERVER_ALIAS MONITORING_SECRET CONTROL_PLANE_URL; /usr/local/bin/infra-agent.sh &gt;/dev/null 2&gt;&amp;1</code></pre>
+        <p>The agent will now execute every 5 minutes, capturing load metrics and piping them securely to the Cloudflare Worker.</p>
         <p>Requires: <code>bash</code>, <code>curl</code>, <code>openssl</code>, <code>vnstat</code>, <code>docker</code> (optional).</p>
 
         <h2 id="mon-alerts">Bandwidth Alerts</h2>
