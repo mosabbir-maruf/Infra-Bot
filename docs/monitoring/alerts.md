@@ -28,13 +28,13 @@ Enter a value like `100,200,500`. If not set, the worker defaults to `50,80,95`.
 
 **Optional — `bandwidthLimitGB`:** Adding `"bandwidthLimitGB": 500` to a server entry in `SERVERS_CONFIG` only adds a progress bar to the `/bandwidth` Telegram command. Without it, you see raw GB numbers. The threshold alerts fire regardless.
 
-**Runtime override:** Use `/setbandwidth <alias> <GB>` via Telegram to set a per-server limit that takes precedence over `bandwidthLimitGB` in `SERVERS_CONFIG`. Use `/setbandwidth <alias> remove` to clear the override and fall back to the env config. The limit is stored in `MONITORING_KV` at key `bandwidth_limit:<alias>`.
+**Runtime override:** Use `/setbandwidth <alias> <GB>` via Telegram to set a per-server threshold that takes precedence over `bandwidthLimitGB` in `SERVERS_CONFIG`. Use `/setbandwidth <alias> remove` to clear the override and fall back to the env config. The threshold is stored in `MONITORING_KV` at key `bandwidth_limit:<alias>`.
 
 ## Deduplication Logic
 
 To prevent flooding operator chats with duplicate warnings during consecutive agent posts, the Worker enforces monthly state tracking:
 
-1. **Identifier Key**: Alerts utilize a composite key tracking the server name, the target limit, and the current month:
+1. **Identifier Key**: Alerts utilize a composite key tracking the server name, the target threshold, and the current month:
    ```text
    alert:<server_alias>:<threshold_gb>:<yyyy-mm>
    ```

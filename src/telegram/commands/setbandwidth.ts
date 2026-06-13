@@ -6,7 +6,7 @@ const KV_PREFIX = 'bandwidth_limit:';
 
 export class SetBandwidthHandler implements CommandHandler {
   public readonly name = 'setbandwidth';
-  public readonly description = 'Set bandwidth limit per server — override env config. Use "remove" to clear.';
+  public readonly description = 'Set bandwidth alert threshold per server — override env config. Use "remove" to clear.';
 
   public async execute(ctx: TelegramContext): Promise<void> {
     const kv = ctx.monitoringKv;
@@ -26,10 +26,10 @@ export class SetBandwidthHandler implements CommandHandler {
 
     if (ctx.args.length < 2) {
       await ctx.reply(
-        `<b>Set Bandwidth Limit: ${MessageRenderer.raw(alias)}</b>\n\n` +
-        `To set a limit, copy and edit the command below:\n` +
+        `<b>Set Bandwidth Alert Threshold: ${MessageRenderer.raw(alias)}</b>\n\n` +
+        `To set a threshold, copy and edit the command below:\n` +
         `<code>/setbandwidth ${MessageRenderer.raw(alias)} 500</code>\n\n` +
-        `To remove the limit:\n` +
+        `To remove the threshold:\n` +
         `<code>/setbandwidth ${MessageRenderer.raw(alias)} remove</code>`,
         'HTML',
       );
@@ -41,8 +41,8 @@ export class SetBandwidthHandler implements CommandHandler {
 
     if (valueRaw === 'remove') {
       await kv.delete(key);
-      await ctx.reply(MessageRenderer.success('Bandwidth limit removed', alias, {
-        'Fallback': server.bandwidthLimitGB ? `${server.bandwidthLimitGB} GB (env)` : 'No limit',
+      await ctx.reply(MessageRenderer.success('Bandwidth alert threshold removed', alias, {
+        'Fallback': server.bandwidthLimitGB ? `${server.bandwidthLimitGB} GB (env)` : 'No threshold',
       }), 'HTML');
       return;
     }
@@ -50,15 +50,15 @@ export class SetBandwidthHandler implements CommandHandler {
     const gb = parseFloat(valueRaw);
     if (isNaN(gb) || gb <= 0) {
       await ctx.reply(
-        MessageRenderer.error(this.name, alias, 'Limit must be a positive number in GB, or "remove".'),
+        MessageRenderer.error(this.name, alias, 'Threshold must be a positive number in GB, or "remove".'),
         'HTML',
       );
       return;
     }
 
     await kv.put(key, gb.toString());
-    await ctx.reply(MessageRenderer.success('Bandwidth limit set', alias, {
-      'Limit': `${gb} GB`,
+    await ctx.reply(MessageRenderer.success('Bandwidth alert threshold set', alias, {
+      'Threshold': `${gb} GB`,
       'Fallback': server.bandwidthLimitGB ? `${server.bandwidthLimitGB} GB (env)` : 'None',
     }), 'HTML');
   }

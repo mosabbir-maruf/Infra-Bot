@@ -986,7 +986,7 @@ app.get('/', async (c) => {
             <tr class="cmd-row">
               <td class="cmd-cat"></td>
               <td class="cmd-name">/setbandwidth <span class="cmd-arg">&lt;alias&gt; &lt;GB|remove&gt;</span></td>
-              <td class="cmd-desc">Set bandwidth limit per server (KV override, falls back to env config)</td>
+              <td class="cmd-desc">Set bandwidth alert threshold per server (KV override, falls back to env config)</td>
             </tr>
             <tr class="cmd-row">
               <td class="cmd-cat"></td>
@@ -1515,7 +1515,7 @@ app.get('/docs', (c) => {
             <tbody>
               <tr><td><code>/report</code></td><td>Full metrics (CPU, RAM, Disk, Uptime, Docker)</td></tr>
               <tr><td><code>/bandwidth</code></td><td>Monthly bandwidth (rx/tx, progress bar)</td></tr>
-              <tr><td><code>/setbandwidth</code></td><td>Set per-server bandwidth limit via KV (<code>&lt;alias&gt; &lt;GB|remove&gt;</code>)</td></tr>
+              <tr><td><code>/setbandwidth</code></td><td>Set per-server bandwidth alert threshold via KV (<code>&lt;alias&gt; &lt;GB|remove&gt;</code>)</td></tr>
               <tr><td><code>/docker</code></td><td>Container status (running/total/unhealthy)</td></tr>
               <tr><td><code>/uptime</code></td><td>Uptime per VPS (&gt;15 min = stale)</td></tr>
             </tbody>
@@ -1695,7 +1695,7 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
           <li><code>vnstat</code> installed on the server (<code>sudo apt install vnstat</code> or <code>sudo yum install vnstat</code>)</li>
         </ol>
         <p>Set <code>BANDWIDTH_ALERT_THRESHOLDS</code> as a comma-separated list of GB values (e.g. <code>50,80,95</code>). Defaults to <code>50,80,95</code> if not set. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
-        <p>Override per-server limits at runtime with <code>/setbandwidth &lt;alias&gt; &lt;GB|remove&gt;</code> via Telegram. The KV override takes precedence over <code>bandwidthLimitGB</code> in <code>SERVERS_CONFIG</code>. Use <code>remove</code> to fall back to the env config.</p>
+        <p>Override per-server alert thresholds at runtime with <code>/setbandwidth &lt;alias&gt; &lt;GB|remove&gt;</code> via Telegram. The KV override takes precedence over <code>bandwidthLimitGB</code> in <code>SERVERS_CONFIG</code>. Use <code>remove</code> to fall back to the env config.</p>
 
         <h2 id="mon-cron">Cron Report</h2>
         <p>Daily at <strong>14:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>
@@ -2158,7 +2158,7 @@ app.post('/monitoring/report', async (c) => {
   await kv.put(key, bodyText);
   Logger.info(`Monitoring report: Stored metrics telemetry for "${alias}"`);
 
-  // Bandwidth limit warnings checking
+  // Bandwidth alert threshold warnings checking
   const totalB = (payload.bandwidth?.rx || 0) + (payload.bandwidth?.tx || 0);
   const totalGB = totalB / (1024 * 1024 * 1024);
 
