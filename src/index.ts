@@ -1494,7 +1494,7 @@ app.get('/docs', (c) => {
 
       <div class="section" id="config">
         <div class="section-label">server configuration</div>
-        <p><code>SERVERS_CONFIG</code> is a flat JSON object keyed by alias.</p>
+        <p><code>SERVERS_CONFIG</code> is a flat JSON object keyed by alias. Only servers listed here appear on the dashboard and are addressable by Telegram commands — the bot does not auto-discover instances from cloud provider APIs.</p>
         <h2 id="config-aws">AWS EC2</h2>
         <pre><code>{
   "ai-gateway-prod": {
