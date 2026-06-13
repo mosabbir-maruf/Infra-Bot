@@ -262,7 +262,7 @@ export class MessageRenderer {
     msg += `<code>├ Providers  </code> <code>${providers}</code>\n`;
     msg += `<code>├ Telemetry  </code> <code>${isOperational ? 'Connected 🟢' : 'Disconnected 🔴'}</code>\n`;
     msg += '<code>├ Runtime    </code> <code>Cloudflare Workers</code>\n';
-    msg += `<code>├ Operators  </code> <code>${users}</code>\n`;
+    msg += `<code>├ Auth Users </code> <code>${users}</code>\n`;
     msg += `<code>└ Updated    </code> <code>${lastReportText}</code>`;
     return msg;
   }
