@@ -18,8 +18,10 @@ export class StatusHandler implements CommandHandler {
       }
 
       const provider = ctx.providerRegistry.getProvider(server.provider);
-      const status = await provider.getServerStatus(server.id, server.region);
-      const meta = await provider.getInstanceMetadata(server.id, server.region);
+      const [status, meta] = await Promise.all([
+        provider.getServerStatus(server.id, server.region),
+        provider.getInstanceMetadata(server.id, server.region),
+      ]);
 
       await ctx.reply(
         MessageRenderer.serverDetails(alias, provider.name, {

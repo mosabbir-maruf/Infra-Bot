@@ -23,18 +23,20 @@ export class DigitalOceanProvider implements CloudProvider {
   public readonly name = 'DigitalOcean';
   private readonly token: string;
   private readonly baseUrl = 'https://api.digitalocean.com/v2';
+  private readonly authHeader: string;
 
   constructor(env: Env) {
     if (!env.DIGITALOCEAN_TOKEN) {
       throw new Error('DigitalOceanProvider: Missing token');
     }
     this.token = env.DIGITALOCEAN_TOKEN;
+    this.authHeader = `Bearer ${this.token}`;
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const headers = {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${this.token}`,
+      Authorization: this.authHeader,
       ...options.headers,
     };
 
@@ -95,9 +97,14 @@ export class DigitalOceanProvider implements CloudProvider {
     Logger.info(`DigitalOceanProvider: Retrieving metadata for droplet ${serverId}`);
     const data = await this.request<{ droplet: DigitalOceanDroplet }>(`/droplets/${serverId}`);
     const droplet = data.droplet;
-    
-    const publicIp = droplet.networks.v4?.find((net) => net.type === 'public')?.ip_address;
-    const privateIp = droplet.networks.v4?.find((net) => net.type === 'private')?.ip_address;
+
+    let publicIp: string | undefined;
+    let privateIp: string | undefined;
+    for (const net of droplet.networks.v4 ?? []) {
+      if (net.type === 'public') publicIp = net.ip_address;
+      else if (net.type === 'private') privateIp = net.ip_address;
+      if (publicIp && privateIp) break;
+    }
 
     return {
       instanceId: String(droplet.id),

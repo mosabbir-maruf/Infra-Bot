@@ -1,15 +1,13 @@
 import { TelegramContext } from '../../types';
 import { CommandHandler } from './CommandHandler';
 import { MessageRenderer } from '../MessageRenderer';
-import { ProviderRegistry } from '../../providers/ProviderRegistry';
 
 export class HealthHandler implements CommandHandler {
   public readonly name = 'health';
   public readonly description = 'Control Plane diagnostics — bindings, providers, environment';
 
   public async execute(ctx: TelegramContext): Promise<void> {
-    const registry = new ProviderRegistry(ctx.env);
-    const activeProviders = registry.getActiveProviders().map((p) => p.name);
+    const activeProviders = ctx.providerRegistry.getActiveProviders().map((p) => p.name);
 
     const kv = ctx.monitoringKv;
     const kvStatus = kv ? 'Bound' : 'Unbound';
@@ -17,14 +15,14 @@ export class HealthHandler implements CommandHandler {
     let latestTs = 0;
     if (kv) {
       const aliases = ctx.serverRegistry.getAliases();
-      for (const alias of aliases) {
-        const raw = await kv.get(`metrics:${alias.toLowerCase()}`);
+      const raws = await Promise.all(
+        aliases.map((alias) => kv.get(`metrics:${alias.toLowerCase()}`)),
+      );
+      for (const raw of raws) {
         if (raw) {
           try {
             const parsed = JSON.parse(raw) as { timestamp: number };
-            if (parsed.timestamp > latestTs) {
-              latestTs = parsed.timestamp;
-            }
+            if (parsed.timestamp > latestTs) latestTs = parsed.timestamp;
           } catch { /* skip malformed JSON */ }
         }
       }

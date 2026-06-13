@@ -23,8 +23,13 @@ export class BandwidthHandler implements CommandHandler {
     if (aliases.length === 0) { await ctx.reply(MessageRenderer.noServers(), 'HTML'); return; }
 
     const cards: string[] = [];
-    for (const alias of aliases) {
-      const raw = await kv.get(`metrics:${alias.toLowerCase()}`);
+    const raws = await Promise.all(
+      aliases.map((alias) => kv.get(`metrics:${alias.toLowerCase()}`)),
+    );
+
+    for (let i = 0; i < aliases.length; i++) {
+      const alias = aliases[i];
+      const raw = raws[i];
       if (!raw) { cards.push(MessageRenderer.emptyCard(alias)); continue; }
 
       try {

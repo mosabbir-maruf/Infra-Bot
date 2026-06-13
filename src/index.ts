@@ -2173,38 +2173,47 @@ app.post('/monitoring/report', async (c) => {
       .filter((val) => !isNaN(val) && val > 0);
   }
 
-  const currentMonth = new Date().toISOString().substring(0, 7); // "YYYY-MM"
+  const crossedThresholds = effectiveThresholds.filter((t) => totalGB >= t);
 
-  for (const threshold of effectiveThresholds) {
-    if (totalGB >= threshold) {
-      const alertKey = `alert:${alias.toLowerCase()}:${threshold}:${currentMonth}`;
-      const isSent = await kv.get(alertKey);
+  if (crossedThresholds.length > 0) {
+    const currentMonth = new Date().toISOString().substring(0, 7); // "YYYY-MM"
+    const aliasLc = alias.toLowerCase();
 
-      if (!isSent) {
-        // Mark alert as sent
-        await kv.put(alertKey, 'true', { expirationTtl: 30 * 24 * 3600 });
-        Logger.warn(`Monitoring report: Bandwidth threshold limit ${threshold} GB crossed for ${alias}`);
+    // Check all alert dedup keys concurrently
+    const alertKeys = crossedThresholds.map((t) => `alert:${aliasLc}:${t}:${currentMonth}`);
+    const sentFlags = await Promise.all(alertKeys.map((k) => kv.get(k)));
 
-        // Dispatch alert messages to operators
-        const client = new TelegramClient(env.TELEGRAM_BOT_TOKEN);
-        const warningMessage = MessageRenderer.warning(
-          alias.toUpperCase(),
-          `Bandwidth usage has exceeded the configured threshold of ${threshold} GB.`,
-          {
-            'Current Usage': `${totalGB.toFixed(2)} GB`,
-            'Alert Threshold': `${threshold} GB`,
-          },
-        );
+    const client = new TelegramClient(env.TELEGRAM_BOT_TOKEN);
+    const totalGBStr = totalGB.toFixed(2);
 
-        for (const userId of env.AUTHORIZED_USER_IDS) {
-          const alertPromise = client.sendMessage(userId, warningMessage, 'HTML').catch((err) => {
-            Logger.error(`Failed to send bandwidth alert to user ${userId}`, err);
-          });
-          try {
-            c.executionCtx.waitUntil(alertPromise);
-          } catch {
-            // Fallback for testing environments
-          }
+    for (let i = 0; i < crossedThresholds.length; i++) {
+      if (sentFlags[i]) continue;
+
+      const threshold = crossedThresholds[i];
+      const alertKey = alertKeys[i];
+
+      // Mark alert as sent
+      await kv.put(alertKey, 'true', { expirationTtl: 30 * 24 * 3600 });
+      Logger.warn(`Monitoring report: Bandwidth threshold limit ${threshold} GB crossed for ${alias}`);
+
+      // Dispatch alert messages to operators
+      const warningMessage = MessageRenderer.warning(
+        alias.toUpperCase(),
+        `Bandwidth usage has exceeded the configured threshold of ${threshold} GB.`,
+        {
+          'Current Usage': `${totalGBStr} GB`,
+          'Alert Threshold': `${threshold} GB`,
+        },
+      );
+
+      for (const userId of env.AUTHORIZED_USER_IDS) {
+        const alertPromise = client.sendMessage(userId, warningMessage, 'HTML').catch((err) => {
+          Logger.error(`Failed to send bandwidth alert to user ${userId}`, err);
+        });
+        try {
+          c.executionCtx.waitUntil(alertPromise);
+        } catch {
+          // Fallback for testing environments
         }
       }
     }
@@ -2235,24 +2244,30 @@ async function handleDailyReport(env: unknown): Promise<void> {
   report += `${MessageRenderer.line('Date', new Date().toISOString().split('T')[0])}\n`;
   let activeCount = 0;
 
-  for (const server of servers) {
-    const data = await kv.get(`metrics:${server.alias.toLowerCase()}`);
+  interface MetricsJson {
+    timestamp: number;
+    cpu: string;
+    ram: { total: number; used: number };
+    disk: { total: number; used: number };
+    uptime: number;
+    docker: { running: number; total: number };
+    bandwidth: { rx: number; tx: number };
+  }
+
+  // Fetch all server metrics concurrently
+  const dataList = await Promise.all(
+    servers.map((s) => kv.get(`metrics:${s.alias.toLowerCase()}`)),
+  );
+
+  for (let i = 0; i < servers.length; i++) {
+    const server = servers[i];
+    const data = dataList[i];
     if (!data) {
       report += MessageRenderer.emptyCard(server.alias);
       continue;
     }
 
     try {
-      interface MetricsJson {
-        timestamp: number;
-        cpu: string;
-        ram: { total: number; used: number };
-        disk: { total: number; used: number };
-        uptime: number;
-        docker: { running: number; total: number };
-        bandwidth: { rx: number; tx: number };
-      }
-
       const metrics = JSON.parse(data) as MetricsJson;
       const ageMinutes = (Date.now() - metrics.timestamp * 1000) / (1000 * 60);
       if (ageMinutes <= 15) activeCount++;

@@ -47,11 +47,8 @@ export class MessageRenderer {
     return escapeHtml(text);
   }
 
-  static pad(k: string, n = 9): string {
-    return k.padEnd(n, ' ');
-  }
-
   // ── Monitoring Commands ──────────────────────────────────
+
 
   /** Full server telemetry card */
   static reportCard(alias: string, ts: number, _cpu: string, cpuPct: number,
@@ -219,17 +216,8 @@ export class MessageRenderer {
     return msg;
   }
 
-  /** Container detail row for docker output */
-  static containerRow(name: string, state: string, status: string): string {
-    const isRunning = state.toLowerCase() === 'running';
-    const isUnhealthy = status.toLowerCase().includes('unhealthy');
-    let healthText = 'Healthy';
-    if (!isRunning) healthText = 'Critical';
-    else if (isUnhealthy) healthText = 'Unhealthy';
-    return `<b>${escapeHtml(name)}</b>\n${isRunning ? 'Running' : 'Stopped'} · Health: ${healthText}`;
-  }
-
   /** Compact empty/no-data placeholder */
+
   static emptyCard(alias: string): string {
     let msg = '<b>Infrastructure Report</b>\n';
     msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
@@ -239,17 +227,8 @@ export class MessageRenderer {
     return msg;
   }
 
-  /** No data summary card */
-  static noDataCard(alias: string): string {
-    let msg = '<b>Infrastructure Report</b>\n\n';
-    msg += `<code>Server</code>  <code>${escapeHtml(alias)}</code>\n`;
-    msg += '<code>Status</code>  <code>Offline</code>\n';
-    msg += '<code>Health</code>  <code>Critical 🔴</code>\n';
-    msg += '<code>Last Report</code>  <code>Never</code>';
-    return msg;
-  }
-
   /** /health dashboard */
+
   static healthDashboard(kvStatus: string, providers: string, _region: string,
     _env: string, users: number, lastReportText: string
   ): string {
@@ -353,21 +332,6 @@ export class MessageRenderer {
       }
     }
     return msg;
-  }
-
-  static serverMetrics(alias: string, fields: Record<string, string>): string {
-    let msg = `<b>Metrics: ${escapeHtml(alias)}</b>\n`;
-    const entries = Object.entries(fields);
-    for (let i = 0; i < entries.length; i++) {
-      const [k, v] = entries[i];
-      const prefix = i === entries.length - 1 ? '└' : '├';
-      msg += `<code>${prefix} ${escapeHtml(k.padEnd(10, ' '))} </code> <code>${escapeHtml(v)}</code>\n`;
-    }
-    return msg;
-  }
-
-  static multiline(label: string, value: string): string {
-    return `<b>${escapeHtml(label)}</b>\n<code>${escapeHtml(value)}</code>\n`;
   }
 
   static help(commands: Array<{ command: string; description: string; args?: string }>): string {

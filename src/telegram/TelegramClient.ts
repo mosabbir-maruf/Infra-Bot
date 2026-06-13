@@ -3,6 +3,7 @@ import { escapeMarkdownV2 } from './Escaper';
 
 export class TelegramClient {
   private readonly baseUrl: string;
+  private static readonly POST_HEADERS = { 'Content-Type': 'application/json' };
 
   constructor(token: string) {
     this.baseUrl = `https://api.telegram.org/bot${token}`;
@@ -29,9 +30,7 @@ export class TelegramClient {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: TelegramClient.POST_HEADERS,
         body: JSON.stringify(body),
       });
 
@@ -68,9 +67,7 @@ export class TelegramClient {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: TelegramClient.POST_HEADERS,
         body: JSON.stringify(body),
       });
 
@@ -97,9 +94,7 @@ export class TelegramClient {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: TelegramClient.POST_HEADERS,
         body: JSON.stringify(body),
       });
 
@@ -131,9 +126,7 @@ export class TelegramClient {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: TelegramClient.POST_HEADERS,
         body: JSON.stringify(body),
       });
 

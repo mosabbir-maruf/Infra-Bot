@@ -6,6 +6,7 @@ import { Logger } from '../utils/Logger';
 
 export class ProviderRegistry {
   private readonly providers = new Map<string, CloudProvider>();
+  private readonly activeProviders: CloudProvider[];
 
   constructor(env: Env) {
     if (env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY) {
@@ -33,6 +34,10 @@ export class ProviderRegistry {
         'ProviderRegistry: DigitalOcean token not configured. Skipping DigitalOcean registration.',
       );
     }
+
+    // Cache unique active providers once — avoids Set+Array.from on every getActiveProviders() call
+    const unique = new Set(this.providers.values());
+    this.activeProviders = Array.from(unique);
   }
 
   /**
@@ -52,7 +57,6 @@ export class ProviderRegistry {
    * Returns a list of all active registered CloudProviders
    */
   public getActiveProviders(): CloudProvider[] {
-    const unique = new Set(this.providers.values());
-    return Array.from(unique);
+    return this.activeProviders;
   }
 }

@@ -31,14 +31,16 @@ export class InMemoryRateLimiter implements RateLimiter {
 export class CloudflareKVRateLimiter implements RateLimiter {
   private kvNamespace: { get(key: string): Promise<string | null>; put(key: string, val: string, options?: { expirationTtl?: number }): Promise<void> };
   private fallback: InMemoryRateLimiter;
+  private readonly hasKv: boolean;
 
   constructor(kvNamespace: unknown) {
     this.kvNamespace = kvNamespace as { get(key: string): Promise<string | null>; put(key: string, val: string, options?: { expirationTtl?: number }): Promise<void> };
     this.fallback = new InMemoryRateLimiter();
+    this.hasKv = !!(kvNamespace && typeof (kvNamespace as Record<string, unknown>).get === 'function');
   }
 
   public async isRateLimited(key: string, limit: number, windowSeconds: number): Promise<boolean> {
-    if (!this.kvNamespace || typeof this.kvNamespace.get !== 'function') {
+    if (!this.hasKv) {
       Logger.warn('RateLimiter: KV Namespace not bound. Falling back to InMemory rate limiting.');
       return this.fallback.isRateLimited(key, limit, windowSeconds);
     }

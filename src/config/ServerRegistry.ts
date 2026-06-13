@@ -9,6 +9,8 @@ export interface RegistryServer {
 
 export class ServerRegistry {
   private readonly servers = new Map<string, RegistryServer>();
+  private cachedAliases: string[] | null = null;
+  private cachedAllServers: Array<{ alias: string } & RegistryServer> | null = null;
 
   constructor(configJson: string) {
     if (!configJson || configJson.trim() === '') {
@@ -99,16 +101,22 @@ export class ServerRegistry {
    * Returns a list of all defined server alias names
    */
   public getAliases(): string[] {
-    return Array.from(this.servers.keys());
+    if (!this.cachedAliases) {
+      this.cachedAliases = Array.from(this.servers.keys());
+    }
+    return this.cachedAliases;
   }
 
   /**
    * Returns a list of all registered servers including their aliases
    */
   public getAllServers(): Array<{ alias: string } & RegistryServer> {
-    return Array.from(this.servers.entries()).map(([alias, config]) => ({
-      alias,
-      ...config,
-    }));
+    if (!this.cachedAllServers) {
+      this.cachedAllServers = Array.from(this.servers.entries()).map(([alias, config]) => ({
+        alias,
+        ...config,
+      }));
+    }
+    return this.cachedAllServers;
   }
 }
