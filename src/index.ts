@@ -15,6 +15,8 @@ import { ProviderRegistry } from './providers/ProviderRegistry';
 import { faviconBase64, favicon32Base64, favicon16Base64 } from './assets/favicon';
 import { metaOgBase64 } from './assets/meta-og';
 
+const ISOLATE_START_TIME = Date.now();
+
 // Strict type bindings for Hono environment
 interface Bindings {
   TELEGRAM_BOT_TOKEN: string;
@@ -196,6 +198,7 @@ app.get('/', async (c) => {
 
   const now = new Date();
   const buildTime = now.toISOString();
+  const workerUptime = Math.floor((Date.now() - ISOLATE_START_TIME) / 1000);
   const year = now.getFullYear();
   const requestUrl = new URL(c.req.url);
   const siteUrl = requestUrl.origin;
@@ -862,7 +865,7 @@ app.get('/', async (c) => {
       <div class="page-meta">
         <div class="meta-line"><b>rendered</b> <span id="rendered-at">${buildTime}</span></div>
         <div class="meta-line"><b>runtime</b> cloudflare-workers</div>
-        <div class="meta-line"><b>uptime</b> <span id="uptime">—</span></div>
+        <div class="meta-line"><b>uptime</b> <span id="uptime" data-start-seconds="${workerUptime}">—</span></div>
       </div>
     </div>
 
@@ -1014,6 +1017,8 @@ app.get('/', async (c) => {
   <script>
     (() => {
       const p = v => String(v).padStart(2,'0');
+      const uptimeEl = document.getElementById('uptime');
+      const baseSeconds = parseInt(uptimeEl.getAttribute('data-start-seconds'), 10) || 0;
       const start = Date.now();
 
       function tick() {
@@ -1023,9 +1028,9 @@ app.get('/', async (c) => {
         const dc = document.getElementById('clock-docs');
         if (dc) dc.textContent = t;
 
-        const s = Math.floor((Date.now()-start)/1000);
+        const s = baseSeconds + Math.floor((Date.now()-start)/1000);
         const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-        document.getElementById('uptime').textContent = p(h)+'h '+p(m)+'m '+p(sec)+'s';
+        uptimeEl.textContent = p(h)+'h '+p(m)+'m '+p(sec)+'s';
       }
       tick();
       setInterval(tick, 1000);
@@ -1342,6 +1347,7 @@ app.get('/docs', (c) => {
     .mobile-overlay.open { display:block; }
     .mobile-nav {
       position:fixed; top:0; left:-280px; bottom:0; width:260px;
+      height:100vh; height:100dvh;
       z-index:70; background:var(--sidebar); border-right:1px solid var(--border);
       padding:1.25rem 1rem; overflow-y:auto;
       transition:left .25s ease; display:flex; flex-direction:column; gap:0.25rem;
