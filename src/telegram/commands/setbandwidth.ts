@@ -47,7 +47,8 @@ export class SetBandwidthHandler implements CommandHandler {
 
       await ctx.reply(
         `<b>Set Bandwidth Alert Thresholds: ${MessageRenderer.raw(alias)}</b>\n\n` +
-        `Select a threshold option below, or manually type a command to set custom values (e.g. <code>/setbandwidth ${MessageRenderer.raw(alias)} 20,40,60</code>):`,
+        'Select a preset option below, or copy and edit the command format to set custom thresholds:\n\n' +
+        `<code>/setbandwidth ${MessageRenderer.raw(alias)} 20,40,60</code>`,
         'HTML',
         { inline_keyboard: inlineKeyboard }
       );
@@ -58,8 +59,12 @@ export class SetBandwidthHandler implements CommandHandler {
     const key = `${KV_PREFIX}${alias.toLowerCase()}`;
 
     if (valueRaw === 'remove') {
+      const currentVal = await kv.get(key);
+      const thresholdsDisplay = currentVal ? currentVal.split(',').map((t) => `${t.trim()} GB`).join(', ') : 'None';
       await kv.delete(key);
-      await ctx.reply(MessageRenderer.success('Bandwidth alert thresholds removed', alias), 'HTML');
+      await ctx.reply(MessageRenderer.success('Bandwidth alert thresholds removed', alias, {
+        'Removed': thresholdsDisplay,
+      }), 'HTML');
       return;
     }
 
