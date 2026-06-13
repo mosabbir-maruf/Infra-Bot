@@ -41,7 +41,7 @@ NODE_ENV    = "production"
 # ------------------------------------------------------------
 
 [triggers]
-crons = ["0 8 * * *"]
+crons = ["0 14 * * *"]
 
 [observability]
 enabled = true

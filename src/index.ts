@@ -1683,7 +1683,7 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
         <p>Set <code>BANDWIDTH_ALERT_THRESHOLDS</code> as a comma-separated list of GB values (e.g. <code>50,80,95</code>). Defaults to <code>50,80,95</code> if not set. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
 
         <h2 id="mon-cron">Cron Report</h2>
-        <p>Daily at <strong>08:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>
+        <p>Daily at <strong>14:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>
 
         <h2 id="mon-recovery">Recovery</h2>
         <p>Stale server? SSH in, check <code>grep CRON /var/log/syslog</code>, run agent manually. Clock drift? <code>sudo systemctl restart systemd-timesyncd</code>. Rotate secret: <code>openssl rand -hex 24</code>, <code>wr secret put</code>, update agent configs.</p>
