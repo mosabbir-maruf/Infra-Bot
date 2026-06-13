@@ -50,13 +50,44 @@ To set your configuration:
 | :--- | :--- | :--- | :--- |
 | `TELEGRAM_BOT_TOKEN` | Secret | **Yes** | Your Telegram Bot token from `@BotFather`. |
 | `AUTHORIZED_USER_IDS` | Secret | **Yes** | Comma-separated list of whitelisted Telegram User IDs. |
-| `SERVERS_CONFIG` | Secret | **Yes** | JSON configuration string mapping server aliases to instances. |
+| `SERVERS_CONFIG` | Secret | **Yes** | JSON configuration string mapping server aliases to instances. See Server Registration below. |
 | `MONITORING_SECRET` | Secret | **Yes** | Shared HMAC secret key used to verify telemetry reports. |
 | `TELEGRAM_WEBHOOK_SECRET` | Secret | No (Rec.) | Arbitrary secret header token to verify incoming webhook requests. |
 | `AWS_ACCESS_KEY_ID` | Secret | No (Opt.) | AWS IAM User Access Key for EC2 integration. |
 | `AWS_SECRET_ACCESS_KEY` | Secret | No (Opt.) | AWS IAM User Secret Key for EC2 integration. |
 | `DIGITALOCEAN_TOKEN` | Secret | No (Opt.) | Personal Access Token for DigitalOcean integration. |
 | `AWS_REGION` | Plain text | No (Opt.) | AWS region for EC2 API calls. Default: `us-east-1`. |
+
+### Server Registration
+
+The `SERVERS_CONFIG` JSON tells the bot which servers to manage. Each entry maps an alias (used in Telegram commands like `/status my-server`) to a cloud provider and instance identifier.
+
+**DigitalOcean example:**
+```json
+{
+  "docs-server": {
+    "provider": "digitalocean",
+    "dropletId": "123456789"
+  },
+  "api-prod-01": {
+    "provider": "digitalocean",
+    "dropletId": "987654321"
+  }
+}
+```
+
+**AWS EC2 example:**
+```json
+{
+  "ai-gateway-prod": {
+    "provider": "aws",
+    "region": "ap-south-1",
+    "instanceId": "i-0123456789abcdef0"
+  }
+}
+```
+
+Only servers listed here will appear on the dashboard and be addressable by Telegram commands.
 
 ### How to Find Your Telegram Chat ID (User ID)
 The `AUTHORIZED_USER_IDS` configuration requires your numeric Telegram User ID (which also serves as your private chat ID for telemetry reports and warnings). To find your ID:
