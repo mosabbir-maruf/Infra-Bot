@@ -54,7 +54,8 @@ To enforce least privilege, prevent command typos, and protect instances from un
     },
     "docs-server": {
       "provider": "digitalocean",
-      "dropletId": "123456"
+      "dropletId": "123456",
+      "region": "nyc3"
     }
   }
   ```

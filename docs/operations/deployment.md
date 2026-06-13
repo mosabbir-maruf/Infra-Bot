@@ -67,7 +67,8 @@ The `SERVERS_CONFIG` JSON tells the bot which servers to manage. Each entry maps
 {
   "docs-server": {
     "provider": "digitalocean",
-    "dropletId": "123456789"
+    "dropletId": "123456789",
+    "region": "nyc3"
   },
   "api-prod-01": {
     "provider": "digitalocean",
@@ -75,6 +76,8 @@ The `SERVERS_CONFIG` JSON tells the bot which servers to manage. Each entry maps
   }
 }
 ```
+
+The `region` field is optional. If omitted, the dashboard shows `—` instead.
 
 **AWS EC2 example:**
 ```json

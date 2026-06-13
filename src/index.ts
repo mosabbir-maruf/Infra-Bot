@@ -1506,11 +1506,12 @@ app.get('/docs', (c) => {
   }
 }</code></pre>
         <h2 id="config-do">DigitalOcean</h2>
-        <p>Find your droplet ID in the Control Panel URL (<code>cloud.digitalocean.com/droplets/&lt;id&gt;</code>), or via <code>doctl compute droplet list</code>.</p>
+        <p>Find your droplet ID and region in the Control Panel (<code>cloud.digitalocean.com/droplets/&lt;id&gt;</code>), or via <code>doctl compute droplet list</code>. <code>region</code> is optional — if omitted the dashboard shows <code>—</code>.</p>
         <pre><code>{
   "docs-server": {
     "provider": "digitalocean",
-    "dropletId": "123456789"
+    "dropletId": "123456789",
+    "region": "nyc3"
   }
 }</code></pre>
         <div class="tbl-wrap">

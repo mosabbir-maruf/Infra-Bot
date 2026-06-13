@@ -75,7 +75,8 @@ The dashboard and Telegram commands only recognize droplets that are explicitly 
 {
   "my-droplet": {
     "provider": "digitalocean",
-    "dropletId": "123456789"
+    "dropletId": "123456789",
+    "region": "nyc3"
   },
   "api-prod-01": {
     "provider": "digitalocean",
@@ -84,7 +85,9 @@ The dashboard and Telegram commands only recognize droplets that are explicitly 
 }
 ```
 
-**Finding your droplet ID:** Open the droplet in the DigitalOcean Control Panel — the ID is shown below the name on the detail page, or appears in the browser URL (`cloud.digitalocean.com/droplets/123456789`). You can also run `doctl compute droplet list` or `curl -H "Authorization: Bearer $TOKEN" https://api.digitalocean.com/v2/droplets`.
+The `region` field is optional. If omitted, the dashboard shows `—` in the region column. Include it if you want the region displayed.
+
+**Finding droplet details:** Open the droplet in the DigitalOcean Control Panel — the ID and region are shown on the detail page. The ID also appears in the browser URL (`cloud.digitalocean.com/droplets/123456789`). You can also run `doctl compute droplet list` or `curl -H "Authorization: Bearer $TOKEN" https://api.digitalocean.com/v2/droplets`.
 
 Set it as a Cloudflare secret:
 
