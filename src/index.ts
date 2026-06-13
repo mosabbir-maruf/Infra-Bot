@@ -2255,7 +2255,7 @@ async function handleDailyReport(env: unknown): Promise<void> {
     ram: { total: number; used: number };
     disk: { total: number; used: number };
     uptime: number;
-    docker: { running: number; total: number };
+    docker: { running: number; total: number; unhealthy?: number };
     bandwidth: { rx: number; tx: number };
   }
 
@@ -2264,11 +2264,13 @@ async function handleDailyReport(env: unknown): Promise<void> {
     servers.map((s) => kv.get(`metrics:${s.alias.toLowerCase()}`)),
   );
 
+  const cards: string[] = [];
+
   for (let i = 0; i < servers.length; i++) {
     const server = servers[i];
     const data = dataList[i];
     if (!data) {
-      report += MessageRenderer.emptyCard(server.alias);
+      cards.push(MessageRenderer.emptyCard(server.alias));
       continue;
     }
 
@@ -2278,17 +2280,27 @@ async function handleDailyReport(env: unknown): Promise<void> {
       if (ageMinutes <= 15) activeCount++;
 
       const cpuPct = parseFloat(metrics.cpu) || 0;
-      report += MessageRenderer.reportCard(
-        server.alias, metrics.timestamp, metrics.cpu, cpuPct,
-        metrics.ram.used, metrics.ram.total, metrics.disk.used, metrics.disk.total,
-        metrics.uptime, metrics.docker.running, metrics.docker.total,
-      );
+      cards.push(MessageRenderer.reportCard(
+        server.alias,
+        metrics.timestamp,
+        metrics.cpu,
+        cpuPct,
+        metrics.ram.used,
+        metrics.ram.total,
+        metrics.disk.used,
+        metrics.disk.total,
+        metrics.uptime,
+        metrics.docker.running,
+        metrics.docker.total,
+        metrics.docker.unhealthy,
+      ));
     } catch {
-      report += MessageRenderer.emptyCard(server.alias);
+      cards.push(MessageRenderer.emptyCard(server.alias));
     }
   }
 
-  report += `\n${activeCount} / ${servers.length} servers active.\n`;
+  report += cards.join('\n\n───\n\n');
+  report += `\n\n${activeCount} / ${servers.length} servers active.\n`;
 
   const client = new TelegramClient(validatedEnv.TELEGRAM_BOT_TOKEN);
   for (const userId of validatedEnv.AUTHORIZED_USER_IDS) {

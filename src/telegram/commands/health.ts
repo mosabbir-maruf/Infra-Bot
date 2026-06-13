@@ -27,8 +27,6 @@ export class HealthHandler implements CommandHandler {
         }
       }
     }
-    const lastReportText = latestTs > 0 ? MessageRenderer.ago(latestTs) : 'Never';
-
     await ctx.reply(
       MessageRenderer.healthDashboard(
         kvStatus,
@@ -36,7 +34,7 @@ export class HealthHandler implements CommandHandler {
         ctx.env.AWS_REGION,
         ctx.env.NODE_ENV,
         ctx.env.AUTHORIZED_USER_IDS.length,
-        lastReportText,
+        latestTs,
       ),
       'HTML',
     );
