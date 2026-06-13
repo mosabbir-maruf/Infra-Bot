@@ -40,10 +40,16 @@ export class MessageRenderer {
     const yr = d.getUTCFullYear();
     const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
     const dy = String(d.getUTCDate()).padStart(2, '0');
-    const hr = String(d.getUTCHours()).padStart(2, '0');
+    
+    let hours = d.getUTCHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    const hr = String(hours).padStart(2, '0');
+
     const min = String(d.getUTCMinutes()).padStart(2, '0');
     const sec = String(d.getUTCSeconds()).padStart(2, '0');
-    return `${yr}-${mo}-${dy} ${hr}:${min}:${sec}`;
+    return `${yr}-${mo}-${dy} ${hr}:${min}:${sec} ${ampm}`;
   }
 
   static formatUTC(ts: number): string {
@@ -147,9 +153,9 @@ export class MessageRenderer {
     }
 
     msg += `\n<code>┌ Uptime   </code> <code>${this.duration(uptime)}</code>\n`;
-    msg += `<code>├ Updated  </code> <code>${this.ago(ts)}</code>\n`;
-    msg += `<code>├ UTC      </code> <code>${this.formatUTC(ts)}</code>\n`;
-    msg += `<code>└ BD       </code> <code>${this.formatBD(ts)}</code>`;
+    msg += `<code>├ Time     </code> <code>${this.ago(ts)}</code>\n`;
+    msg += `<code>├ ├ UTC    </code> <code>${this.formatUTC(ts)}</code>\n`;
+    msg += `<code>└ └ BD     </code> <code>${this.formatBD(ts)}</code>`;
     return msg;
   }
 
@@ -163,9 +169,9 @@ export class MessageRenderer {
     msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += `<code>├ Uptime   </code> <code>${this.duration(uptime)}</code>\n`;
     msg += `<code>├ Health   </code> <code>${health} ${healthEmoji}</code>\n`;
-    msg += `<code>├ Updated  </code> <code>${this.ago(ts)}</code>\n`;
-    msg += `<code>├ UTC      </code> <code>${this.formatUTC(ts)}</code>\n`;
-    msg += `<code>└ BD       </code> <code>${this.formatBD(ts)}</code>`;
+    msg += `<code>├ Time     </code> <code>${this.ago(ts)}</code>\n`;
+    msg += `<code>├ ├ UTC    </code> <code>${this.formatUTC(ts)}</code>\n`;
+    msg += `<code>└ └ BD     </code> <code>${this.formatBD(ts)}</code>`;
     return msg;
   }
 
@@ -187,9 +193,9 @@ export class MessageRenderer {
       msg += `<code>└ Usage    </code> <code>[${this.bar(usagePct)}] ${usagePct}% / ${limitGB} GB</code>\n`;
     }
 
-    msg += `\n<code>┌ Updated  </code> <code>${this.ago(ts)}</code>\n`;
-    msg += `<code>├ UTC      </code> <code>${this.formatUTC(ts)}</code>\n`;
-    msg += `<code>└ BD       </code> <code>${this.formatBD(ts)}</code>`;
+    msg += `\n<code>┌ Time     </code> <code>${this.ago(ts)}</code>\n`;
+    msg += `<code>├ ├ UTC    </code> <code>${this.formatUTC(ts)}</code>\n`;
+    msg += `<code>└ └ BD     </code> <code>${this.formatBD(ts)}</code>`;
     return msg;
   }
 
@@ -237,9 +243,9 @@ export class MessageRenderer {
       }
     }
 
-    msg += `\n<code>┌ Updated  </code> <code>${this.ago(ts)}</code>\n`;
-    msg += `<code>├ UTC      </code> <code>${this.formatUTC(ts)}</code>\n`;
-    msg += `<code>└ BD       </code> <code>${this.formatBD(ts)}</code>`;
+    msg += `\n<code>┌ Time     </code> <code>${this.ago(ts)}</code>\n`;
+    msg += `<code>├ ├ UTC    </code> <code>${this.formatUTC(ts)}</code>\n`;
+    msg += `<code>└ └ BD     </code> <code>${this.formatBD(ts)}</code>`;
     return msg;
   }
 
@@ -250,9 +256,9 @@ export class MessageRenderer {
     msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += '<code>├ Status   </code> <code>Offline 🔴</code>\n';
     msg += '<code>├ Health   </code> <code>Critical 🔴</code>\n';
-    msg += '<code>├ Updated  </code> <code>Never</code>\n';
-    msg += '<code>├ UTC      </code> <code>N/A</code>\n';
-    msg += '<code>└ BD       </code> <code>N/A</code>';
+    msg += '<code>├ Time     </code> <code>Never</code>\n';
+    msg += '<code>├ ├ UTC    </code> <code>N/A</code>\n';
+    msg += '<code>└ └ BD     </code> <code>N/A</code>';
     return msg;
   }
 
@@ -272,11 +278,11 @@ export class MessageRenderer {
     msg += '<code>├ Runtime    </code> <code>Cloudflare Workers</code>\n';
     msg += `<code>├ Auth Users </code> <code>${users}</code>\n`;
     if (ts > 0) {
-      msg += `<code>├ Updated    </code> <code>${this.ago(ts)}</code>\n`;
-      msg += `<code>├ UTC        </code> <code>${this.formatUTC(ts)}</code>\n`;
-      msg += `<code>└ BD         </code> <code>${this.formatBD(ts)}</code>`;
+      msg += `<code>├ Time       </code> <code>${this.ago(ts)}</code>\n`;
+      msg += `<code>├ ├ UTC      </code> <code>${this.formatUTC(ts)}</code>\n`;
+      msg += `<code>└ └ BD       </code> <code>${this.formatBD(ts)}</code>`;
     } else {
-      msg += `<code>└ Updated    </code> <code>Never</code>`;
+      msg += `<code>└ Time       </code> <code>Never</code>`;
     }
     return msg;
   }

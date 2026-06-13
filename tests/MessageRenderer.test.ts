@@ -55,8 +55,8 @@ describe('MessageRenderer', () => {
       expect(r).toContain('40%');
       expect(r).toContain('Running  ');
       expect(r).toContain('3/5');
-      expect(r).toContain('UTC      ');
-      expect(r).toContain('BD       ');
+      expect(r).toContain('UTC');
+      expect(r).toContain('BD');
     });
     it('shows reason when unhealthy containers present', () => {
       const r = MessageRenderer.reportCard(
@@ -78,8 +78,8 @@ describe('MessageRenderer', () => {
       expect(r).toContain('1d 0h');
       expect(r).toContain('├ Health   ');
       expect(r).toContain('Healthy 🟢');
-      expect(r).toContain('UTC      ');
-      expect(r).toContain('BD       ');
+      expect(r).toContain('UTC');
+      expect(r).toContain('BD');
     });
   });
 
@@ -96,8 +96,8 @@ describe('MessageRenderer', () => {
       expect(r).toContain('└ Total    ');
       expect(r).toContain('15.00 GB');
       expect(r).toContain('Quota Limit');
-      expect(r).toContain('UTC      ');
-      expect(r).toContain('BD       ');
+      expect(r).toContain('UTC');
+      expect(r).toContain('BD');
     });
     it('shows 0% usage when no bandwidth limit', () => {
       const r = MessageRenderer.bandwidthCard('gw', Date.now() / 1000, 0, 0);
@@ -123,8 +123,8 @@ describe('MessageRenderer', () => {
       expect(r).toContain('api');
       // nginx is healthy and running, should NOT be in affected
       expect(r).not.toContain('nginx (');
-      expect(r).toContain('UTC      ');
-      expect(r).toContain('BD       ');
+      expect(r).toContain('UTC');
+      expect(r).toContain('BD');
     });
     it('shows unhealthy containers as affected services', () => {
       const r = MessageRenderer.dockerCard('node', 3, 3, 1, [
@@ -143,8 +143,8 @@ describe('MessageRenderer', () => {
       expect(r).toContain('missing');
       expect(r).toContain('├ Health   ');
       expect(r).toContain('Critical 🔴');
-      expect(r).toContain('UTC      ');
-      expect(r).toContain('BD       ');
+      expect(r).toContain('UTC');
+      expect(r).toContain('BD');
     });
   });
 
@@ -162,9 +162,9 @@ describe('MessageRenderer', () => {
       expect(r).toContain('Cloudflare Workers');
       expect(r).toContain('Auth Users ');
       expect(r).toContain('2');
-      expect(r).toContain('Updated    ');
-      expect(r).toContain('UTC        ');
-      expect(r).toContain('BD         ');
+      expect(r).toContain('Time       ');
+      expect(r).toContain('UTC');
+      expect(r).toContain('BD');
     });
   });
 
