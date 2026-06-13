@@ -2246,7 +2246,9 @@ async function handleDailyReport(env: unknown): Promise<void> {
   }
 
   let report = MessageRenderer.header('📊 Daily Report');
-  report += `${MessageRenderer.line('Date', new Date().toISOString().split('T')[0])}\n`;
+  const d = new Date();
+  const dateStr = `${String(d.getUTCDate()).padStart(2, '0')}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${d.getUTCFullYear()}`;
+  report += `${MessageRenderer.line('Date', dateStr)}\n`;
   let activeCount = 0;
 
   interface MetricsJson {

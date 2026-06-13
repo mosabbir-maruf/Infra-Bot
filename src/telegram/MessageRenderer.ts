@@ -49,7 +49,7 @@ export class MessageRenderer {
 
     const min = String(d.getUTCMinutes()).padStart(2, '0');
     const sec = String(d.getUTCSeconds()).padStart(2, '0');
-    return `${yr}-${mo}-${dy} ${hr}:${min}:${sec} ${ampm}`;
+    return `${dy}-${mo}-${yr} ${hr}:${min}:${sec} ${ampm}`;
   }
 
   static formatUTC(ts: number): string {
