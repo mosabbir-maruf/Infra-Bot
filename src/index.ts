@@ -2165,34 +2165,34 @@ app.post('/monitoring/report', async (c) => {
   const totalGB = totalB / (1024 * 1024 * 1024);
 
   const rawLimit = await kv.get(`bandwidth_limit:${alias.toLowerCase()}`);
-  let effectiveLimit: number | undefined;
+  let effectiveThresholds: number[] = [];
   if (rawLimit && rawLimit.trim().length > 0) {
-    const parsed = parseFloat(rawLimit);
-    if (!isNaN(parsed) && parsed > 0) {
-      effectiveLimit = parsed;
-    }
+    effectiveThresholds = rawLimit
+      .split(',')
+      .map((val) => parseFloat(val.trim()))
+      .filter((val) => !isNaN(val) && val > 0);
   }
 
   const currentMonth = new Date().toISOString().substring(0, 7); // "YYYY-MM"
 
-  if (effectiveLimit !== undefined) {
-    if (totalGB >= effectiveLimit) {
-      const alertKey = `alert:${alias.toLowerCase()}:${effectiveLimit}:${currentMonth}`;
+  for (const threshold of effectiveThresholds) {
+    if (totalGB >= threshold) {
+      const alertKey = `alert:${alias.toLowerCase()}:${threshold}:${currentMonth}`;
       const isSent = await kv.get(alertKey);
 
       if (!isSent) {
         // Mark alert as sent
         await kv.put(alertKey, 'true', { expirationTtl: 30 * 24 * 3600 });
-        Logger.warn(`Monitoring report: Bandwidth threshold limit ${effectiveLimit} GB crossed for ${alias}`);
+        Logger.warn(`Monitoring report: Bandwidth threshold limit ${threshold} GB crossed for ${alias}`);
 
         // Dispatch alert messages to operators
         const client = new TelegramClient(env.TELEGRAM_BOT_TOKEN);
         const warningMessage = MessageRenderer.warning(
           alias.toUpperCase(),
-          `Bandwidth usage has exceeded the configured threshold of ${effectiveLimit} GB.`,
+          `Bandwidth usage has exceeded the configured threshold of ${threshold} GB.`,
           {
             'Current Usage': `${totalGB.toFixed(2)} GB`,
-            'Alert Threshold': `${effectiveLimit} GB`,
+            'Alert Threshold': `${threshold} GB`,
           },
         );
 

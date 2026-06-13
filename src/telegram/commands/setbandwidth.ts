@@ -24,7 +24,7 @@ export class SetBandwidthHandler implements CommandHandler {
 
     if (!alias) {
       await ctx.reply(
-        MessageRenderer.error(this.name, 'missing alias', 'Usage: /setbandwidth &lt;alias&gt; &lt;GB&gt; or /setbandwidth &lt;alias&gt; remove'),
+        MessageRenderer.error(this.name, 'missing alias', 'Usage: /setbandwidth &lt;alias&gt; &lt;GB,GB,GB&gt; or /setbandwidth &lt;alias&gt; remove'),
         'HTML',
       );
       return;
@@ -37,18 +37,17 @@ export class SetBandwidthHandler implements CommandHandler {
       // Prompt for threshold selection using inline keyboard
       const inlineKeyboard = [
         [
-          { text: '50 GB', callback_data: `setbandwidth:${alias}:50` },
-          { text: '80 GB', callback_data: `setbandwidth:${alias}:80` },
-          { text: '100 GB', callback_data: `setbandwidth:${alias}:100` },
+          { text: '50, 80, 100 GB', callback_data: `setbandwidth:${alias}:50,80,100` },
+          { text: '100, 200, 500 GB', callback_data: `setbandwidth:${alias}:100,200,500` },
         ],
         [
-          { text: 'Remove Threshold', callback_data: `setbandwidth:${alias}:remove` }
+          { text: 'Remove Thresholds', callback_data: `setbandwidth:${alias}:remove` }
         ]
       ];
 
       await ctx.reply(
-        `<b>Set Bandwidth Alert Threshold: ${MessageRenderer.raw(alias)}</b>\n\n` +
-        'Select a threshold value or choose \'Remove\' to clear:',
+        `<b>Set Bandwidth Alert Thresholds: ${MessageRenderer.raw(alias)}</b>\n\n` +
+        `Select a threshold option below, or manually type a command to set custom values (e.g. <code>/setbandwidth ${MessageRenderer.raw(alias)} 20,40,60</code>):`,
         'HTML',
         { inline_keyboard: inlineKeyboard }
       );
@@ -60,25 +59,28 @@ export class SetBandwidthHandler implements CommandHandler {
 
     if (valueRaw === 'remove') {
       await kv.delete(key);
-      await ctx.reply(MessageRenderer.success('Bandwidth alert threshold removed', alias, {
-        'Fallback': server.bandwidthLimitGB ? `${server.bandwidthLimitGB} GB (env)` : 'No threshold',
-      }), 'HTML');
+      await ctx.reply(MessageRenderer.success('Bandwidth alert thresholds removed', alias), 'HTML');
       return;
     }
 
-    const gb = parseFloat(valueRaw);
-    if (isNaN(gb) || gb <= 0) {
+    const thresholds = valueRaw
+      .split(',')
+      .map((val) => parseFloat(val.trim()))
+      .filter((val) => !isNaN(val) && val > 0);
+
+    if (thresholds.length === 0) {
       await ctx.reply(
-        MessageRenderer.error(this.name, alias, 'Threshold must be a positive number in GB, or "remove".'),
+        MessageRenderer.error(this.name, alias, 'Threshold must be a comma-separated list of positive numbers in GB (e.g. 50,80,100), or "remove".'),
         'HTML',
       );
       return;
     }
 
-    await kv.put(key, gb.toString());
-    await ctx.reply(MessageRenderer.success('Bandwidth alert threshold set', alias, {
-      'Threshold': `${gb} GB`,
-      'Fallback': server.bandwidthLimitGB ? `${server.bandwidthLimitGB} GB (env)` : 'None',
+    const cleanValue = thresholds.join(',');
+    await kv.put(key, cleanValue);
+
+    await ctx.reply(MessageRenderer.success('Bandwidth alert thresholds set', alias, {
+      'Thresholds': thresholds.map((t) => `${t} GB`).join(', '),
     }), 'HTML');
   }
 }
