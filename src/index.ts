@@ -101,11 +101,12 @@ app.get('/health', (c) => {
 });
 
 // Root endpoint serving a premium HTML status dashboard
-app.get('/', (c) => {
+app.get('/', async (c) => {
   let serversHtml = '';
   let serverCount = 0;
   let awsCount = 0;
   let doCount = 0;
+  const kv = c.env.MONITORING_KV as KVNamespace | undefined;
 
   try {
     const ctxCache = getContext(c.env);
@@ -114,10 +115,25 @@ app.get('/', (c) => {
 
     if (servers.length === 0) {
       serversHtml = `
-        <tr><td colspan="6" class="empty-cell">
+        <tr><td colspan="7" class="empty-cell">
           <span class="empty-hint">— no nodes registered in SERVERS_CONFIG —</span>
         </td></tr>`;
     } else {
+      const bandwidthData = new Map<string, string>();
+      if (kv) {
+        await Promise.all(servers.map(async (srv) => {
+          try {
+            const raw = await kv.get(`metrics:${srv.alias.toLowerCase()}`);
+            if (raw) {
+              const parsed = JSON.parse(raw) as { bandwidth?: { rx: number; tx: number } };
+              const totalBytes = (parsed.bandwidth?.rx || 0) + (parsed.bandwidth?.tx || 0);
+              const totalGB = totalBytes / (1024 * 1024 * 1024);
+              bandwidthData.set(srv.alias.toLowerCase(), totalGB.toFixed(1));
+            }
+          } catch {}
+        }));
+      }
+
       servers.forEach((srv, idx) => {
         const isAws = srv.provider.toUpperCase() === 'AWS';
         if (isAws) awsCount++; else doCount++;
@@ -143,6 +159,11 @@ app.get('/', (c) => {
           ? '<span class="tag tag-aws">EC2</span>'
           : '<span class="tag tag-do">DO</span>';
 
+        const bw = bandwidthData.get(srv.alias.toLowerCase());
+        const bwCell = bw
+          ? `<span class="mono">${bw} GB</span>`
+          : '<span class="dim">—</span>';
+
         serversHtml += `
           <tr class="node-row" style="--row-i:${idx}">
             <td class="td-idx mono dim">${String(idx + 1).padStart(2, '0')}</td>
@@ -159,13 +180,14 @@ app.get('/', (c) => {
             </td>
             <td class="td-region mono">${regionCell}</td>
             <td class="td-provider">${providerTag}</td>
+            <td class="td-bw mono">${bwCell}</td>
             <td class="td-status"><span class="status-dot"><span class="state-tag">registered</span></span></td>
           </tr>`;
       });
     }
   } catch (err) {
     serversHtml = `
-      <tr><td colspan="6" class="error-cell">
+      <tr><td colspan="7" class="error-cell">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         ${(err as Error).message}
       </td></tr>`;
@@ -874,6 +896,7 @@ app.get('/', (c) => {
               <th>Instance ID</th>
               <th>Region</th>
               <th>Provider</th>
+              <th>Bandwidth</th>
               <th>State</th>
             </tr>
           </thead>
