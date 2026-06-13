@@ -51,7 +51,7 @@ The system operates serverless at the edge, guaranteeing that the control pathwa
 
 ```text
 infra-bot/
-├── .eslintrc.json           # Code quality rules
+├── eslint.config.mjs        # Code quality rules
 ├── .prettierrc              # Code formatting rules
 ├── .env.example             # Template for secrets and variables
 ├── package.json             # Build and test dependencies
@@ -71,7 +71,11 @@ infra-bot/
 │   └── utils/               # Cryptography, logging, and error utilities
 └── tests/                   # Complete Vitest test suite
     ├── Auth.test.ts         # User authorization rules tests
+    ├── CallbackQuery.test.ts # Inline callback query action tests
+    ├── Errors.test.ts       # Error handler and exception formatting tests
+    ├── Escaper.test.ts      # HTML symbol parser and escaper tests
     ├── HttpRouter.test.ts   # Edge HTTP routing integration tests
+    ├── MessageRenderer.test.ts # HTML-based Telegram message template tests
     ├── Monitoring.test.ts   # Telemetry HMAC signature tests
     ├── Providers.test.ts    # AWS/DO mock response parsing tests
     └── Router.test.ts       # Telegram command routing tests
@@ -116,6 +120,8 @@ npx wrangler secret put <SECRET_NAME>
 | `DIGITALOCEAN_TOKEN` | Secret | Personal access token with read/write scopes | `dop_v1_abcdef...` |
 | `SERVERS_CONFIG` | Binding| JSON mapping server aliases to cloud provider IDs | *See below* |
 | `MONITORING_SECRET` | Secret | Shared HMAC key for verifying telemetry payloads | `secure_secret_here` |
+| `BANDWIDTH_ALERT_THRESHOLDS` | Secret/Var | Optional comma-separated alert thresholds in GB | `50,80,95` |
+| `NODE_ENV` | Variable | Runtime environment mode | `production` |
 
 ### Server Registry Configuration (`SERVERS_CONFIG`)
 
