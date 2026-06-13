@@ -1647,7 +1647,16 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
         <p>Requires: <code>bash</code>, <code>curl</code>, <code>openssl</code>, <code>vnstat</code>, <code>docker</code> (optional).</p>
 
         <h2 id="mon-alerts">Bandwidth Alerts</h2>
-        <p>Thresholds: <strong>50 GB</strong>, <strong>80 GB</strong>, <strong>95 GB</strong>. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
+        <p>Alerts are automatic once the agent is running and reporting metrics. No additional configuration is needed — the worker evaluates every incoming report against three hardcoded thresholds.</p>
+        <p>Prerequisites:</p>
+        <ol>
+          <li><code>MONITORING_KV</code> KV namespace bound to the worker</li>
+          <li><code>MONITORING_SECRET</code> set on both worker and agent config</li>
+          <li>Agent cron running every 5 minutes (see Agent Setup above)</li>
+          <li><code>vnstat</code> installed on the server (<code>sudo apt install vnstat</code> or <code>sudo yum install vnstat</code>)</li>
+        </ol>
+        <p>Alert thresholds (hardcoded, evaluated monthly): <strong>50 GB</strong> ⚠️, <strong>80 GB</strong> 🟠, <strong>95 GB</strong> 🚨. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
+        <p>Custom per-server quota: add <code>"bandwidthLimitGB": 200</code> to a server entry in <code>SERVERS_CONFIG</code> — the <code>/bandwidth</code> command will render a progress bar against that limit.</p>
 
         <h2 id="mon-cron">Cron Report</h2>
         <p>Daily at <strong>08:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>
