@@ -85,6 +85,35 @@ export class TelegramClient {
   }
 
   /**
+   * Deletes a message from a chat via Telegram Bot API
+   */
+  public async deleteMessage(chatId: number, messageId: number): Promise<void> {
+    const url = `${this.baseUrl}/deleteMessage`;
+    const body = {
+      chat_id: chatId,
+      message_id: messageId,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Telegram API error (${response.status}): ${errorText}`);
+      }
+    } catch (err) {
+      Logger.error(`TelegramClient: Failed to delete message ${messageId} in chat ${chatId}`, err);
+      throw err;
+    }
+  }
+
+  /**
    * Answers a callback query via Telegram Bot API to clear loading spinner
    */
   public async answerCallbackQuery(

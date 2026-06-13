@@ -16,7 +16,8 @@ export class SetBandwidthHandler implements CommandHandler {
     let valueRaw = ctx.args[1];
 
     // Check if argument came from callback query formatted as "alias:value"
-    if (alias && alias.includes(':')) {
+    const isCallback = !!(alias && alias.includes(':'));
+    if (isCallback) {
       const parts = alias.split(':');
       alias = parts[0];
       valueRaw = parts[1];
@@ -62,9 +63,21 @@ export class SetBandwidthHandler implements CommandHandler {
       const currentVal = await kv.get(key);
       const thresholdsDisplay = currentVal ? currentVal.split(',').map((t) => `${t.trim()} GB`).join(', ') : 'None';
       await kv.delete(key);
-      await ctx.reply(MessageRenderer.success('Bandwidth alert thresholds removed', alias, {
+
+      const successMsg = MessageRenderer.success('Bandwidth alert thresholds removed', alias, {
         'Removed': thresholdsDisplay,
-      }), 'HTML');
+      });
+
+      if (isCallback) {
+        try {
+          await ctx.telegramClient.deleteMessage(ctx.message.chat.id, ctx.message.message_id);
+        } catch {
+          // Ignore deletion failures if the message no longer exists
+        }
+        await ctx.telegramClient.sendMessage(ctx.message.chat.id, successMsg, 'HTML');
+      } else {
+        await ctx.reply(successMsg, 'HTML');
+      }
       return;
     }
 
@@ -84,8 +97,19 @@ export class SetBandwidthHandler implements CommandHandler {
     const cleanValue = thresholds.join(',');
     await kv.put(key, cleanValue);
 
-    await ctx.reply(MessageRenderer.success('Bandwidth alert thresholds set', alias, {
+    const successMsg = MessageRenderer.success('Bandwidth alert thresholds set', alias, {
       'Thresholds': thresholds.map((t) => `${t} GB`).join(', '),
-    }), 'HTML');
+    });
+
+    if (isCallback) {
+      try {
+        await ctx.telegramClient.deleteMessage(ctx.message.chat.id, ctx.message.message_id);
+      } catch {
+        // Ignore deletion failures if the message no longer exists
+      }
+      await ctx.telegramClient.sendMessage(ctx.message.chat.id, successMsg, 'HTML');
+    } else {
+      await ctx.reply(successMsg, 'HTML');
+    }
   }
 }
