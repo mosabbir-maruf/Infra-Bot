@@ -30,12 +30,13 @@ In the **Custom Scopes** section, scroll to the `droplet` resource group and ena
 
 When you check `droplet:update`, the DigitalOcean UI automatically selects these prerequisite scopes (you will see them appear in the selected scopes summary):
 
-| Prerequisite Scope | Why It Is Needed |
+| Prerequisite Scope | Description |
 |---|---|
-| `actions:read` | Required by DO when you select `droplet:update` |
-| `regions:read` | Required by DO when you select `droplet:update` |
-| `sizes:read` | Required by DO when you select `droplet:update` |
-| `image:read` | Required by DO when you select `droplet:update` |
+| `regions:read` | View data center regions |
+| `sizes:read` | View Droplet plan sizes |
+| `actions:read` | View events of shared resources |
+| `image:read` | View images |
+| `snapshot:read` | View snapshots |
 
 No action needed — these are added for you. Your final selected scopes summary will show:
 
@@ -43,6 +44,8 @@ No action needed — these are added for you. Your final selected scopes summary
 |---|---|
 | **Read Access** | droplet (1), actions (1) |
 | **Update Access** | droplet (1) |
+
+All 5 required scopes are transparently handled by the UI and require no additional action on your part.
 
 5. Click **Generate Token** and **copy the token immediately** — you will not see it again.
 
