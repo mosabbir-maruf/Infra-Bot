@@ -135,7 +135,9 @@ app.get('/', (c) => {
 
         const regionCell = regionHref
           ? `<a href="${regionHref}" target="_blank" rel="noopener noreferrer" class="tbl-link">${srv.region}</a>`
-          : '<span class="dim">—</span>';
+          : srv.region
+            ? `<span>${srv.region}</span>`
+            : '<span class="dim">—</span>';
 
         const providerTag = isAws
           ? '<span class="tag tag-aws">EC2</span>'
