@@ -988,7 +988,7 @@ app.get('/', async (c) => {
             <tr class="cmd-row">
               <td class="cmd-cat"></td>
               <td class="cmd-name">/setbandwidth <span class="cmd-arg">&lt;alias&gt; &lt;GB|remove&gt;</span></td>
-              <td class="cmd-desc">Set bandwidth alert threshold per server (KV override, falls back to env config)</td>
+              <td class="cmd-desc">Set bandwidth alert threshold per server (stored in KV)</td>
             </tr>
             <tr class="cmd-row">
               <td class="cmd-cat"></td>
