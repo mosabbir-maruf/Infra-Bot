@@ -64,4 +64,13 @@ Configure a cron job to run the agent every 5 minutes:
    ```cron
    */5 * * * * . /etc/infra-agent.conf; export SERVER_ALIAS MONITORING_SECRET CONTROL_PLANE_URL; /usr/local/bin/infra-agent.sh >/dev/null 2>&1
    ```
-3. Save and close. The agent will now execute every 5 minutes, capturing load metrics and piping them securely to the Cloudflare Worker.
+3. Save and close.
+
+**What this does:** Every 5 minutes, your server runs the agent script which collects CPU, RAM, disk, and bandwidth usage, then posts the data to your Cloudflare Worker. Without this cron job, no metrics are collected — the dashboard shows `—` for bandwidth and Telegram commands like `/status` and `/bandwidth` have no data to display.
+
+**Breaking down the command:**
+- `*/5 * * * *` — run every 5 minutes, all day, every day
+- `. /etc/infra-agent.conf` — load your server alias, secret, and worker URL from the config file
+- `export ...` — pass those values to the agent script
+- `/usr/local/bin/infra-agent.sh` — the script that collects and sends metrics
+- `>/dev/null 2>&1` — discard output to prevent cron from sending you emails

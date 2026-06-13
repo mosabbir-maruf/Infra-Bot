@@ -179,8 +179,12 @@ To hook a Linux VPS into the telemetry monitoring pipeline:
    ```bash
    sudo apt-get install vnstat curl -y
    ```
-3. Set up a systemd service or a cron job executing the agent periodically:
+3. Set up a cron job executing the agent every 5 minutes:
    ```bash
-   # Execute agent every 5 minutes and sign with your HMAC secret
-   */5 * * * * SERVER_ALIAS="ai-gateway-prod" MONITORING_SECRET="your_shared_secret" CONTROL_PLANE_URL="https://your-worker.workers.dev" /usr/local/bin/agent.sh
+   sudo crontab -e
    ```
+   Paste this line:
+   ```cron
+   */5 * * * * . /etc/infra-agent.conf; export SERVER_ALIAS MONITORING_SECRET CONTROL_PLANE_URL; /usr/local/bin/infra-agent.sh >/dev/null 2>&1
+   ```
+   **What this does:** Every 5 minutes, the agent collects CPU, RAM, disk, and bandwidth metrics and posts them to the Control Plane. Without this cron job, no data is collected and Telegram commands show no data.

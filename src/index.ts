@@ -921,7 +921,7 @@ app.get('/', async (c) => {
         </div>
         <div class="sys-item">
           <span class="sys-k">Cron</span>
-          <span class="sys-v">0 8 * * *</span>
+          <span class="sys-v">0 14 * * *</span>
         </div>
         <div class="sys-item">
           <span class="sys-k">Health</span>
@@ -1668,7 +1668,15 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
         <pre><code>sudo crontab -e</code></pre>
         <p>Paste the following line, save, and close:</p>
         <pre><code>*/5 * * * * . /etc/infra-agent.conf; export SERVER_ALIAS MONITORING_SECRET CONTROL_PLANE_URL; /usr/local/bin/infra-agent.sh &gt;/dev/null 2&gt;&amp;1</code></pre>
-        <p>The agent will now execute every 5 minutes, capturing load metrics and piping them securely to the Cloudflare Worker.</p>
+        <p><strong>What this does:</strong> Every 5 minutes, your server runs the agent script which collects CPU, RAM, disk, and bandwidth usage, then posts the data to your Cloudflare Worker. Without this cron job, no metrics are collected — the dashboard shows <code>—</code> for bandwidth and Telegram commands like <code>/status</code> and <code>/bandwidth</code> will have no data to display.</p>
+        <p><strong>Breaking down the command:</strong></p>
+        <ul>
+          <li><code>*/5 * * * *</code> — run every 5 minutes, all day, every day</li>
+          <li><code>. /etc/infra-agent.conf</code> — load your server alias, secret, and worker URL from the config file</li>
+          <li><code>export ...</code> — pass those values to the agent script</li>
+          <li><code>/usr/local/bin/infra-agent.sh</code> — the script that collects and sends metrics</li>
+          <li><code>&gt;/dev/null 2&gt;&amp;1</code> — discard output to prevent cron from sending you emails</li>
+        </ul>
         <p>Requires: <code>bash</code>, <code>curl</code>, <code>openssl</code>, <code>vnstat</code>, <code>docker</code> (optional).</p>
 
         <h2 id="mon-alerts">Bandwidth Alerts</h2>
