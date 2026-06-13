@@ -15,7 +15,7 @@ import { ProviderRegistry } from './providers/ProviderRegistry';
 import { faviconBase64, favicon32Base64, favicon16Base64 } from './assets/favicon';
 import { metaOgBase64 } from './assets/meta-og';
 
-const ISOLATE_START_TIME = Date.now();
+let isolateStartTime: number | null = null;
 
 // Strict type bindings for Hono environment
 interface Bindings {
@@ -198,7 +198,10 @@ app.get('/', async (c) => {
 
   const now = new Date();
   const buildTime = now.toISOString();
-  const workerUptime = Math.floor((Date.now() - ISOLATE_START_TIME) / 1000);
+  if (!isolateStartTime) {
+    isolateStartTime = Date.now();
+  }
+  const workerUptime = Math.floor((Date.now() - isolateStartTime) / 1000);
   const year = now.getFullYear();
   const requestUrl = new URL(c.req.url);
   const siteUrl = requestUrl.origin;
