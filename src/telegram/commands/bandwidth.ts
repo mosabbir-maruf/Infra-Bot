@@ -1,6 +1,7 @@
 import { TelegramContext } from '../../types';
 import { CommandHandler } from './CommandHandler';
 import { MessageRenderer } from '../MessageRenderer';
+import { getEffectiveBandwidthLimit } from '../../utils/bandwidth';
 
 export class BandwidthHandler implements CommandHandler {
   public readonly name = 'bandwidth';
@@ -31,8 +32,9 @@ export class BandwidthHandler implements CommandHandler {
       try {
         interface M { timestamp: number; bandwidth?: { rx: number; tx: number }; }
         const m = JSON.parse(raw) as M;
+        const effectiveLimit = await getEffectiveBandwidthLimit(kv, alias, serverConfig?.bandwidthLimitGB);
         cards.push(MessageRenderer.bandwidthCard(
-          alias, m.timestamp, m.bandwidth?.rx || 0, m.bandwidth?.tx || 0, serverConfig?.bandwidthLimitGB,
+          alias, m.timestamp, m.bandwidth?.rx || 0, m.bandwidth?.tx || 0, effectiveLimit,
         ));
       } catch {
         cards.push(MessageRenderer.emptyCard(alias));

@@ -16,6 +16,7 @@ export class HelpHandler implements CommandHandler {
       { command: '/reboot', description: 'Reboot a server.', args: '<server>' },
       { command: '/report', description: 'View metrics summary for all servers.' },
       { command: '/bandwidth', description: 'View bandwidth usage details.' },
+      { command: '/setbandwidth', description: 'Set bandwidth limit per server.', args: '<alias> <GB|remove>' },
       { command: '/docker', description: 'View Docker container status.' },
       { command: '/uptime', description: 'View system uptime details.' },
     ];

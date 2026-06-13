@@ -985,6 +985,11 @@ app.get('/', async (c) => {
             </tr>
             <tr class="cmd-row">
               <td class="cmd-cat"></td>
+              <td class="cmd-name">/setbandwidth <span class="cmd-arg">&lt;alias&gt; &lt;GB|remove&gt;</span></td>
+              <td class="cmd-desc">Set bandwidth limit per server (KV override, falls back to env config)</td>
+            </tr>
+            <tr class="cmd-row">
+              <td class="cmd-cat"></td>
               <td class="cmd-name">/docker</td>
               <td class="cmd-desc">View Docker container status across all nodes</td>
             </tr>
@@ -1510,6 +1515,7 @@ app.get('/docs', (c) => {
             <tbody>
               <tr><td><code>/report</code></td><td>Full metrics (CPU, RAM, Disk, Uptime, Docker)</td></tr>
               <tr><td><code>/bandwidth</code></td><td>Monthly bandwidth (rx/tx, progress bar)</td></tr>
+              <tr><td><code>/setbandwidth</code></td><td>Set per-server bandwidth limit via KV (<code>&lt;alias&gt; &lt;GB|remove&gt;</code>)</td></tr>
               <tr><td><code>/docker</code></td><td>Container status (running/total/unhealthy)</td></tr>
               <tr><td><code>/uptime</code></td><td>Uptime per VPS (&gt;15 min = stale)</td></tr>
             </tbody>
@@ -1545,7 +1551,7 @@ app.get('/docs', (c) => {
               <tr><td><code>instanceId</code></td><td><span class="tag tag-req">req</span></td><td>AWS EC2 instance ID</td></tr>
               <tr><td><code>region</code></td><td><span class="tag tag-opt">opt</span></td><td>Defaults to <code>AWS_REGION</code></td></tr>
               <tr><td><code>dropletId</code></td><td><span class="tag tag-req">req</span></td><td>DO droplet ID (string/number)</td></tr>
-              <tr><td><code>bandwidthLimitGB</code></td><td><span class="tag tag-opt">opt</span></td><td>Shows progress bar in <code>/bandwidth</code>. Alerts fire regardless.</td></tr>
+              <tr><td><code>bandwidthLimitGB</code></td><td><span class="tag tag-opt">opt</span></td><td>Shows progress bar in <code>/bandwidth</code>. Alerts fire regardless. Overridable via <code>/setbandwidth</code> Telegram command.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1689,6 +1695,7 @@ CONTROL_PLANE_URL="https://your-worker.workers.dev"</code></pre>
           <li><code>vnstat</code> installed on the server (<code>sudo apt install vnstat</code> or <code>sudo yum install vnstat</code>)</li>
         </ol>
         <p>Set <code>BANDWIDTH_ALERT_THRESHOLDS</code> as a comma-separated list of GB values (e.g. <code>50,80,95</code>). Defaults to <code>50,80,95</code> if not set. Dedup via <code>alert:&lt;alias&gt;:&lt;threshold&gt;:&lt;yyyy-mm&gt;</code> with 30-day TTL.</p>
+        <p>Override per-server limits at runtime with <code>/setbandwidth &lt;alias&gt; &lt;GB|remove&gt;</code> via Telegram. The KV override takes precedence over <code>bandwidthLimitGB</code> in <code>SERVERS_CONFIG</code>. Use <code>remove</code> to fall back to the env config.</p>
 
         <h2 id="mon-cron">Cron Report</h2>
         <p>Daily at <strong>14:00 UTC</strong>. Summarizes all servers, marks telemetry &gt;15 min as stale.</p>

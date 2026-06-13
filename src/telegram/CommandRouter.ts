@@ -16,6 +16,7 @@ import { StopHandler } from './commands/stop';
 import { RebootHandler } from './commands/reboot';
 import { ReportHandler } from './commands/report';
 import { BandwidthHandler } from './commands/bandwidth';
+import { SetBandwidthHandler } from './commands/setbandwidth';
 import { DockerHandler } from './commands/docker';
 import { UptimeHandler } from './commands/uptime';
 
@@ -31,6 +32,7 @@ export class CommandRouter {
     this.register(new RebootHandler());
     this.register(new ReportHandler());
     this.register(new BandwidthHandler());
+    this.register(new SetBandwidthHandler());
     this.register(new DockerHandler());
     this.register(new UptimeHandler());
   }
