@@ -26,7 +26,11 @@ export class SetBandwidthHandler implements CommandHandler {
 
     if (ctx.args.length < 2) {
       await ctx.reply(
-        MessageRenderer.error(this.name, alias, 'Missing GB value or "remove". Usage: /setbandwidth &lt;alias&gt; &lt;GB&gt; or /setbandwidth &lt;alias&gt; remove'),
+        `<b>Set Bandwidth Limit: ${MessageRenderer.raw(alias)}</b>\n\n` +
+        `To set a limit, copy and edit the command below:\n` +
+        `<code>/setbandwidth ${MessageRenderer.raw(alias)} 500</code>\n\n` +
+        `To remove the limit:\n` +
+        `<code>/setbandwidth ${MessageRenderer.raw(alias)} remove</code>`,
         'HTML',
       );
       return;

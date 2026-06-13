@@ -150,7 +150,7 @@ describe('MessageRenderer', () => {
       expect(r).toContain('Connected 🟢');
       expect(r).toContain('Runtime    ');
       expect(r).toContain('Cloudflare Workers');
-      expect(r).toContain('Operators  ');
+      expect(r).toContain('Auth Users ');
       expect(r).toContain('2');
       expect(r).toContain('Updated    ');
       expect(r).toContain('2m ago');
