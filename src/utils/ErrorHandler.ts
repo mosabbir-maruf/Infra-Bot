@@ -50,7 +50,7 @@ function normalizeProviderError(err: unknown): string {
       return 'Provider network error.';
     }
 
-    return 'Provider request failed.';
+    return `Provider request failed: ${msg}`;
   }
 
   return 'An unexpected error occurred.';
