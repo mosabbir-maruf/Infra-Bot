@@ -1572,7 +1572,7 @@ app.get('/docs', (c) => {
   }
 }</code></pre>
         <h2 id="config-azure">Azure</h2>
-        <p>Azure VMs are identified by resource group + VM name. Find both in the Azure Portal VM overview page.</p>
+        <p>Azure VMs are identified by resource group + VM name. Find both in the Azure Portal VM overview page. The resource group also appears in the URL path: <code>/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/virtualMachines/{vmName}</code>.</p>
         <pre><code>{
   "app-vm-prod": {
     "provider": "azure",
@@ -1580,6 +1580,8 @@ app.get('/docs', (c) => {
     "vmName": "app-vm-prod-01"
   }
 }</code></pre>
+        <p>The <code>region</code> field is optional. If omitted, the provider returns the Azure region (location) where the VM is deployed.</p>
+        <p>Optional <code>"bandwidthLimitGB": 500</code> adds a progress bar to <code>/bandwidth</code>. Bandwidth alerts are disabled by default and only fire when a threshold is configured via Telegram using <code>/setbandwidth</code> (e.g. <code>/setbandwidth &lt;alias&gt; &lt;GB|remove&gt;</code>). The Telegram threshold takes precedence over <code>bandwidthLimitGB</code> in <code>SERVERS_CONFIG</code>.</p>
         <div class="tbl-wrap">
           <table>
             <thead><tr><th>Field</th><th>Req</th><th>Notes</th></tr></thead>
@@ -1676,8 +1678,15 @@ app.get('/docs', (c) => {
 
         <h2 id="providers-azure">Azure</h2>
         <p>REST at <code>https://management.azure.com</code>, OAuth2 client credentials (<code>AZURE_TENANT_ID</code>, <code>AZURE_CLIENT_ID</code>, <code>AZURE_CLIENT_SECRET</code>).</p>
-        <p>Create a service principal in <strong>Microsoft Entra ID</strong> → App registrations → New registration. Add a client secret in Certificates &amp; secrets. Assign the <strong>Virtual Machine Contributor</strong> role to the app at the subscription level (IAM → Add role assignment).</p>
-        <p>OAuth2 token is cached in memory with automatic refresh. The provider uses <code>$expand=instanceView</code> to fetch VM power state in a single request — no separate API call needed. Actions: <code>/virtualMachines/{vmName}/start</code>, <code>/powerOff</code>, <code>/restart</code>. All operations expect the VM ID in <code>resourceGroup/vmName</code> format.</p>
+        <p><strong>Create a Service Principal:</strong></p>
+        <ol>
+          <li>Azure Portal → <strong>Microsoft Entra ID</strong> → App registrations → New registration</li>
+          <li>Name it (e.g. <code>infra-bot-sp</code>), leave defaults, Register</li>
+          <li>Copy <strong>Application (client) ID</strong> and <strong>Directory (tenant) ID</strong> — these are <code>AZURE_CLIENT_ID</code> and <code>AZURE_TENANT_ID</code></li>
+        </ol>
+        <p><strong>Generate a Client Secret:</strong> In the app registration → Certificates &amp; secrets → Client secrets → New client secret. Add description and expiration, then <strong>copy the secret value immediately</strong> — this is <code>AZURE_CLIENT_SECRET</code>.</p>
+        <p><strong>Assign RBAC Role:</strong> Subscriptions → select subscription → Access control (IAM) → Add role assignment. Select <strong>Virtual Machine Contributor</strong> (or a custom role with <code>Microsoft.Compute/virtualMachines/read</code>, <code>start/action</code>, <code>powerOff/action</code>, <code>restart/action</code>). Search for your app registration name and assign.</p>
+        <p>OAuth2 token is cached in memory with automatic refresh. The provider uses <code>$expand=instanceView</code> to fetch VM power state in a single request. Actions: <code>/virtualMachines/{vmName}/start</code>, <code>/powerOff</code>, <code>/restart</code>. All operations expect the VM ID in <code>resourceGroup/vmName</code> format.</p>
         <p>Status mapping: <code>PowerState/running</code>→running, <code>PowerState/starting</code>→starting, <code>PowerState/stopping</code>→stopping, <code>PowerState/stopped</code>→stopped, <code>PowerState/deallocated</code>→stopped (<em>deallocated VMs incur no compute charges</em>).</p>
       </div>
 
