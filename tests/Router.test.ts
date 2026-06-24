@@ -20,6 +20,7 @@ describe('CommandRouter', () => {
     TELEGRAM_BOT_TOKEN: 'mock-bot-token',
     AUTHORIZED_USER_IDS: [12345],
     AWS_REGION: 'us-east-1',
+    AZURE_REGION: 'eastus',
     NODE_ENV: 'test',
     SERVERS_CONFIG: '{"ai-gateway-prod":{"provider":"aws","region":"ap-south-1","instanceId":"i-0123"}}',
     MONITORING_SECRET: 'mock-secret',

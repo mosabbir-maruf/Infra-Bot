@@ -17,6 +17,7 @@ describe('AuthMiddleware', () => {
     TELEGRAM_BOT_TOKEN: 'test-token',
     AUTHORIZED_USER_IDS: [12345, 67890],
     AWS_REGION: 'us-east-1',
+    AZURE_REGION: 'eastus',
     NODE_ENV: 'test',
     SERVERS_CONFIG: '{"ai-gateway-prod":{"provider":"aws","region":"ap-south-1","id":"i-0123"}}',
     MONITORING_SECRET: 'mock-secret',

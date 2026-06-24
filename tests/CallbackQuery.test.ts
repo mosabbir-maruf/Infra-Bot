@@ -20,6 +20,7 @@ describe('CallbackQuery and Selection UX', () => {
     TELEGRAM_BOT_TOKEN: 'mock-bot-token',
     AUTHORIZED_USER_IDS: [12345],
     AWS_REGION: 'us-east-1',
+    AZURE_REGION: 'eastus',
     AWS_ACCESS_KEY_ID: 'mock-key',
     AWS_SECRET_ACCESS_KEY: 'mock-secret',
     NODE_ENV: 'test',

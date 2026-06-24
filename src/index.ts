@@ -141,10 +141,10 @@ app.get('/', async (c) => {
       servers.forEach((srv, idx) => {
         const isAws = srv.provider.toUpperCase() === 'AWS';
         const isDo = srv.provider.toUpperCase() === 'DIGITALOCEAN';
-        const isAzure = srv.provider === 'Azure';
+        const isAzure = srv.provider === 'azure';
         if (isAws) awsCount++;
         else if (isDo) doCount++;
-        else if (isAzure) azureCount++;
+        if (isAzure) azureCount++;
 
         const consoleHref = isAws && srv.region
           ? `https://${srv.region}.console.aws.amazon.com/ec2/home?region=${srv.region}#Instances:instanceId=${srv.id}`

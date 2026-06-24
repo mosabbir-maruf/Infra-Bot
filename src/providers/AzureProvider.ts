@@ -42,7 +42,6 @@ export class AzureProvider implements CloudProvider {
   private readonly clientId: string;
   private readonly clientSecret: string;
   private readonly subscriptionId: string;
-  private readonly defaultRegion: string;
   private readonly baseUrl: string;
 
   private cachedToken: { token: string; expiresAt: number } | null = null;
@@ -56,7 +55,6 @@ export class AzureProvider implements CloudProvider {
     this.clientId = env.AZURE_CLIENT_ID;
     this.clientSecret = env.AZURE_CLIENT_SECRET;
     this.subscriptionId = env.AZURE_SUBSCRIPTION_ID;
-    this.defaultRegion = env.AZURE_REGION || 'eastus';
     this.baseUrl = `https://management.azure.com/subscriptions/${this.subscriptionId}`;
   }
 
