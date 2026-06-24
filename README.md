@@ -23,21 +23,22 @@ The system operates serverless at the edge, guaranteeing that the control pathwa
                   └──────┬─────────┬──────┘               │ (POST /monitoring/report)
                          │         │                      │ (HMAC-SHA256 Signed)
             ┌────────────┘         └────────────┐         │
-  ┌─────────▼──────────┐              ┌─────────▼────────┐│   ┌──────────────────────┐
-  │  AWS EC2 Adapter   │              │  DigitalOcean    │└───┤ VPS Telemetry Agent │
-  └─────────┬──────────┘              │  Droplet Adapter │    │   (monitoring/      │
-            │                         └─────────┬────────┘    │    agent.sh)         │
-            │ REST/SDK                          │ REST        └──────────────────────┘
-  ┌─────────▼──────────┐              ┌─────────▼────────┐
-  │ AWS EC2 Instances  │              │  DO Droplets     │
-  └────────────────────┘              └──────────────────┘
+  ┌─────────▼──────────┐   ┌─────────▼─────────┐│  ┌─────▼────────────────┐
+  │  AWS EC2 Adapter   │   │  DigitalOcean     │└──┤ VPS Telemetry Agent │
+  ├────────────────────┤   │  Droplet Adapter  │   │   (monitoring/      │
+  │  Azure VM Adapter  │   └─────────┬─────────┘   │    agent.sh)         │
+  └─────────┬──────────┘             │             └──────────────────────┘
+            │ REST/SDK               │ REST
+  ┌─────────▼──────────┐   ┌─────────▼─────────┐
+  │ AWS EC2 / Azure VM │   │  DO Droplets      │
+  └────────────────────┘   └───────────────────┘
 ```
 
 ---
 
 ## 🌟 Key Features
 
-* **Multi-Provider Support**: Built-in adapters for AWS EC2 and DigitalOcean Droplets.
+* **Multi-Provider Support**: Built-in adapters for AWS EC2, DigitalOcean Droplets, and Azure VMs.
 * **Unified Command Interface**: Commands resolved using server aliases rather than raw IDs (e.g. `/status ai-gateway-prod`).
 * **Decoupled Architecture**: Query state, trigger reboots, starts, and stops directly via cloud provider APIs.
 * **Robust Telemetry**: A lightweight, dependency-free Linux Bash agent reporting CPU, RAM, Disk, Uptime, Docker container status, and vnStat monthly bandwidth usage.
@@ -67,7 +68,7 @@ infra-bot/
 │   ├── core/                # Unified provider interfaces
 │   ├── errors/              # Custom control plane error definitions
 │   ├── middleware/          # Rate limiting middleware
-│   ├── providers/           # AWS and DigitalOcean adapter implementations
+│   ├── providers/           # AWS, Azure, and DigitalOcean adapter implementations
 │   ├── telegram/            # Telegram client, webhook router, and command handlers
 │   ├── types/               # Strict TypeScript interface declarations
 │   └── utils/               # Cryptography, logging, and error utilities
@@ -79,7 +80,7 @@ infra-bot/
     ├── HttpRouter.test.ts   # Edge HTTP routing integration tests
     ├── MessageRenderer.test.ts # HTML-based Telegram message template tests
     ├── Monitoring.test.ts   # Telemetry HMAC signature tests
-    ├── Providers.test.ts    # AWS/DO mock response parsing tests
+    ├── Providers.test.ts    # AWS/DO/Azure mock response parsing tests
     └── Router.test.ts       # Telegram command routing tests
 ```
 
@@ -90,6 +91,7 @@ The following guides are available in the [docs/](file:///Volumes/Mosabbir/Devel
 * **Architecture Overview**: [docs/architecture/overview.md](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/docs/architecture/overview.md)
 * **Security & Auth Rules**: [docs/security/authentication.md](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/docs/security/authentication.md)
 * **AWS Integration Guide**: [docs/providers/aws.md](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/docs/providers/aws.md)
+* **Azure Integration Guide**: [docs/providers/azure.md](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/docs/providers/azure.md)
 * **DigitalOcean Integration**: [docs/providers/digitalocean.md](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/docs/providers/digitalocean.md)
 * **Deployment Guide**: [docs/operations/deployment.md](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/docs/operations/deployment.md)
 * **Disaster Recovery Playbook**: [docs/recovery/disaster-recovery.md](file:///Volumes/Mosabbir/Developement/Project/mosabbir-infra-bot/docs/recovery/disaster-recovery.md)
@@ -118,8 +120,13 @@ npx wrangler secret put <SECRET_NAME>
 | `TELEGRAM_WEBHOOK_SECRET` | Secret | Optional secret token to verify webhook source authenticity | `webhook_secret_here` |
 | `AWS_ACCESS_KEY_ID` | Secret | Restricted AWS IAM access key ID | `AKIAIOSFODNN7EXAMPLE` |
 | `AWS_SECRET_ACCESS_KEY`| Secret | Restricted AWS IAM secret access key | `wJalrXUtnFEMI/K7MDEN...` |
-| `AWS_REGION` | Secret | Default fallback AWS region | `us-east-1` |
+| `AWS_REGION` | Variable | Default fallback AWS region | `us-east-1` |
 | `DIGITALOCEAN_TOKEN` | Secret | Personal access token with read/write scopes | `dop_v1_abcdef...` |
+| `AZURE_TENANT_ID` | Secret | Azure Entra ID (tenant) for service principal | `00000000-...` |
+| `AZURE_CLIENT_ID` | Secret | Azure app registration client ID | `00000000-...` |
+| `AZURE_CLIENT_SECRET` | Secret | Azure client secret | `your_secret` |
+| `AZURE_SUBSCRIPTION_ID` | Secret | Azure subscription ID | `00000000-...` |
+| `AZURE_REGION` | Variable | Default Azure region | `eastus` |
 | `SERVERS_CONFIG` | Binding| JSON mapping server aliases to cloud provider IDs | *See below* |
 | `MONITORING_SECRET` | Secret | Shared HMAC key for verifying telemetry payloads | `secure_secret_here` |
 | `NODE_ENV` | Variable | Runtime environment mode | `production` |
@@ -138,6 +145,11 @@ Configure the target servers in the registry JSON schema:
   "docs-server": {
     "provider": "digitalocean",
     "dropletId": "123456789"
+  },
+  "app-vm-prod": {
+    "provider": "azure",
+    "resourceGroup": "production-rg",
+    "vmName": "app-vm-prod-01"
   }
 }
 ```
