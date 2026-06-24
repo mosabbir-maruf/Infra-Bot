@@ -282,7 +282,7 @@ export class MessageRenderer {
       msg += `<code>├ ├ UTC      </code> <code>${this.formatUTC(ts)}</code>\n`;
       msg += `<code>└ └ BD       </code> <code>${this.formatBD(ts)}</code>`;
     } else {
-      msg += `<code>└ Time       </code> <code>Never</code>`;
+      msg += '<code>└ Time       </code> <code>Never</code>';
     }
     return msg;
   }

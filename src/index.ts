@@ -107,6 +107,7 @@ app.get('/', async (c) => {
   let serverCount = 0;
   let awsCount = 0;
   let doCount = 0;
+  let azureCount = 0;
   const kv = c.env.MONITORING_KV;
 
   try {
@@ -139,7 +140,11 @@ app.get('/', async (c) => {
 
       servers.forEach((srv, idx) => {
         const isAws = srv.provider.toUpperCase() === 'AWS';
-        if (isAws) awsCount++; else doCount++;
+        const isDo = srv.provider.toUpperCase() === 'DIGITALOCEAN';
+        const isAzure = srv.provider === 'Azure';
+        if (isAws) awsCount++;
+        else if (isDo) doCount++;
+        else if (isAzure) azureCount++;
 
         const consoleHref = isAws && srv.region
           ? `https://${srv.region}.console.aws.amazon.com/ec2/home?region=${srv.region}#Instances:instanceId=${srv.id}`
@@ -158,9 +163,16 @@ app.get('/', async (c) => {
             ? `<span>${srv.region}</span>`
             : '<span class="dim">—</span>';
 
-        const providerTag = isAws
-          ? '<span class="tag tag-aws">EC2</span>'
-          : '<span class="tag tag-do">DO</span>';
+        let providerTag: string;
+        if (isAws) {
+          providerTag = '<span class="tag tag-aws">EC2</span>';
+        } else if (isDo) {
+          providerTag = '<span class="tag tag-do">DO</span>';
+        } else if (isAzure) {
+          providerTag = '<span class="tag tag-azure">Azure</span>';
+        } else {
+          providerTag = '<span class="tag">VM</span>';
+        }
 
         const bw = bandwidthData.get(srv.alias.toLowerCase());
         const bwCell = bw
@@ -597,6 +609,7 @@ app.get('/', async (c) => {
 
     .tag-aws { background: rgba(245,158,11,0.1); color: var(--aws-c); border: 1px solid rgba(245,158,11,0.2); }
     .tag-do  { background: rgba(96,165,250,0.1);  color: var(--do-c);  border: 1px solid rgba(96,165,250,0.2); }
+    .tag-azure { background: rgba(0,120,212,0.1); color: #0078d4; border: 1px solid rgba(0,120,212,0.2); }
 
     /* copy button */
     .copy-btn {
@@ -888,6 +901,11 @@ app.get('/', async (c) => {
         <span class="s-label">DigitalOcean</span>
         <span class="s-val">${doCount}</span>
         <span class="s-note">droplets</span>
+      </div>
+      <div class="summary-item">
+        <span class="s-label">Azure</span>
+        <span class="s-val">${azureCount}</span>
+        <span class="s-note">VMs</span>
       </div>
     </div>
 
@@ -1481,7 +1499,7 @@ app.get('/docs', (c) => {
 
       <div class="section" id="architecture">
         <div class="section-label">architecture</div>
-        <p>The Control Plane is a <strong>production-grade, vendor-independent edge service</strong> on Cloudflare Workers managing VPS infrastructure across <strong>AWS EC2</strong> and <strong>DigitalOcean</strong> via Telegram.</p>
+        <p>The Control Plane is a <strong>production-grade, vendor-independent edge service</strong> on Cloudflare Workers managing VPS infrastructure across <strong>AWS EC2</strong>, <strong>DigitalOcean</strong>, and <strong>Azure</strong> via Telegram.</p>
         <h2 id="arch-design">Key Design Decisions</h2>
         <ul>
           <li><strong>Edge serverless</strong> — No VMs to maintain. Immune to datacenter outages. Cost efficient with high free-tier.</li>
@@ -1553,14 +1571,26 @@ app.get('/docs', (c) => {
     "region": "nyc3"
   }
 }</code></pre>
+        <h2 id="config-azure">Azure</h2>
+        <p>Azure VMs are identified by resource group + VM name. Find both in the Azure Portal VM overview page.</p>
+        <pre><code>{
+  "app-vm-prod": {
+    "provider": "azure",
+    "resourceGroup": "production-rg",
+    "vmName": "app-vm-prod-01"
+  }
+}</code></pre>
         <div class="tbl-wrap">
           <table>
             <thead><tr><th>Field</th><th>Req</th><th>Notes</th></tr></thead>
             <tbody>
-              <tr><td><code>provider</code></td><td><span class="tag tag-req">req</span></td><td><code>aws</code>, <code>digitalocean</code>, <code>do</code></td></tr>
+              <tr><td><code>provider</code></td><td><span class="tag tag-req">req</span></td><td><code>aws</code>, <code>digitalocean</code>, <code>do</code>, <code>azure</code></td></tr>
               <tr><td><code>instanceId</code></td><td><span class="tag tag-req">req</span></td><td>AWS EC2 instance ID</td></tr>
               <tr><td><code>region</code></td><td><span class="tag tag-opt">opt</span></td><td>Defaults to <code>AWS_REGION</code></td></tr>
               <tr><td><code>dropletId</code></td><td><span class="tag tag-req">req</span></td><td>DO droplet ID (string/number)</td></tr>
+              <tr><td><code>dropletId</code></td><td><span class="tag tag-req">req</span></td><td>DO droplet ID (string/number)</td></tr>
+              <tr><td><code>vmName</code></td><td><span class="tag tag-req">req</span></td><td>Azure VM name</td></tr>
+              <tr><td><code>resourceGroup</code></td><td><span class="tag tag-req">req</span></td><td>Azure resource group</td></tr>
               <tr><td><code>bandwidthLimitGB</code></td><td><span class="tag tag-opt">opt</span></td><td>Shows progress bar in <code>/bandwidth</code>. Alerts fire regardless. Overridable via <code>/setbandwidth</code> Telegram command.</td></tr>
             </tbody>
           </table>
@@ -1583,6 +1613,11 @@ app.get('/docs', (c) => {
               <tr><td><code>AWS_SECRET_ACCESS_KEY</code></td><td><span class="tag tag-opt">opt</span></td><td>AWS IAM secret key</td></tr>
               <tr><td><code>AWS_REGION</code></td><td><span class="tag tag-opt">opt</span></td><td>Plain-text variable. Default: <code>us-east-1</code></td></tr>
               <tr><td><code>DIGITALOCEAN_TOKEN</code></td><td><span class="tag tag-opt">opt</span></td><td>DO personal access token</td></tr>
+              <tr><td><code>AZURE_TENANT_ID</code></td><td><span class="tag tag-opt">opt</span></td><td>Azure Entra ID (tenant) for service principal</td></tr>
+              <tr><td><code>AZURE_CLIENT_ID</code></td><td><span class="tag tag-opt">opt</span></td><td>Azure app registration client ID</td></tr>
+              <tr><td><code>AZURE_CLIENT_SECRET</code></td><td><span class="tag tag-opt">opt</span></td><td>Azure client secret</td></tr>
+              <tr><td><code>AZURE_SUBSCRIPTION_ID</code></td><td><span class="tag tag-opt">opt</span></td><td>Azure subscription ID</td></tr>
+              <tr><td><code>AZURE_REGION</code></td><td><span class="tag tag-opt">opt</span></td><td>Plain-text variable. Default: <code>eastus</code></td></tr>
               <tr><td><code>TELEGRAM_WEBHOOK_SECRET</code></td><td><span class="tag tag-rec">rec</span></td><td>Webhook header validation</td></tr>
             </tbody>
           </table>
@@ -1638,6 +1673,10 @@ app.get('/docs', (c) => {
           <li>Set as <code>DIGITALOCEAN_TOKEN</code> secret</li>
         </ol>
         <p>Actions: <code>power_on</code> <code>power_off</code> <code>reboot</code>. Status: <code>new</code>→starting, <code>active</code>→running, <code>off</code>→stopped, <code>archive</code>→terminated.</p>
+
+        <h2 id="providers-azure">Azure</h2>
+        <p>REST at <code>https://management.azure.com</code>, OAuth2 client credentials (<code>AZURE_TENANT_ID</code>, <code>AZURE_CLIENT_ID</code>, <code>AZURE_CLIENT_SECRET</code>).</p>
+        <p>The provider uses <code>$expand=instanceView</code> to fetch VM power state in a single request. Power states: <code>PowerState/running</code>→running, <code>PowerState/stopped</code>→stopped, <code>PowerState/deallocated</code>→stopped, <code>PowerState/starting</code>→starting, <code>PowerState/stopping</code>→stopping. All power operations expect the VM ID in <code>resourceGroup/vmName</code> format.</p>
       </div>
 
       <div class="section" id="security">
@@ -1747,6 +1786,7 @@ npm run deploy</code></pre>
           <li><strong>Telegram:</strong> <code>/revoke</code> with BotFather, update secret, re-register webhook</li>
           <li><strong>AWS:</strong> Delete compromised key in IAM, generate new, update secrets</li>
           <li><strong>DO:</strong> Revoke token in API settings, generate new, update secret</li>
+          <li><strong>Azure:</strong> Rotate client secret in app registration, generate new, update <code>AZURE_CLIENT_SECRET</code></li>
         </ul>
         <h2 id="dr-webhook">Webhook Troubleshooting</h2>
         <ol>

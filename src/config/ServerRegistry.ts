@@ -1,8 +1,10 @@
 export interface RegistryServer {
-  provider: 'aws' | 'digitalocean' | 'do';
+  provider: 'aws' | 'digitalocean' | 'do' | 'azure';
   id: string; // Uniform identifier used internally by commands
   instanceId?: string; // Explicit identifier for AWS
   dropletId?: string; // Explicit identifier for DigitalOcean
+  vmName?: string; // Azure VM name
+  resourceGroup?: string; // Azure resource group
   region?: string;
   bandwidthLimitGB?: number;
 }
@@ -31,7 +33,7 @@ export class ServerRegistry {
 
         if (
           typeof provider !== 'string' ||
-          !['aws', 'digitalocean', 'do'].includes(provider.toLowerCase())
+          !['aws', 'digitalocean', 'do', 'azure'].includes(provider.toLowerCase())
         ) {
           throw new Error(`Invalid or missing provider for server "${alias}"`);
         }
@@ -66,6 +68,15 @@ export class ServerRegistry {
           if (id.trim() === '') {
             throw new Error(`Invalid or missing dropletId/id for DigitalOcean server "${alias}"`);
           }
+        } else if (normProvider === 'azure') {
+          const vmName = typeof serverObj.vmName === 'string' ? serverObj.vmName : undefined;
+          const resourceGroup = typeof serverObj.resourceGroup === 'string' ? serverObj.resourceGroup : undefined;
+
+          if (!vmName || !resourceGroup) {
+            throw new Error(`Invalid or missing vmName/resourceGroup for Azure server "${alias}"`);
+          }
+
+          id = `${resourceGroup}/${vmName}`;
         }
 
         if (region !== undefined && typeof region !== 'string') {
@@ -81,6 +92,8 @@ export class ServerRegistry {
           id,
           instanceId,
           dropletId,
+          vmName: normProvider === 'azure' ? serverObj.vmName as string : undefined,
+          resourceGroup: normProvider === 'azure' ? serverObj.resourceGroup as string : undefined,
           region: region || undefined,
           bandwidthLimitGB: bandwidthLimitGB || undefined,
         });

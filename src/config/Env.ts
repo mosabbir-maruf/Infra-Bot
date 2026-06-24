@@ -5,6 +5,11 @@ export interface Env {
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_REGION: string;
   DIGITALOCEAN_TOKEN?: string;
+  AZURE_TENANT_ID?: string;
+  AZURE_CLIENT_ID?: string;
+  AZURE_CLIENT_SECRET?: string;
+  AZURE_SUBSCRIPTION_ID?: string;
+  AZURE_REGION: string;
   NODE_ENV: string;
   SERVERS_CONFIG: string;
   MONITORING_SECRET: string;
@@ -65,6 +70,11 @@ export function validateEnv(rawEnv: unknown): Env {
     AWS_SECRET_ACCESS_KEY: envObj.AWS_SECRET_ACCESS_KEY,
     AWS_REGION: envObj.AWS_REGION || 'us-east-1',
     DIGITALOCEAN_TOKEN: envObj.DIGITALOCEAN_TOKEN,
+    AZURE_TENANT_ID: envObj.AZURE_TENANT_ID,
+    AZURE_CLIENT_ID: envObj.AZURE_CLIENT_ID,
+    AZURE_CLIENT_SECRET: envObj.AZURE_CLIENT_SECRET,
+    AZURE_SUBSCRIPTION_ID: envObj.AZURE_SUBSCRIPTION_ID,
+    AZURE_REGION: envObj.AZURE_REGION || 'eastus',
     NODE_ENV: envObj.NODE_ENV || 'production',
     SERVERS_CONFIG: serversConfig,
     MONITORING_SECRET: monitoringSecret,

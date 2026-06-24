@@ -1,6 +1,7 @@
 import { CloudProvider } from '../core/providers/Provider';
 import { Env } from '../config/Env';
 import { AWSProvider } from './AWSProvider';
+import { AzureProvider } from './AzureProvider';
 import { DigitalOceanProvider } from './DigitalOceanProvider';
 import { Logger } from '../utils/Logger';
 
@@ -32,6 +33,19 @@ export class ProviderRegistry {
     } else {
       Logger.warn(
         'ProviderRegistry: DigitalOcean token not configured. Skipping DigitalOcean registration.',
+      );
+    }
+
+    if (env.AZURE_TENANT_ID && env.AZURE_CLIENT_ID && env.AZURE_CLIENT_SECRET && env.AZURE_SUBSCRIPTION_ID) {
+      try {
+        this.providers.set('azure', new AzureProvider(env));
+        Logger.info('ProviderRegistry: Registered Azure provider.');
+      } catch (err) {
+        Logger.error('ProviderRegistry: Failed to register Azure provider.', err);
+      }
+    } else {
+      Logger.warn(
+        'ProviderRegistry: Azure credentials not configured. Skipping Azure registration.',
       );
     }
 
