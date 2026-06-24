@@ -1676,7 +1676,9 @@ app.get('/docs', (c) => {
 
         <h2 id="providers-azure">Azure</h2>
         <p>REST at <code>https://management.azure.com</code>, OAuth2 client credentials (<code>AZURE_TENANT_ID</code>, <code>AZURE_CLIENT_ID</code>, <code>AZURE_CLIENT_SECRET</code>).</p>
-        <p>The provider uses <code>$expand=instanceView</code> to fetch VM power state in a single request. Power states: <code>PowerState/running</code>→running, <code>PowerState/stopped</code>→stopped, <code>PowerState/deallocated</code>→stopped, <code>PowerState/starting</code>→starting, <code>PowerState/stopping</code>→stopping. All power operations expect the VM ID in <code>resourceGroup/vmName</code> format.</p>
+        <p>Create a service principal in <strong>Microsoft Entra ID</strong> → App registrations → New registration. Add a client secret in Certificates &amp; secrets. Assign the <strong>Virtual Machine Contributor</strong> role to the app at the subscription level (IAM → Add role assignment).</p>
+        <p>OAuth2 token is cached in memory with automatic refresh. The provider uses <code>$expand=instanceView</code> to fetch VM power state in a single request — no separate API call needed. Actions: <code>/virtualMachines/{vmName}/start</code>, <code>/powerOff</code>, <code>/restart</code>. All operations expect the VM ID in <code>resourceGroup/vmName</code> format.</p>
+        <p>Status mapping: <code>PowerState/running</code>→running, <code>PowerState/starting</code>→starting, <code>PowerState/stopping</code>→stopping, <code>PowerState/stopped</code>→stopped, <code>PowerState/deallocated</code>→stopped (<em>deallocated VMs incur no compute charges</em>).</p>
       </div>
 
       <div class="section" id="security">
