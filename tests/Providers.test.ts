@@ -302,6 +302,76 @@ describe('Provider Adapters', () => {
       );
     });
 
+    it('should fetch VM status with NIC and public IP', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            access_token: 'mock-azure-token',
+            expires_in: 3599,
+            token_type: 'Bearer',
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            name: 'app-vm-prod-01',
+            id: '/subscriptions/mock-sub-id/resourceGroups/production-rg/providers/Microsoft.Compute/virtualMachines/app-vm-prod-01',
+            location: 'eastus',
+            properties: {
+              vmId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+              hardwareProfile: { vmSize: 'Standard_D2s_v3' },
+              provisioningState: 'Succeeded',
+              networkProfile: {
+                networkInterfaces: [
+                  { id: '/subscriptions/mock-sub-id/resourceGroups/production-rg/providers/Microsoft.Network/networkInterfaces/app-vm-nic' },
+                ],
+              },
+              instanceView: {
+                statuses: [
+                  { code: 'PowerState/running', displayStatus: 'VM running', level: 'Info' },
+                ],
+              },
+            },
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            properties: {
+              ipConfigurations: [
+                {
+                  properties: {
+                    privateIPAddress: '10.0.0.5',
+                    publicIPAddress: {
+                      id: '/subscriptions/mock-sub-id/resourceGroups/production-rg/providers/Microsoft.Network/publicIPAddresses/app-vm-pip',
+                    },
+                  },
+                },
+              ],
+            },
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            properties: {
+              ipAddress: '203.0.113.50',
+            },
+          }),
+        });
+
+      const provider = new AzureProvider(mockEnv);
+      const status = await provider.getServerStatus('production-rg/app-vm-prod-01');
+
+      expect(status.id).toBe('production-rg/app-vm-prod-01');
+      expect(status.name).toBe('app-vm-prod-01');
+      expect(status.status).toBe('running');
+      expect(status.ipAddress).toBe('203.0.113.50');
+      expect(status.provider).toBe('Azure');
+      expect(status.region).toBe('eastus');
+    });
+
     it('should fetch VM status and map status correctly', async () => {
       mockFetch
         .mockResolvedValueOnce({
@@ -340,6 +410,76 @@ describe('Provider Adapters', () => {
       expect(status.status).toBe('running');
       expect(status.provider).toBe('Azure');
       expect(status.region).toBe('eastus');
+    });
+
+    it('should fetch instance metadata with NIC and IPs', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            access_token: 'mock-azure-token',
+            expires_in: 3599,
+            token_type: 'Bearer',
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            name: 'app-vm-prod-01',
+            id: '/subscriptions/mock-sub-id/resourceGroups/production-rg/providers/Microsoft.Compute/virtualMachines/app-vm-prod-01',
+            location: 'eastus',
+            properties: {
+              vmId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+              hardwareProfile: { vmSize: 'Standard_D2s_v3' },
+              provisioningState: 'Succeeded',
+              networkProfile: {
+                networkInterfaces: [
+                  { id: '/subscriptions/mock-sub-id/resourceGroups/production-rg/providers/Microsoft.Network/networkInterfaces/app-vm-nic' },
+                ],
+              },
+              instanceView: {
+                statuses: [
+                  { code: 'PowerState/running', displayStatus: 'VM running', level: 'Info' },
+                ],
+              },
+            },
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            properties: {
+              ipConfigurations: [
+                {
+                  properties: {
+                    privateIPAddress: '10.0.0.5',
+                    publicIPAddress: {
+                      id: '/subscriptions/mock-sub-id/resourceGroups/production-rg/providers/Microsoft.Network/publicIPAddresses/app-vm-pip',
+                    },
+                  },
+                },
+              ],
+            },
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            properties: {
+              ipAddress: '198.51.100.99',
+            },
+          }),
+        });
+
+      const provider = new AzureProvider(mockEnv);
+      const meta = await provider.getInstanceMetadata('production-rg/app-vm-prod-01');
+
+      expect(meta.instanceId).toBe('a1b2c3d4-e5f6-7890-abcd-ef1234567890');
+      expect(meta.instanceType).toBe('Standard_D2s_v3');
+      expect(meta.state).toBe('VM running');
+      expect(meta.publicIp).toBe('198.51.100.99');
+      expect(meta.privateIp).toBe('10.0.0.5');
+      expect(meta.availabilityZone).toBe('eastus');
     });
 
     it('should fetch and map instance metadata correctly', async () => {

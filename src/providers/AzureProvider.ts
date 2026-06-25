@@ -17,6 +17,9 @@ interface AzureVMProperties {
   hardwareProfile: { vmSize: string };
   provisioningState?: string;
   instanceView?: AzureVMInstanceView;
+  networkProfile?: {
+    networkInterfaces?: Array<{ id: string }>;
+  };
 }
 
 interface AzureVM {
@@ -24,13 +27,38 @@ interface AzureVM {
   id: string;
   location: string;
   properties: AzureVMProperties;
+  tags?: Record<string, string>;
 }
 
 interface AzureVMListResult {
   value: AzureVM[];
 }
 
+interface NicIPConfiguration {
+  properties?: {
+    privateIPAddress?: string;
+    publicIPAddress?: { id: string };
+  };
+}
+
+interface NicProperties {
+  ipConfigurations?: NicIPConfiguration[];
+}
+
+interface NicResponse {
+  properties: NicProperties;
+}
+
+interface PublicIPProperties {
+  ipAddress?: string;
+}
+
+interface PublicIPResponse {
+  properties: PublicIPProperties;
+}
+
 const RESOURCE_GROUP_REGEX = /\/resourceGroups\/([^/]+)/i;
+const NIC_NAME_REGEX = /\/networkInterfaces\/([^/]+)/i;
 const API_VERSION = '2024-03-01';
 const TOKEN_REFRESH_BUFFER_MS = 60_000;
 
@@ -46,6 +74,7 @@ export class AzureProvider implements CloudProvider {
 
   private cachedToken: { token: string; expiresAt: number } | null = null;
   private tokenRefreshPromise: Promise<string> | null = null;
+  private vmFetchPromises: Map<string, Promise<{ vm: AzureVM; ips: { publicIp?: string; privateIp?: string } }>> = new Map();
 
   constructor(env: Env) {
     if (!env.AZURE_TENANT_ID || !env.AZURE_CLIENT_ID || !env.AZURE_CLIENT_SECRET || !env.AZURE_SUBSCRIPTION_ID) {
@@ -166,6 +195,54 @@ export class AzureProvider implements CloudProvider {
     return 'unknown';
   }
 
+  private async fetchVMIPs(vm: AzureVM): Promise<{ publicIp?: string; privateIp?: string }> {
+    const nics = vm.properties.networkProfile?.networkInterfaces;
+    if (!nics || nics.length === 0) return {};
+
+    const nicResults = await Promise.allSettled(
+      nics.map(async (nic) => {
+        const nicRg = this.extractResourceGroup(nic.id);
+        const nicName = NIC_NAME_REGEX.exec(nic.id)?.[1];
+        if (!nicRg || !nicName) return;
+
+        const nicData = await this.request<NicResponse>(
+          `/resourceGroups/${encodeURIComponent(nicRg)}/providers/Microsoft.Network/networkInterfaces/${encodeURIComponent(nicName)}?api-version=${API_VERSION}`,
+        );
+
+        const ipConfig = nicData.properties?.ipConfigurations?.[0]?.properties;
+        return {
+          privateIp: ipConfig?.privateIPAddress,
+          pipId: ipConfig?.publicIPAddress?.id,
+        };
+      }),
+    );
+
+    let publicIp: string | undefined;
+    let privateIp: string | undefined;
+
+    for (const result of nicResults) {
+      if (result.status === 'fulfilled' && result.value) {
+        if (!privateIp) privateIp = result.value.privateIp;
+        if (!publicIp && result.value.pipId) {
+          const pipRg = this.extractResourceGroup(result.value.pipId);
+          const pipName = result.value.pipId.split('/').pop();
+          if (pipRg && pipName) {
+            try {
+              const pipData = await this.request<PublicIPResponse>(
+                `/resourceGroups/${encodeURIComponent(pipRg)}/providers/Microsoft.Network/publicIPAddresses/${encodeURIComponent(pipName)}?api-version=${API_VERSION}`,
+              );
+              publicIp = pipData.properties?.ipAddress;
+            } catch {
+              // Public IP query failed — skip
+            }
+          }
+        }
+      }
+    }
+
+    return { publicIp, privateIp };
+  }
+
   private mapVM(vm: AzureVM): CloudServerInstance {
     const resourceGroup = this.extractResourceGroup(vm.id);
 
@@ -181,6 +258,29 @@ export class AzureProvider implements CloudProvider {
         VmId: vm.properties.vmId,
       }),
     };
+  }
+
+  private async fetchVMWithIPs(serverId: string): Promise<{ vm: AzureVM; ips: { publicIp?: string; privateIp?: string } }> {
+    const cached = this.vmFetchPromises.get(serverId);
+    if (cached) return cached;
+
+    const promise = this.doFetchVMWithIPs(serverId);
+    this.vmFetchPromises.set(serverId, promise);
+
+    try {
+      return await promise;
+    } finally {
+      this.vmFetchPromises.delete(serverId);
+    }
+  }
+
+  private async doFetchVMWithIPs(serverId: string): Promise<{ vm: AzureVM; ips: { publicIp?: string; privateIp?: string } }> {
+    const { resourceGroup, vmName } = this.parseServerId(serverId);
+    const vm = await this.request<AzureVM>(
+      `${this.vmPath(resourceGroup, vmName)}?$expand=instanceView&api-version=${API_VERSION}`,
+    );
+    const ips = await this.fetchVMIPs(vm);
+    return { vm, ips };
   }
 
   public async startServer(serverId: string, _region?: string): Promise<void> {
@@ -202,11 +302,12 @@ export class AzureProvider implements CloudProvider {
   }
 
   public async getServerStatus(serverId: string, _region?: string): Promise<CloudServerInstance> {
-    const { resourceGroup, vmName } = this.parseServerId(serverId);
-    const vm = await this.request<AzureVM>(
-      `${this.vmPath(resourceGroup, vmName)}?$expand=instanceView&api-version=${API_VERSION}`,
-    );
-    return this.mapVM(vm);
+    const { vm, ips } = await this.fetchVMWithIPs(serverId);
+    const result = this.mapVM(vm);
+    if (ips.publicIp || ips.privateIp) {
+      result.ipAddress = ips.publicIp || ips.privateIp;
+    }
+    return result;
   }
 
   public async listServers(_region?: string): Promise<CloudServerInstance[]> {
@@ -217,10 +318,7 @@ export class AzureProvider implements CloudProvider {
   }
 
   public async getInstanceMetadata(serverId: string, _region?: string): Promise<CloudServerMetadata> {
-    const { resourceGroup, vmName } = this.parseServerId(serverId);
-    const vm = await this.request<AzureVM>(
-      `${this.vmPath(resourceGroup, vmName)}?$expand=instanceView&api-version=${API_VERSION}`,
-    );
+    const { vm, ips } = await this.fetchVMWithIPs(serverId);
 
     const instanceView = vm.properties.instanceView;
     const powerState = instanceView?.statuses?.find((s) => s.code?.startsWith('PowerState/'));
@@ -230,6 +328,8 @@ export class AzureProvider implements CloudProvider {
       instanceId: vm.properties.vmId,
       instanceType: vm.properties.hardwareProfile.vmSize,
       state: powerState?.displayStatus || provisioningState?.displayStatus || 'unknown',
+      publicIp: ips.publicIp,
+      privateIp: ips.privateIp,
       availabilityZone: vm.location,
     };
   }
