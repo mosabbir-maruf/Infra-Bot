@@ -146,10 +146,11 @@ Configure the target servers in the registry JSON schema:
     "provider": "digitalocean",
     "dropletId": "123456789"
   },
-  "app-vm-prod": {
+  "Mosabbir-Cloud": {
     "provider": "azure",
-    "resourceGroup": "production-rg",
-    "vmName": "app-vm-prod-01"
+    "region": "eastasia",
+    "resourceGroup": "Mosabbir-Cloud_group",
+    "vmName": "Mosabbir-Cloud"
   }
 }
 ```
