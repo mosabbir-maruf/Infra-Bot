@@ -82,6 +82,8 @@ Optional `"bandwidthLimitGB": 500` adds a progress bar to `/bandwidth`. Bandwidt
 
 **Finding VM details:** In the Azure Portal, navigate to **Virtual Machines** → select your VM. The resource group and VM name are shown at the top of the overview page. The resource group also appears in the URL path: `/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/virtualMachines/{vmName}`.
 
+> ⚠ **Don't use the example value `production-rg` literally** — replace it with your actual resource group name. If you get `ResourceGroupNotFound`, the resource group name in your config doesn't match any group in your subscription. Copy it exactly from the Azure Portal VM overview page.
+
 Set it as a Cloudflare secret:
 
 ```

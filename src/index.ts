@@ -1573,6 +1573,7 @@ app.get('/docs', (c) => {
 }</code></pre>
         <h2 id="config-azure">Azure</h2>
         <p>Azure VMs are identified by resource group + VM name. Find both in the Azure Portal VM overview page. The resource group also appears in the URL path: <code>/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/virtualMachines/{vmName}</code>.</p>
+        <div class="warning"><strong>Don't use the example value <code>production-rg</code> literally</strong> — replace it with your actual resource group name. If you get <code>ResourceGroupNotFound</code>, the resource group name in your config doesn't match any group in your subscription. Copy it exactly from the Azure Portal VM overview page.</div>
         <pre><code>{
   "app-vm-prod": {
     "provider": "azure",
