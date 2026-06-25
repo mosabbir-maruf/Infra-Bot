@@ -19,6 +19,8 @@ Azure uses **OAuth2 client credentials** (service principal) for API authenticat
 2. Add a description and expiration (recommend 12–24 months), then **Add**.
 3. **Copy the secret value immediately** — you will not see it again. This is `AZURE_CLIENT_SECRET`.
 
+> ⚠ **Important:** Azure displays two columns: **Secret ID** (a UUID identifier) and **Value** (the actual secret). Copy the **Value**, not the Secret ID. The value is a long random string (e.g. `q8n~abcDEF...`), while the Secret ID looks like a UUID (`0000...`). If you accidentally copy the Secret ID, authentication will fail with `AADSTS7000215`.
+
 ### Assign RBAC Role
 
 1. Go to **Subscriptions** → select your subscription → **Access control (IAM)** → **Add** → **Add role assignment**.
@@ -46,7 +48,7 @@ Or for local development, add them to `.dev.vars`:
 ```
 AZURE_TENANT_ID="00000000-0000-0000-0000-000000000000"
 AZURE_CLIENT_ID="00000000-0000-0000-0000-000000000001"
-AZURE_CLIENT_SECRET="a_service_principal_client_secret"
+AZURE_CLIENT_SECRET="q8n~abcDEF0123456789_long_random_secret_value_generated_by_azure"
 AZURE_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000002"
 AZURE_REGION="eastus"
 ```
