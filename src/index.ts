@@ -1722,7 +1722,7 @@ app.get('/docs', (c) => {
 
       <div class="section" id="rate-limit">
         <div class="section-label">rate limiting</div>
-        <p><strong>10 commands / 60s</strong> per user. Uses <code>MONITORING_KV</code>; falls back to in-memory. Exceeded users receive a warning and are blocked for the window. Key: <code>rl:&lt;userId&gt;</code>, 60s TTL.</p>
+        <p><strong>20 commands / 60s</strong> per user. Uses <code>MONITORING_KV</code>; falls back to in-memory. Exceeded users receive a warning and are blocked for the window. Key: <code>rl:&lt;userId&gt;</code>, 60s TTL.</p>
       </div>
 
       <div class="section" id="monitoring">
