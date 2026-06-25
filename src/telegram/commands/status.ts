@@ -23,11 +23,15 @@ export class StatusHandler implements CommandHandler {
         provider.getInstanceMetadata(server.id, server.region),
       ]);
 
+      const region = meta.availabilityZone
+        ? (provider.name === 'AWS' ? meta.availabilityZone.slice(0, -1) : meta.availabilityZone)
+        : (server.region || 'N/A');
+
       await ctx.reply(
         MessageRenderer.serverDetails(alias, provider.name, {
           'Instance ID': meta.instanceId,
           'Instance Type': meta.instanceType,
-          'Region': meta.availabilityZone ? meta.availabilityZone.slice(0, -1) : (server.region || 'N/A'),
+          'Region': region,
           'Availability Zone': meta.availabilityZone || 'N/A',
           'Status': status.status,
           'State': meta.state,
