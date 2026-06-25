@@ -1678,6 +1678,17 @@ app.get('/docs', (c) => {
 
         <h2 id="providers-azure">Azure</h2>
         <p>REST at <code>https://management.azure.com</code>, OAuth2 client credentials (<code>AZURE_TENANT_ID</code>, <code>AZURE_CLIENT_ID</code>, <code>AZURE_CLIENT_SECRET</code>).</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Variable</th><th>Where to find it</th></tr></thead>
+            <tbody>
+              <tr><td><code>AZURE_TENANT_ID</code></td><td>App registration → <strong>Directory (tenant) ID</strong></td></tr>
+              <tr><td><code>AZURE_CLIENT_ID</code></td><td>App registration → <strong>Application (client) ID</strong></td></tr>
+              <tr><td><code>AZURE_CLIENT_SECRET</code></td><td>App registration → <strong>Certificates &amp; secrets</strong> → create a secret → copy the <strong>Value</strong> column (long random string, <em>not</em> the Secret ID)</td></tr>
+              <tr><td><code>AZURE_SUBSCRIPTION_ID</code></td><td>Azure Portal → <strong>Subscriptions</strong> → your subscription → <strong>Subscription ID</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
         <p><strong>Create a Service Principal:</strong></p>
         <ol>
           <li>Azure Portal → <strong>Microsoft Entra ID</strong> → App registrations → New registration</li>

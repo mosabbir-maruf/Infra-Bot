@@ -6,6 +6,13 @@ The Azure provider adapter manages Virtual Machines using fetch-based REST reque
 
 Azure uses **OAuth2 client credentials** (service principal) for API authentication.
 
+| Variable | Where to find it |
+|---|---|
+| `AZURE_TENANT_ID` | App registration → **Directory (tenant) ID** |
+| `AZURE_CLIENT_ID` | App registration → **Application (client) ID** |
+| `AZURE_CLIENT_SECRET` | App registration → **Certificates & secrets** → create a secret → copy the **Value** column (long random string, *not* the Secret ID) |
+| `AZURE_SUBSCRIPTION_ID` | Azure Portal → **Subscriptions** → your subscription → **Subscription ID** |
+
 ### Create a Service Principal
 
 1. Open the **Azure Portal** → **Microsoft Entra ID** (formerly Azure Active Directory).
