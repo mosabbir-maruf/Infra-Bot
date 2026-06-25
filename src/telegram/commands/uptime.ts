@@ -77,7 +77,18 @@ export class UptimeHandler implements CommandHandler {
           overallHealth = 'Warning';
         }
 
-        cards.push(MessageRenderer.uptimeCard(alias, m.timestamp, m.uptime, overallHealth));
+        const reasons: string[] = [];
+        if (!['Healthy', 'Healthy', 'Healthy'].includes(cpuHealth)) reasons.push(`CPU ${cpuHealth.toLowerCase()}`);
+        if (!['Healthy', 'Healthy', 'Healthy'].includes(ramHealth)) reasons.push(`RAM ${ramHealth.toLowerCase()}`);
+        if (!['Healthy', 'Healthy', 'Healthy'].includes(diskHealth)) reasons.push(`Disk ${diskHealth.toLowerCase()}`);
+        if (freshnessHealth !== 'Healthy') reasons.push(freshnessHealth === 'Critical' ? 'agent offline' : 'agent delayed');
+        if (m.docker && m.docker.total > 0) {
+          if (m.docker.running < m.docker.total) reasons.push(`${m.docker.total - m.docker.running} stopped svc`);
+          if (m.docker.unhealthy > 0) reasons.push(`${m.docker.unhealthy} unhealthy svc`);
+        }
+        const reasonText = reasons.length > 0 ? reasons.join(', ') : 'None';
+
+        cards.push(MessageRenderer.uptimeCard(alias, m.timestamp, m.uptime, overallHealth, reasonText));
       } catch {
         cards.push(MessageRenderer.emptyCard(alias));
       }

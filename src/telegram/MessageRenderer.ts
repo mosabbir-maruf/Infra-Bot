@@ -160,7 +160,7 @@ export class MessageRenderer {
   }
 
   /** Compact uptime card */
-  static uptimeCard(alias: string, ts: number, uptime: number, health: string): string {
+  static uptimeCard(alias: string, ts: number, uptime: number, health: string, reason?: string): string {
     let healthEmoji = '🟢';
     if (health === 'Critical') healthEmoji = '🔴';
     else if (health === 'Warning') healthEmoji = '🟡';
@@ -169,6 +169,9 @@ export class MessageRenderer {
     msg += `<code>┌ Server   </code> <code>${escapeHtml(alias)}</code>\n`;
     msg += `<code>├ Uptime   </code> <code>${this.duration(uptime)}</code>\n`;
     msg += `<code>├ Health   </code> <code>${health} ${healthEmoji}</code>\n`;
+    if (health !== 'Healthy' && reason) {
+      msg += `<code>├ Reason   </code> <code>${escapeHtml(reason)}</code>\n`;
+    }
     msg += `<code>├ Time     </code> <code>${this.ago(ts)}</code>\n`;
     msg += `<code>├ ├ UTC    </code> <code>${this.formatUTC(ts)}</code>\n`;
     msg += `<code>└ └ BD     </code> <code>${this.formatBD(ts)}</code>`;
