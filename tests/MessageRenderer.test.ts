@@ -186,7 +186,7 @@ describe('MessageRenderer', () => {
     });
     it('rateLimit renders compact', () => {
       expect(MessageRenderer.rateLimit()).toContain('Rate Limit');
-      expect(MessageRenderer.rateLimit()).toContain('10 commands');
+      expect(MessageRenderer.rateLimit()).toContain('20 commands');
     });
     it('configError renders compact', () => {
       expect(MessageRenderer.configError('KV')).toContain('Config Error');

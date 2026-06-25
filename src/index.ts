@@ -2100,7 +2100,7 @@ app.post('/webhook', async (c) => {
 
   // 2. Distributed Rate Limiting (10 requests / 60 seconds)
   const rateLimitKey = `rl:${userId}`;
-  const isLimited = await rateLimiter.isRateLimited(rateLimitKey, 10, 60);
+  const isLimited = await rateLimiter.isRateLimited(rateLimitKey, 20, 60);
 
   if (isLimited) {
     Logger.warn(`Rate limiter activated for user ID ${userId}`, { userId });

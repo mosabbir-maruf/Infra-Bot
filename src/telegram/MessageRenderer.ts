@@ -394,7 +394,7 @@ export class MessageRenderer {
 
   static rateLimit(): string {
     let msg = '<b>⏳ Rate Limit</b>\n';
-    msg += '<code>└ Message    10 commands/min limit. Please wait.</code>';
+    msg += '<code>└ Message    20 commands/min limit. Please wait.</code>';
     return msg;
   }
 
