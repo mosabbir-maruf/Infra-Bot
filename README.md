@@ -117,7 +117,7 @@ npx wrangler secret put <SECRET_NAME>
 |---|---|---|---|
 | `TELEGRAM_BOT_TOKEN` | Secret | Token issued by Telegram's BotFather | `123456789:ABCdef...` |
 | `AUTHORIZED_USER_IDS`| Secret | Comma-separated list of Telegram user IDs authorized to run commands | `123456789,987654321` |
-| `TELEGRAM_WEBHOOK_SECRET` | Secret | Optional secret token to verify webhook source authenticity | `webhook_secret_here` |
+| `TELEGRAM_WEBHOOK_SECRET` | Secret | Optional secret token to verify webhook source authenticity (must match `secret_token` in `setWebhook`, else `/webhook` returns `403`) | `webhook_secret_here` |
 | `AWS_ACCESS_KEY_ID` | Secret | Restricted AWS IAM access key ID | `AKIAIOSFODNN7EXAMPLE` |
 | `AWS_SECRET_ACCESS_KEY`| Secret | Restricted AWS IAM secret access key | `wJalrXUtnFEMI/K7MDEN...` |
 | `AWS_REGION` | Variable | Default fallback AWS region | `us-east-1` |
@@ -130,6 +130,18 @@ npx wrangler secret put <SECRET_NAME>
 | `SERVERS_CONFIG` | Binding| JSON mapping server aliases to cloud provider IDs | *See below* |
 | `MONITORING_SECRET` | Secret | Shared HMAC key for verifying telemetry payloads | `secure_secret_here` |
 | `NODE_ENV` | Variable | Runtime environment mode | `production` |
+
+### Webhook Registration
+
+After deploying, register the Telegram webhook (one-time, redo only on token / URL / secret change):
+
+```bash
+curl -F "url=https://<YOUR-WORKER>.workers.dev/webhook" \
+  -F "secret_token=<YOUR_TELEGRAM_WEBHOOK_SECRET>" \
+  https://api.telegram.org/bot<YOUR_TELEGRAM_BOT_TOKEN>/setWebhook
+```
+
+*Note: Include `secret_token` only if you configured `TELEGRAM_WEBHOOK_SECRET`. Omitting it while the secret is set causes `403 Forbidden` with queued updates (`pending_update_count` grows). See `docs/operations/deployment.md`.*
 
 ### Server Registry Configuration (`SERVERS_CONFIG`)
 
