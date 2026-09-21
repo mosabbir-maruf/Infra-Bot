@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: CI
 
 run-name: "CI | ${{ github.ref_name }} @ ${{ github.sha }}"
 
@@ -27,7 +27,7 @@ defaults:
 
 jobs:
   lint:
-    name: CI / Lint (ESLint)
+    name: Lint (ESLint)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -45,7 +45,7 @@ jobs:
         run: npm run lint
 
   typecheck:
-    name: CI / Typecheck (tsc)
+    name: Typecheck (tsc)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -63,7 +63,7 @@ jobs:
         run: npm run build
 
   test:
-    name: CI / Unit Tests (Vitest)
+    name: Unit Tests (Vitest)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -81,7 +81,7 @@ jobs:
         run: npm run test
 
   worker-dry-run:
-    name: CI / Validate Worker (Wrangler dry-run)
+    name: Validate Worker (Wrangler dry-run)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [lint, typecheck, test]
@@ -101,7 +101,7 @@ jobs:
         run: npx wrangler deploy --dry-run
 
   ci:
-    name: CI / All Checks Passed
+    name: All Checks Passed
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [lint, typecheck, test, worker-dry-run]
