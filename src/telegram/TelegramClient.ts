@@ -66,6 +66,11 @@ export class TelegramClient {
 
     if (!response.ok) {
       const errorText = await response.text();
+      // Tapping the same inline button twice triggers Telegram 400
+      // "message is not modified" — not a real failure, swallow it.
+      if (errorText.includes('message is not modified')) {
+        return;
+      }
       throw new Error(`Telegram API error (${response.status}): ${errorText}`);
     }
   }
