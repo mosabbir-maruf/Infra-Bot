@@ -1,4 +1,6 @@
-name: CI
+name: Continuous Integration
+
+run-name: "CI | ${{ github.ref_name }} @ ${{ github.sha }}"
 
 on:
   push:
@@ -15,57 +17,103 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CI: true
+  FORCE_COLOR: 1
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   lint:
-    name: ESLint
+    name: CI / Lint (ESLint)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
+          check-latest: true
           cache: npm
-      - run: npm ci
-      - run: npm run lint
+      - name: Install dependencies
+        run: npm ci
+      - name: Run ESLint
+        run: npm run lint
 
   typecheck:
-    name: TypeScript
+    name: CI / Typecheck (tsc)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
+          check-latest: true
           cache: npm
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        run: npm ci
+      - name: Run TypeScript typecheck
+        run: npm run build
 
   test:
-    name: Vitest
+    name: CI / Unit Tests (Vitest)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
+          check-latest: true
           cache: npm
-      - run: npm ci
-      - run: npm run test
+      - name: Install dependencies
+        run: npm ci
+      - name: Run test suite
+        run: npm run test
 
   worker-dry-run:
-    name: Wrangler dry-run
+    name: CI / Validate Worker (Wrangler dry-run)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [lint, typecheck, test]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
+          check-latest: true
           cache: npm
-      - run: npm ci
-      # Validates bundling only — never deploys (CF Git integration owns deploys).
-      - run: npx wrangler deploy --dry-run
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate worker bundle (no deploy)
+        # Validates bundling only — never deploys (CF Git integration owns deploys).
+        run: npx wrangler deploy --dry-run
+
+  ci:
+    name: CI / All Checks Passed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [lint, typecheck, test, worker-dry-run]
+    if: always()
+    steps:
+      - name: Verify all required jobs succeeded
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.typecheck.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.worker-dry-run.result }}" != "success" ]; then
+            echo "One or more CI jobs failed."
+            exit 1
+          fi
+          echo "All CI checks passed."
