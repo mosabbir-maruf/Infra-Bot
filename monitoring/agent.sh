@@ -94,7 +94,9 @@ try:
         month_list = traffic.get("month", traffic.get("months", []))
         if len(month_list) > 0:
             current = month_list[-1]
-            print(f"{current.get(\"rx\", 0)},{current.get(\"tx\", 0)}")
+            rx = current.get("rx", 0)
+            tx = current.get("tx", 0)
+            print(str(rx) + "," + str(tx))
             sys.exit(0)
 except Exception:
     pass
